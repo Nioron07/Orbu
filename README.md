@@ -1,112 +1,103 @@
-# AcuNexus - Multi-Client Acumatica Manager
+# AcuNexus
 
-**AcuNexus** is a self-hosted Docker application for managing multiple Acumatica ERP connections, browsing services and models, and building integrations.
+AcuNexus is a self-hosted web application for managing multiple Acumatica ERP instances and deploying REST API endpoints. Built on [Easy-Acumatica](https://github.com/Nioron07/Easy-Acumatica), a Python library for simplified Acumatica REST API integration.
 
 ## Features
 
-- 🔗 **Multi-Client Management**: Connect and manage multiple Acumatica instances
-- 🔐 **Secure Credential Storage**: Encrypted storage of connection credentials
-- 📊 **Service Browser**: Explore available REST API services
-- 📋 **Model Browser**: Browse data models and schemas
-- 🐳 **Docker-Based**: Easy deployment with Docker Compose
-- 🔄 **Session Management**: Persistent sessions with automatic reconnection
-- 🎨 **Modern UI**: Vue 3 + Vuetify Material Design interface
-- 🌙 **Dark Mode**: Built-in theme switching
+- **Multi-Client Management**: Connect and manage multiple Acumatica instances with encrypted credential storage
+- **Service Browser**: Explore available REST API services and their methods
+- **Model Browser**: Browse data models and schemas
+- **Endpoint Deployment**: Deploy service methods as REST API endpoints with automatic schema generation
+- **Endpoint Testing**: Test endpoints directly from the UI with parameter validation
+- **Dark Mode**: Built-in light/dark theme switching
 
 ## Architecture
 
-AcuNexus v2.0 is built as a containerized web application:
-
 - **Frontend**: Vue 3 + Vuetify 3 + TypeScript
-- **Backend**: Flask + SQLAlchemy + EasyAcumatica
-- **Database**: PostgreSQL for persistent storage
-- **Web Server**: Nginx reverse proxy
-- **Deployment**: Docker Compose orchestration
+- **Backend**: Flask + SQLAlchemy + Easy-Acumatica
+- **Database**: PostgreSQL
+- **Deployment**: Docker Compose
 
-## Prerequisites
+## Setup
 
-- Docker Engine 24.0+
-- Docker Compose 2.0+
-- 2GB RAM minimum
-- 1GB disk space
-
-## Quick Start
-
-### 1. Clone the Repository
+### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/acunexus.git
-cd acunexus
+git clone https://github.com/Nioron07/AcuNexus.git
+cd AcuNexus
 ```
 
-### 2. Set Up Environment
+### 2. Configure Environment
 
 ```bash
 # Copy environment template
 cp .env.example .env
 
-# Generate encryption keys
-python scripts/generate_keys.py
+# Generate encryption key
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 
-# Or manually generate keys:
-# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# Update .env with generated keys
 ```
 
-### 3. Run Setup Script
+### 3. Start Services
 
 ```bash
-# Make script executable
-chmod +x scripts/setup.sh
-
-# Run setup
-./scripts/setup.sh
-```
-
-### 4. Start Services
-
-```bash
-# Start all services
+# Build and start all services
 docker compose up -d
 
 # Check status
 docker compose ps
-
-# View logs
-docker compose logs -f
 ```
 
-### 5. Access AcuNexus
+### 4. Access Application
 
-Open your browser and navigate to:
-- **Application**: http://localhost:8080
-- **API Health**: http://localhost:8080/api/health
+Open http://localhost:8080 in your browser.
 
-## Manual Setup
+## Usage
 
-If you prefer manual setup over the script:
+### Client Management
 
-### Build Frontend
+1. Navigate to Clients page
+2. Click "Add Client"
+3. Enter Acumatica connection details (URL, tenant, credentials)
+4. Connect to the client
 
-```bash
-cd frontend
-npm install
-npm run build
-cd ..
+### Browse Services & Models
+
+1. Connect to a client
+2. Navigate to Services or Models pages
+3. Search and explore available APIs and data structures
+
+### Deploy Endpoints
+
+1. Navigate to Services page
+2. Select a service and view its methods
+3. Click "Deploy as Endpoint" for any method
+4. The endpoint is now available as a REST API
+
+### Test Endpoints
+
+1. Navigate to Endpoints page
+2. Click the menu icon on any endpoint
+3. Select "Test Endpoint"
+4. Fill in required parameters
+5. View the response
+
+## API Endpoints
+
+All deployed endpoints are accessible at:
+
+```
+POST http://localhost:8080/api/v1/endpoints/{client_id}/{service_name}/{method_name}
 ```
 
-### Start Docker Services
-
-```bash
-# Start services
-docker compose up -d
-
-# Initialize database (first time only)
-docker compose exec backend flask db upgrade
+Headers:
+```
+Content-Type: application/json
+X-API-Key: {your-api-key}
 ```
 
 ## Configuration
-
-### Environment Variables
 
 Key environment variables in `.env`:
 
@@ -116,170 +107,34 @@ POSTGRES_DB=acunexus
 POSTGRES_USER=acunexus
 POSTGRES_PASSWORD=your-secure-password
 
-# Encryption (REQUIRED - Generate with script)
-ENCRYPTION_KEY=your-encryption-key
+# Encryption (REQUIRED)
+ENCRYPTION_KEY=your-fernet-key
 
 # Flask
 SECRET_KEY=your-secret-key
-FLASK_ENV=production
-
-# Ports
-NGINX_PORT=8080
 ```
-
-### Client Configuration
-
-Each Acumatica client connection includes:
-
-- **Basic Settings**:
-  - Name and Description
-  - Base URL
-  - Tenant/Company
-  - Branch (optional)
-
-- **Credentials**:
-  - Username
-  - Password (encrypted)
-
-- **Advanced Options**:
-  - SSL Verification
-  - Session Persistence
-  - Rate Limiting
-  - Caching Settings
-
-## Usage
-
-### Managing Clients
-
-1. Navigate to **Clients** page
-2. Click **Add Client**
-3. Enter connection details
-4. Test connection
-5. Save and connect
-
-### Browsing Services
-
-1. Connect to a client
-2. Navigate to **Services**
-3. Search or browse available APIs
-4. View method signatures and documentation
-
-### Browsing Models
-
-1. Connect to a client
-2. Navigate to **Models**
-3. Explore data models
-4. View field definitions
 
 ## Development
 
-### Local Development Setup
+### Backend
 
 ```bash
-# Backend development
 cd backend
 pip install -r requirements.txt
 flask run --debug
+```
 
-# Frontend development
+### Frontend
+
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Running Tests
-
-```bash
-# Backend tests
-cd backend
-pytest
-
-# Frontend tests
-cd frontend
-npm run test
-```
-
-### Building for Production
-
-```bash
-# Build all images
-docker compose build
-
-# Or build individually
-docker compose build backend
-docker compose build nginx
-```
-
-## Backup & Restore
-
-### Backup Database
-
-```bash
-./scripts/backup.sh
-```
-
-### Restore Database
-
-```bash
-./scripts/restore.sh
-```
-
-Backups are stored in `./backups/` with optional encryption.
-
-## API Documentation
-
-### Base URL
-```
-http://localhost:8080/api/v1
-```
-
-### Endpoints
-
-#### Client Management
-- `GET /clients` - List all clients
-- `POST /clients` - Create client
-- `GET /clients/{id}` - Get client details
-- `PUT /clients/{id}` - Update client
-- `DELETE /clients/{id}` - Delete client
-
-#### Connection
-- `POST /clients/{id}/connect` - Connect to client
-- `POST /clients/{id}/disconnect` - Disconnect
-- `POST /clients/{id}/test` - Test connection
-
-#### Browsing
-- `GET /clients/{id}/services` - List services
-- `GET /clients/{id}/services/{name}` - Service details
-- `GET /clients/{id}/models` - List models
-- `GET /clients/{id}/models/{name}` - Model details
-
 ## Troubleshooting
 
-### Common Issues
-
-**Cannot connect to database**
-```bash
-# Check PostgreSQL container
-docker compose logs postgres
-docker compose restart postgres
-```
-
-**Frontend not loading**
-```bash
-# Rebuild frontend
-cd frontend && npm run build
-docker compose restart nginx
-```
-
-**Connection to Acumatica fails**
-- Verify URL is accessible
-- Check credentials
-- Ensure SSL certificates are valid
-- Review firewall settings
-
-### Logs
-
-View logs for debugging:
+### View Logs
 
 ```bash
 # All services
@@ -287,56 +142,23 @@ docker compose logs
 
 # Specific service
 docker compose logs backend
-docker compose logs postgres
-docker compose logs nginx
-
-# Follow logs
-docker compose logs -f backend
+docker compose logs frontend
 ```
 
-## Security
+### Rebuild Services
 
-- Credentials are encrypted using Fernet symmetric encryption
-- Database passwords are never exposed in logs
-- Session tokens expire after 24 hours
-- HTTPS recommended for production
-- Regular security updates recommended
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+```bash
+# Rebuild and restart
+docker compose down
+docker compose up -d --build
+```
 
 ## License
 
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-
-Key points:
-- You can use, modify, and distribute this software
-- Any modifications must be open-sourced under AGPL-3.0
-- Network use constitutes distribution
-- Commercial use is allowed
+GNU Affero General Public License v3.0 (AGPL-3.0)
 
 See [LICENSE](LICENSE) for details.
 
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/acunexus/issues)
-- **Documentation**: [Wiki](https://github.com/yourusername/acunexus/wiki)
-- **Email**: support@example.com
-
 ## Credits
 
-- Built with [Easy-Acumatica](https://github.com/GISMentors/easy-acumatica)
-- Icons by [Material Design Icons](https://materialdesignicons.com/)
-- UI Framework: [Vuetify](https://vuetifyjs.com/)
-
----
-
-**AcuNexus v2.0** - Self-Hosted Docker Edition
-Transform from desktop to cloud-ready multi-client management system.
+Built with [Easy-Acumatica](https://github.com/Nioron07/Easy-Acumatica)
