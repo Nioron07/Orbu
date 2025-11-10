@@ -10,24 +10,26 @@
       </div>
     </div>
 
-    <!-- Connection Required Alert -->
-    <v-alert
-      v-if="!clientsStore.isConnected"
-      type="warning"
-      variant="tonal"
-      class="mb-4"
-    >
-      <div class="d-flex justify-space-between align-center">
-        <span>Please connect to Acumatica first to browse models.</span>
-        <v-btn
-          color="warning"
-          variant="text"
-          @click="router.push('/clients')"
-        >
-          Go to Clients
-        </v-btn>
-      </div>
-    </v-alert>
+    <!-- Connection Required Empty State -->
+    <v-card v-if="!clientsStore.isConnected" class="glass-card" elevation="0">
+      <v-card-text class="pa-12">
+        <div class="text-center">
+          <v-icon size="80" color="primary" class="mb-4">mdi-link-off</v-icon>
+          <h2 class="text-h5 font-weight-bold mb-3">No Client Connected</h2>
+          <p class="text-body-1 text-medium-emphasis mb-6" style="max-width: 500px; margin: 0 auto;">
+            Connect to an Acumatica client to explore data models, fields, and schemas.
+          </p>
+          <v-btn
+            color="primary"
+            size="large"
+            prepend-icon="mdi-domain"
+            @click="router.push('/clients')"
+          >
+            Go to Clients Page
+          </v-btn>
+        </div>
+      </v-card-text>
+    </v-card>
 
     <!-- Error Alert -->
     <v-alert

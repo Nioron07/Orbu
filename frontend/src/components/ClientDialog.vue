@@ -2,15 +2,18 @@
   <v-dialog
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
-    max-width="800"
+    max-width="1000"
     scrollable
   >
     <v-card>
-      <v-card-title>
-        {{ isEditing ? 'Edit Client' : 'Add New Client' }}
+      <v-card-title class="d-flex align-center bg-primary pa-4">
+        <v-icon start>{{ isEditing ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
+        <span>{{ isEditing ? 'Edit Client' : 'Add New Client' }}</span>
+        <v-spacer />
+        <v-btn icon="mdi-close" variant="text" @click="cancel" />
       </v-card-title>
 
-      <v-card-text>
+      <v-card-text class="pa-6">
         <v-form ref="form" v-model="valid">
           <!-- Basic Information -->
           <div class="text-subtitle-2 mb-2">Basic Information</div>
@@ -192,15 +195,16 @@
         </v-form>
       </v-card-text>
 
-      <v-card-actions>
+      <v-card-actions class="pa-4">
         <v-spacer />
-        <v-btn @click="cancel">Cancel</v-btn>
+        <v-btn variant="text" @click="cancel">Cancel</v-btn>
         <v-btn
           color="primary"
           variant="flat"
           @click="save"
           :disabled="!valid"
         >
+          <v-icon start>{{ isEditing ? 'mdi-check' : 'mdi-plus' }}</v-icon>
           {{ isEditing ? 'Update' : 'Create' }}
         </v-btn>
       </v-card-actions>

@@ -3,15 +3,16 @@
     <template v-slot:activator="{ props }">
       <v-btn
         v-bind="props"
-        :class="['client-switcher-btn', { 'client-switcher-btn--connected': clientsStore.isConnected }]"
+        :class="['client-switcher-btn', { 'client-switcher-btn--connected': clientsStore.isConnected, 'client-switcher-btn--connecting': clientsStore.isConnecting }]"
         variant="tonal"
         size="large"
+        :loading="clientsStore.isConnecting"
       >
         <v-icon start>
-          {{ clientsStore.isConnected ? 'mdi-check-circle' : 'mdi-alert-circle-outline' }}
+          {{ clientsStore.isConnecting ? 'mdi-loading' : clientsStore.isConnected ? 'mdi-check-circle' : 'mdi-alert-circle-outline' }}
         </v-icon>
         <span class="client-switcher-btn__text">
-          {{ clientsStore.activeClient?.name || 'No Connection' }}
+          {{ clientsStore.isConnecting ? 'Connecting...' : clientsStore.activeClient?.name || 'No Connection' }}
         </span>
         <v-icon end>mdi-chevron-down</v-icon>
       </v-btn>
@@ -169,6 +170,14 @@ onMounted(() => {
 
     &:hover {
       background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%);
+    }
+  }
+
+  &--connecting {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+
+    &:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%);
     }
   }
 }

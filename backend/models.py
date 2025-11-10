@@ -32,6 +32,9 @@ class Client(db.Model):
     encrypted_username = Column(Text, nullable=False)
     encrypted_password = Column(Text, nullable=False)
 
+    # API key for endpoint authentication
+    api_key = Column(UUID(as_uuid=True), unique=True, nullable=False, default=uuid.uuid4, index=True)
+
     # API configuration
     endpoint_name = Column(String(100), default='Default')
     endpoint_version = Column(String(50))
@@ -54,16 +57,20 @@ class Client(db.Model):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     last_connected_at = Column(DateTime(timezone=True))
 
-    def to_dict(self, include_sensitive=False):
+    def to_dict(self, include_sensitive=False, show_full_api_key=True):
         """
         Convert client to dictionary for API responses.
 
         Args:
             include_sensitive: Whether to include sensitive data (never include passwords)
+            show_full_api_key: Whether to show full API key (default: True for internal use)
 
         Returns:
             dict: Client data as dictionary
         """
+        # Always show full API key for internal/authorized use
+        api_key_str = str(self.api_key)
+
         data = {
             'id': str(self.id),
             'name': self.name,
@@ -71,6 +78,7 @@ class Client(db.Model):
             'base_url': self.base_url,
             'tenant': self.tenant,
             'branch': self.branch,
+            'api_key': api_key_str,
             'endpoint_name': self.endpoint_name,
             'endpoint_version': self.endpoint_version,
             'locale': self.locale,
@@ -176,3 +184,113 @@ class ConnectionLog(db.Model):
 
     def __repr__(self):
         return f'<ConnectionLog {self.event_type} for client {self.client_id}>'
+
+
+class Endpoint(db.Model):
+    """
+    Represents a deployed endpoint that exposes an Acumatica service method as a REST API.
+    """
+    __tablename__ = 'endpoints'
+
+    # Primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Foreign key to client
+    client_id = Column(UUID(as_uuid=True), db.ForeignKey('clients.id', ondelete='CASCADE'), nullable=False)
+
+    # Service and method information
+    service_name = Column(String(255), nullable=False)  # e.g., 'SalesOrder'
+    method_name = Column(String(255), nullable=False)   # e.g., 'get_list'
+
+    # Display and description
+    display_name = Column(String(255))
+    description = Column(Text)
+
+    # Schema information (stored as JSON)
+    request_schema = Column(JSON, nullable=False)   # Parameter definitions with types
+    response_schema = Column(JSON)                  # Expected response structure
+
+    # Status
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationship
+    client = db.relationship('Client', backref=db.backref('endpoints', lazy='dynamic', cascade='all, delete-orphan'))
+
+    # Unique constraint - one endpoint per client/service/method combination
+    __table_args__ = (
+        db.UniqueConstraint('client_id', 'service_name', 'method_name', name='unique_endpoint_per_method'),
+    )
+
+    def get_url_path(self):
+        """Generate the URL path for this endpoint."""
+        return f"/api/v1/endpoints/{self.client_id}/{self.service_name}/{self.method_name}"
+
+    def to_dict(self):
+        """Convert endpoint to dictionary for API responses."""
+        return {
+            'id': str(self.id),
+            'client_id': str(self.client_id),
+            'service_name': self.service_name,
+            'method_name': self.method_name,
+            'display_name': self.display_name,
+            'description': self.description,
+            'request_schema': self.request_schema,
+            'response_schema': self.response_schema,
+            'is_active': self.is_active,
+            'url_path': self.get_url_path(),
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+    def __repr__(self):
+        return f'<Endpoint {self.service_name}.{self.method_name} for client {self.client_id}>'
+
+
+class EndpointExecution(db.Model):
+    """
+    Tracks execution of deployed endpoints for monitoring and debugging.
+    """
+    __tablename__ = 'endpoint_executions'
+
+    # Primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Foreign key to endpoint
+    endpoint_id = Column(UUID(as_uuid=True), db.ForeignKey('endpoints.id', ondelete='CASCADE'), nullable=False)
+
+    # Execution details
+    executed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    duration_ms = Column(Integer)
+    status_code = Column(Integer, nullable=False)
+    error_message = Column(Text)
+
+    # Request context
+    ip_address = Column(String(45))
+    user_agent = Column(Text)
+
+    # Request/response data (optional, for debugging)
+    request_data = Column(JSON)
+    response_data = Column(JSON)
+
+    # Relationship
+    endpoint = db.relationship('Endpoint', backref=db.backref('executions', lazy='dynamic', cascade='all, delete-orphan'))
+
+    def to_dict(self):
+        """Convert execution log to dictionary."""
+        return {
+            'id': str(self.id),
+            'endpoint_id': str(self.endpoint_id),
+            'executed_at': self.executed_at.isoformat() if self.executed_at else None,
+            'duration_ms': self.duration_ms,
+            'status_code': self.status_code,
+            'error_message': self.error_message,
+            'ip_address': self.ip_address,
+            'user_agent': self.user_agent,
+        }
+
+    def __repr__(self):
+        return f'<EndpointExecution {self.endpoint_id} at {self.executed_at}>'

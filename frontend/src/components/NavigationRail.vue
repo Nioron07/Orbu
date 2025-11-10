@@ -1,20 +1,18 @@
 <template>
   <v-navigation-drawer
-    :model-value="true"
-    :rail="rail"
-    :expand-on-hover="expandOnHover"
+    rail
+    expand-on-hover
     permanent
     class="navigation-rail gradient-sidebar"
   >
     <!-- Logo Section -->
-    <div class="navigation-rail__logo">
-      <v-avatar :size="rail ? 40 : 48" class="logo-avatar">
-        <v-img src="@/assets/logo.svg" alt="AcuNexus Logo"></v-img>
-      </v-avatar>
-      <transition name="fade">
-        <span v-if="!rail" class="logo-text gradient-text-primary">AcuNexus</span>
-      </transition>
-    </div>
+        <v-list class="navigation-rail__list">
+          <v-list-item
+        class="navigation-item"
+            prepend-avatar="@/assets/AcuNexus_Logo_Small_Transparent.png"
+            title="AcuNexus"
+          ></v-list-item>
+        </v-list>
 
     <v-divider class="my-2"></v-divider>
 
@@ -24,7 +22,6 @@
         v-for="item in navigationItems"
         :key="item.path"
         :to="item.path"
-        :disabled="item.requiresConnection && !clientsStore.isConnected"
         class="navigation-item"
         rounded="lg"
       >
@@ -32,15 +29,6 @@
           <v-icon :icon="item.icon"></v-icon>
         </template>
         <v-list-item-title>{{ item.title }}</v-list-item-title>
-
-        <template v-if="item.requiresConnection && !clientsStore.isConnected" v-slot:append>
-          <v-tooltip location="right">
-            <template v-slot:activator="{ props }">
-              <v-icon v-bind="props" size="small" color="warning">mdi-lock</v-icon>
-            </template>
-            <span>Connect to a client first</span>
-          </v-tooltip>
-        </template>
       </v-list-item>
     </v-list>
 
@@ -63,51 +51,37 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useClientsStore } from '@/stores/clients';
-
 interface NavigationItem {
   title: string;
   icon: string;
   path: string;
-  requiresConnection?: boolean;
 }
-
-interface Props {
-  rail?: boolean;
-  expandOnHover?: boolean;
-}
-
-withDefaults(defineProps<Props>(), {
-  rail: true,
-  expandOnHover: true,
-});
-
-const clientsStore = useClientsStore();
 
 const navigationItems = computed<NavigationItem[]>(() => [
   {
     title: 'Dashboard',
     icon: 'mdi-view-dashboard',
     path: '/',
-    requiresConnection: false,
   },
   {
     title: 'Clients',
     icon: 'mdi-domain',
     path: '/clients',
-    requiresConnection: false,
+  },
+  {
+    title: 'Endpoints',
+    icon: 'mdi-api',
+    path: '/endpoints',
   },
   {
     title: 'Services',
-    icon: 'mdi-api',
+    icon: 'mdi-cogs',
     path: '/servicebrowser',
-    requiresConnection: true,
   },
   {
     title: 'Models',
     icon: 'mdi-database',
     path: '/modelbrowser',
-    requiresConnection: true,
   },
 ]);
 </script>
@@ -119,27 +93,6 @@ const navigationItems = computed<NavigationItem[]>(() => [
   &::v-deep(.v-navigation-drawer__content) {
     display: flex;
     flex-direction: column;
-  }
-}
-
-.navigation-rail__logo {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem 1rem;
-  min-height: 72px;
-
-  .logo-avatar {
-    flex-shrink: 0;
-    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-    padding: 4px;
-  }
-
-  .logo-text {
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
   }
 }
 

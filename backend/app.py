@@ -16,6 +16,8 @@ from datetime import timedelta
 from database import init_database
 from encryption import init_encryption
 from api.clients import clients_bp
+from api.endpoints import endpoints_bp
+from services.connection_pool import init_connection_pool
 
 # Load environment variables
 load_dotenv()
@@ -44,7 +46,7 @@ cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:8080')
 CORS(app,
      origins=cors_origins.split(',') if ',' in cors_origins else [cors_origins],
      supports_credentials=True,
-     allow_headers=['Content-Type', 'Authorization'],
+     allow_headers=['Content-Type', 'Authorization', 'X-API-Key'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
 # Initialize extensions
@@ -54,6 +56,7 @@ init_encryption(app)
 
 # Register blueprints
 app.register_blueprint(clients_bp)
+app.register_blueprint(endpoints_bp)
 
 
 @app.errorhandler(Exception)
@@ -101,13 +104,18 @@ def root():
     })
 
 
-# Create database tables
+# Create database tables and initialize services
 with app.app_context():
     try:
         db.create_all()
         logger.info("Database tables created/verified")
+
+        # Initialize connection pool
+        init_connection_pool()
+        logger.info("Connection pool initialized")
+
     except Exception as e:
-        logger.error(f"Failed to create database tables: {e}")
+        logger.error(f"Failed to initialize application: {e}")
 
 
 if __name__ == '__main__':

@@ -106,6 +106,19 @@
           </v-tooltip>
         </template>
 
+        <!-- API Key Column -->
+        <template v-slot:item.api_key="{ item }">
+          <div class="d-flex align-center">
+            <code class="text-caption mr-2">{{ item.api_key }}</code>
+            <v-btn
+              icon="mdi-content-copy"
+              variant="text"
+              size="x-small"
+              @click.stop="copyApiKeyFromRow(item)"
+            />
+          </div>
+        </template>
+
         <!-- Last Connected Column -->
         <template v-slot:item.last_connected_at="{ item }">
           <span class="text-caption">
@@ -192,6 +205,19 @@
                     <v-icon size="small">mdi-content-copy</v-icon>
                   </template>
                   <v-list-item-title>Duplicate</v-list-item-title>
+                </v-list-item>
+                <v-divider />
+                <v-list-item @click="regenerateApiKey(item)">
+                  <template v-slot:prepend>
+                    <v-icon size="small">mdi-key-refresh</v-icon>
+                  </template>
+                  <v-list-item-title>Regenerate API Key</v-list-item-title>
+                </v-list-item>
+                <v-list-item @click="viewEndpoints(item)">
+                  <template v-slot:prepend>
+                    <v-icon size="small">mdi-api</v-icon>
+                  </template>
+                  <v-list-item-title>View Endpoints</v-list-item-title>
                 </v-list-item>
                 <v-divider />
                 <v-list-item
@@ -300,16 +326,25 @@
     />
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="showDeleteDialog" max-width="400">
-      <v-card class="glass-card">
-        <v-card-title class="text-h6">
-          Delete Client?
+    <v-dialog v-model="showDeleteDialog" max-width="600">
+      <v-card>
+        <v-card-title class="d-flex align-center bg-error pa-4">
+          <v-icon start>mdi-delete</v-icon>
+          <span>Delete Client?</span>
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" @click="showDeleteDialog = false" />
         </v-card-title>
-        <v-card-text>
-          Are you sure you want to delete <strong>{{ deletingClient?.name }}</strong>?
-          This action cannot be undone.
+
+        <v-card-text class="pa-6">
+          <p class="text-h6 mb-3">
+            Delete <strong>{{ deletingClient?.name }}</strong>?
+          </p>
+          <v-alert type="error" variant="tonal">
+            This action cannot be undone. All client configuration and associated endpoints will be permanently deleted.
+          </v-alert>
         </v-card-text>
-        <v-card-actions>
+
+        <v-card-actions class="pa-4">
           <v-spacer />
           <v-btn variant="text" @click="showDeleteDialog = false">
             Cancel
@@ -341,16 +376,54 @@
         <v-btn variant="text" @click="snackbar.show = false">Close</v-btn>
       </template>
     </v-snackbar>
+
+    <!-- Regenerate API Key Confirmation Dialog -->
+    <v-dialog v-model="regenerateDialog.show" max-width="600">
+      <v-card>
+        <v-card-title class="d-flex align-center bg-warning pa-4">
+          <v-icon start>mdi-alert</v-icon>
+          <span>Regenerate API Key?</span>
+          <v-spacer />
+          <v-btn icon="mdi-close" variant="text" @click="regenerateDialog.show = false" />
+        </v-card-title>
+
+        <v-card-text class="pa-6">
+          <p class="text-h6 mb-3">
+            Regenerate API key for <strong>{{ regenerateDialog.clientName }}</strong>?
+          </p>
+
+          <v-alert type="warning" variant="tonal">
+            This will invalidate the existing key and all external services using it will need to be updated.
+          </v-alert>
+        </v-card-text>
+
+        <v-card-actions class="pa-4">
+          <v-spacer />
+          <v-btn variant="text" @click="regenerateDialog.show = false">Cancel</v-btn>
+          <v-btn
+            color="warning"
+            variant="flat"
+            @click="confirmRegenerateApiKey"
+            :loading="regenerateDialog.loading"
+          >
+            <v-icon start>mdi-key-refresh</v-icon>
+            Regenerate
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useClientsStore } from '@/stores/clients';
 import ClientDialog from '@/components/ClientDialog.vue';
-import type { Client } from '@/services/clientApi';
+import { clientApi, type Client } from '@/services/clientApi';
 
 const clientsStore = useClientsStore();
+const router = useRouter();
 
 // Reactive data
 const searchQuery = ref('');
@@ -369,6 +442,13 @@ const snackbar = ref({
   show: false,
   message: '',
   color: 'success'
+});
+
+const regenerateDialog = ref({
+  show: false,
+  clientName: '',
+  clientId: '',
+  loading: false
 });
 
 // Table configuration
@@ -399,6 +479,12 @@ const tableHeaders = [
     key: 'tenant',
     sortable: true,
     width: '150px'
+  },
+  {
+    title: 'API Key',
+    key: 'api_key',
+    sortable: false,
+    width: '220px'
   },
   {
     title: 'Last Connected',
@@ -546,6 +632,62 @@ function duplicateClient(client: Client) {
     last_connected_at: undefined,
   };
   showCreateDialog.value = true;
+}
+
+async function copyApiKeyFromRow(client: Client) {
+  if (!client.id) return;
+
+  try {
+    // Fetch the full API key from the backend
+    const response = await clientApi.getApiKey(client.id);
+    if (response.success && response.api_key) {
+      navigator.clipboard.writeText(response.api_key);
+      showSnackbar('API key copied to clipboard', 'success');
+    } else {
+      showSnackbar(response.error || 'Failed to get API key', 'error');
+    }
+  } catch (error: any) {
+    showSnackbar(error.message || 'Failed to get API key', 'error');
+  }
+}
+
+function regenerateApiKey(client: Client) {
+  if (!client.id) return;
+
+  regenerateDialog.value = {
+    show: true,
+    clientName: client.name,
+    clientId: client.id,
+    loading: false
+  };
+}
+
+async function confirmRegenerateApiKey() {
+  const clientId = regenerateDialog.value.clientId;
+  if (!clientId) return;
+
+  regenerateDialog.value.loading = true;
+
+  try {
+    const response = await clientApi.regenerateApiKey(clientId);
+    if (response.success) {
+      showSnackbar(`API key regenerated successfully. New key: ${response.api_key}`, 'success');
+      // Reload clients to update the table
+      await clientsStore.loadClients();
+      regenerateDialog.value.show = false;
+    } else {
+      showSnackbar(response.error || 'Failed to regenerate API key', 'error');
+    }
+  } catch (error: any) {
+    showSnackbar(error.message || 'Failed to regenerate API key', 'error');
+  } finally {
+    regenerateDialog.value.loading = false;
+  }
+}
+
+function viewEndpoints(client: Client) {
+  // Navigate to endpoints page with this client selected
+  router.push({ path: '/endpoints', query: { client: client.id } });
 }
 
 async function saveClient(client: Client) {

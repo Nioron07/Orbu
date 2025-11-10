@@ -181,9 +181,11 @@ def create_client():
         db.session.add(client)
         db.session.commit()
 
+        # Show full API key only on creation
         return jsonify({
             'success': True,
-            'client': client.to_dict()
+            'client': client.to_dict(show_full_api_key=True),
+            'message': 'Client created successfully. Save the API key - it will be masked in future responses.'
         }), 201
 
     except Exception as e:
@@ -786,6 +788,79 @@ def deactivate_client(client_id):
             'message': 'Client deactivated successfully',
             'client': client.to_dict(),
             'was_connected': get_client_from_session(client_id) is not None
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@clients_bp.route('/<uuid:client_id>/api-key', methods=['GET'])
+def get_api_key(client_id):
+    """
+    Get the full API key for a client (for copying purposes).
+
+    Args:
+        client_id: UUID of the client
+
+    Returns:
+        JSON response with the full API key
+    """
+    try:
+        client = Client.query.get(client_id)
+        if not client:
+            return jsonify({
+                'success': False,
+                'error': 'Client not found'
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'api_key': str(client.api_key)
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@clients_bp.route('/<uuid:client_id>/regenerate-api-key', methods=['POST'])
+def regenerate_api_key(client_id):
+    """
+    Regenerate the API key for a client.
+
+    This will invalidate the old API key and generate a new one.
+    All existing deployed endpoints will continue to work with the new key.
+
+    Args:
+        client_id: UUID of the client
+
+    Returns:
+        JSON response with the new API key (shown in full, only time)
+    """
+    try:
+        client = Client.query.get(client_id)
+        if not client:
+            return jsonify({
+                'success': False,
+                'error': 'Client not found'
+            }), 404
+
+        # Generate new API key
+        client.api_key = uuid.uuid4()
+        client.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'API key regenerated successfully',
+            'api_key': str(client.api_key),  # Show full key only on regeneration
+            'warning': 'The old API key has been invalidated. Update all external services with the new key.'
         }), 200
 
     except Exception as e:

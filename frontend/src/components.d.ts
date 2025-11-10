@@ -15,11 +15,14 @@ declare module 'vue' {
     ClientDialog: typeof import('./components/ClientDialog.vue')['default']
     ClientSwitcher: typeof import('./components/ClientSwitcher.vue')['default']
     EmptyState: typeof import('./components/EmptyState.vue')['default']
+    EndpointBuilder: typeof import('./components/EndpointBuilder.vue')['default']
     LoadingState: typeof import('./components/LoadingState.vue')['default']
     NavigationRail: typeof import('./components/NavigationRail.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SchemaTree: typeof import('./components/SchemaTree.vue')['default']
     SchemaTreeNode: typeof import('./components/SchemaTreeNode.vue')['default']
+    SchemaViewer: typeof import('./components/SchemaViewer.vue')['default']
+    TestEndpointDialog: typeof import('./components/TestEndpointDialog.vue')['default']
   }
 }

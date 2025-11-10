@@ -12,18 +12,25 @@
       <!-- Small Logo and Brand -->
       <div class="d-flex align-center px-4">
         <v-img
-          src="/logo.png"
-          width="32"
-          height="32"
+          src="@/assets/AcuNexus_Logo_Big.png"
           class="mr-3"
         />
-        <span class="text-h6 font-weight-bold gradient-text-primary">AcuNexus</span>
       </div>
 
       <v-spacer />
 
       <!-- Right Side Actions -->
       <div class="d-flex align-center gap-3 px-4">
+        <!-- Theme Toggle -->
+        <v-btn
+          icon
+          variant="text"
+          @click="toggleTheme"
+          class="theme-toggle-btn"
+        >
+          <v-icon>{{ theme.global.current.value.dark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
+        </v-btn>
+
         <!-- Client Switcher -->
         <ClientSwitcher />
       </div>
@@ -39,35 +46,7 @@
     </v-main>
 
     <!-- Footer -->
-    <v-footer
-      app
-      height="48"
-      class="gradient-app-bar"
-    >
-      <v-container fluid class="d-flex align-center justify-center py-2">
-        <div class="text-caption d-flex align-center gap-2" style="opacity: 0.7;">
-          <span class="font-weight-semibold">AcuNexus</span>
-          <span>v0.1.0</span>
-          <span class="mx-1">•</span>
-          <span>Powered by</span>
-          <a href="https://github.com/Nioron07/Easy-Acumatica" target="_blank" class="text-primary text-decoration-none font-weight-medium">Easy-Acumatica</a>
-          <span class="mx-1">•</span>
-          <a href="https://github.com/Nioron07/AcuNexus/blob/main/LICENSE" target="_blank" class="text-decoration-none font-weight-medium">GNU AGPL v3.0</a>
-          <span class="mx-1">•</span>
-          <v-btn
-            href="https://github.com/Nioron07/AcuNexus/issues/new"
-            target="_blank"
-            variant="text"
-            size="x-small"
-            prepend-icon="mdi-bug"
-            class="text-caption"
-            style="opacity: 0.7;"
-          >
-            Report Issue
-          </v-btn>
-        </div>
-      </v-container>
-    </v-footer>
+    <AppFooter />
   </v-app>
 </template>
 
@@ -80,6 +59,7 @@ import { useClientsStore } from '@/stores/clients';
 import { useSettingsStore } from '@/stores/settings';
 import NavigationRail from '@/components/NavigationRail.vue';
 import ClientSwitcher from '@/components/ClientSwitcher.vue';
+import AppFooter from '@/components/AppFooter.vue';
 
 const router = useRouter();
 const theme = useTheme();
@@ -88,6 +68,11 @@ const clientsStore = useClientsStore();
 const settingsStore = useSettingsStore();
 
 // Methods
+function toggleTheme() {
+  appStore.toggleTheme();
+  theme.global.name.value = appStore.theme;
+}
+
 function logout() {
   // Disconnect from any active client
   if (clientsStore.isConnected) {
@@ -196,19 +181,6 @@ onMounted(async () => {
 // App bar enhancements
 .v-app-bar {
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
-}
-
-// Footer enhancements
-.v-footer {
-  border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
-
-  a {
-    transition: opacity 0.2s ease;
-
-    &:hover {
-      opacity: 0.8;
-    }
-  }
 }
 
 // Global tooltip color fix for light/dark mode

@@ -8,7 +8,11 @@ export const useAppStore = defineStore('app', {
   actions: {
     setTheme(theme: 'light' | 'dark') {
       this.theme = theme;
-      localStorage.setItem('theme', theme);
+      localStorage.setItem('acunexus_theme', theme);
+    },
+    toggleTheme() {
+      const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+      this.setTheme(newTheme);
     },
   },
 })

@@ -19,6 +19,7 @@ export interface Client {
   branch?: string;
   username?: string;  // Only for creation/update
   password?: string;  // Only for creation/update
+  api_key?: string;   // Full API key - always unmasked for internal use
   endpoint_name?: string;
   endpoint_version?: string;
   locale?: string;
@@ -84,6 +85,61 @@ export interface ModelDetails {
   description: string;
   key_fields: string[];
   schema: any;
+}
+
+// Endpoint interfaces
+export interface Endpoint {
+  id: string;
+  client_id: string;
+  service_name: string;
+  method_name: string;
+  display_name?: string;
+  description?: string;
+  request_schema: any;
+  response_schema: any;
+  is_active: boolean;
+  url_path: string;
+  created_at: string;
+  updated_at: string;
+  stats?: EndpointStats;
+}
+
+export interface EndpointStats {
+  total_executions: number;
+  avg_duration_ms: number;
+  min_duration_ms: number;
+  max_duration_ms: number;
+  successful: number;
+  failed: number;
+  success_rate: number;
+}
+
+export interface EndpointExecution {
+  id: string;
+  endpoint_id: string;
+  executed_at: string;
+  duration_ms: number;
+  status_code: number;
+  error_message?: string;
+  ip_address?: string;
+  user_agent?: string;
+}
+
+export interface CreateEndpointRequest {
+  service_name: string;
+  method_name: string;
+  display_name?: string;
+  description?: string;
+  auto_generate_schema?: boolean;
+  request_schema?: any;
+  response_schema?: any;
+  is_active?: boolean;
+}
+
+export interface DeployServiceRequest {
+  service_name: string;
+  methods?: string[];
+  auto_generate_schema?: boolean;
 }
 
 class ClientApiService {
@@ -253,6 +309,122 @@ class ClientApiService {
    */
   async getApiInfo() {
     const response = await this.axiosInstance.get('/');
+    return response.data;
+  }
+
+  // ========== API Key Management ==========
+
+  /**
+   * Get the full API key for a client
+   */
+  async getApiKey(clientId: string) {
+    const response = await this.axiosInstance.get(`/v1/clients/${clientId}/api-key`);
+    return response.data;
+  }
+
+  /**
+   * Regenerate API key for a client
+   */
+  async regenerateApiKey(clientId: string) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/regenerate-api-key`);
+    return response.data;
+  }
+
+  // ========== Endpoint Management ==========
+
+  /**
+   * List all endpoints for a client
+   */
+  async listEndpoints(clientId: string, params?: { is_active?: boolean; service_name?: string; method_name?: string }) {
+    const response = await this.axiosInstance.get(`/v1/clients/${clientId}/endpoints`, { params });
+    return response.data;
+  }
+
+  /**
+   * Create a single endpoint
+   */
+  async createEndpoint(clientId: string, data: CreateEndpointRequest) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/endpoints`, data);
+    return response.data;
+  }
+
+  /**
+   * Deploy all methods of a service as endpoints
+   */
+  async deployService(clientId: string, data: DeployServiceRequest) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/endpoints/batch`, data);
+    return response.data;
+  }
+
+  /**
+   * Get endpoint details
+   */
+  async getEndpoint(endpointId: string) {
+    const response = await this.axiosInstance.get(`/v1/endpoints/${endpointId}`);
+    return response.data;
+  }
+
+  /**
+   * Update an endpoint
+   */
+  async updateEndpoint(endpointId: string, updates: Partial<Endpoint>) {
+    const response = await this.axiosInstance.put(`/v1/endpoints/${endpointId}`, updates);
+    return response.data;
+  }
+
+  /**
+   * Delete an endpoint
+   */
+  async deleteEndpoint(endpointId: string) {
+    const response = await this.axiosInstance.delete(`/v1/endpoints/${endpointId}`);
+    return response.data;
+  }
+
+  /**
+   * Activate an endpoint
+   */
+  async activateEndpoint(endpointId: string) {
+    const response = await this.axiosInstance.post(`/v1/endpoints/${endpointId}/activate`);
+    return response.data;
+  }
+
+  /**
+   * Deactivate an endpoint
+   */
+  async deactivateEndpoint(endpointId: string) {
+    const response = await this.axiosInstance.post(`/v1/endpoints/${endpointId}/deactivate`);
+    return response.data;
+  }
+
+  /**
+   * Get execution logs for an endpoint
+   */
+  async getEndpointLogs(endpointId: string, limit: number = 100) {
+    const response = await this.axiosInstance.get(`/v1/endpoints/${endpointId}/logs`, { params: { limit } });
+    return response.data;
+  }
+
+  /**
+   * Test an endpoint with parameters
+   */
+  async testEndpoint(endpointId: string, requestBody: any = {}) {
+    const response = await this.axiosInstance.post(`/v1/endpoints/${endpointId}/test`, requestBody);
+    return response.data;
+  }
+
+  /**
+   * Execute an endpoint using API key (for external services)
+   */
+  async executeEndpoint(clientId: string, serviceName: string, methodName: string, requestBody: any, apiKey: string) {
+    const response = await this.axiosInstance.post(
+      `/v1/endpoints/${clientId}/${serviceName}/${methodName}`,
+      requestBody,
+      {
+        headers: {
+          'X-API-Key': apiKey
+        }
+      }
+    );
     return response.data;
   }
 }
