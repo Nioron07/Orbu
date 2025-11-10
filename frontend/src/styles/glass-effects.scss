@@ -1,0 +1,214 @@
+// Glass morphism and modern UI effects for AcuNexus
+
+// CSS Variables for glass effects
+:root {
+  --glass-blur: 20px;
+  --glass-saturation: 180%;
+  --border-opacity: 0.1;
+  --surface-opacity: 0.7;
+}
+
+// Smooth transitions for all interactive elements
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 150ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Glass morphism base effects
+.glass-surface {
+  background: rgba(var(--v-theme-surface), var(--surface-opacity)) !important;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border: 1px solid rgba(255, 255, 255, var(--border-opacity));
+}
+
+.glass-app-bar {
+  background: rgba(var(--v-theme-surface), 0.85) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(var(--v-border-color), 0.08) !important;
+
+  // Add subtle shadow for depth
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+.glass-footer {
+  background: rgba(var(--v-theme-surface), 0.85) !important;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border-top: 1px solid rgba(var(--v-border-color), 0.08) !important;
+}
+
+.glass-card {
+  background: rgba(var(--v-theme-surface), 0.6) !important;
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+// Breadcrumb bar styling
+.breadcrumb-bar {
+  padding: 8px 0;
+  background: rgba(var(--v-theme-surface), 0.5) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(var(--v-border-color), 0.05);
+}
+
+// Modern data table styling
+.data-table {
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+
+  .v-table__wrapper {
+    background: transparent !important;
+  }
+
+  .v-data-table__th {
+    background: rgba(var(--v-theme-surface-variant), 0.4) !important;
+    backdrop-filter: blur(8px);
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.75rem !important;
+    color: rgba(var(--v-theme-on-surface), 0.7) !important;
+    border-bottom: 1px solid rgba(var(--v-border-color), 0.08) !important;
+  }
+
+  .v-data-table__tr {
+    &:hover {
+      background: rgba(var(--v-theme-primary), 0.04) !important;
+
+      td {
+        background: transparent !important;
+      }
+    }
+  }
+
+  .v-data-table__td {
+    border-bottom: 1px solid rgba(var(--v-border-color), 0.03) !important;
+  }
+}
+
+// Button enhancements
+.v-btn {
+  &:not(.v-btn--flat):not(.v-btn--text):not(.v-btn--outlined) {
+    backdrop-filter: blur(8px);
+  }
+
+  &.v-btn--variant-flat {
+    background: rgba(var(--v-theme-primary), 0.9) !important;
+  }
+}
+
+// Enhanced chip styling
+.v-chip {
+  &:not(.v-chip--variant-text) {
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+// Dialog and menu enhancements
+.v-dialog {
+  .v-card {
+    @extend .glass-card;
+    background: rgba(var(--v-theme-surface), 0.95) !important;
+  }
+}
+
+.v-menu {
+  .v-list {
+    background: rgba(var(--v-theme-surface), 0.95) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+}
+
+// Input field glass effect
+.v-text-field {
+  .v-field {
+    background: rgba(var(--v-theme-surface), 0.3) !important;
+    backdrop-filter: blur(8px);
+
+    &:hover {
+      background: rgba(var(--v-theme-surface), 0.4) !important;
+    }
+
+    &.v-field--focused {
+      background: rgba(var(--v-theme-surface), 0.5) !important;
+      border-color: rgba(var(--v-theme-primary), 0.5) !important;
+    }
+  }
+}
+
+// Snackbar glass effect
+.v-snackbar__wrapper {
+  background: rgba(var(--v-theme-surface), 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+// Scrollbar styling for webkit browsers
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(var(--v-theme-surface), 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--v-theme-on-surface), 0.2);
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(var(--v-theme-on-surface), 0.3);
+  }
+}
+
+// Loading skeleton with glass effect
+.v-skeleton-loader__bone {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--v-theme-surface), 0.3) 0%,
+    rgba(var(--v-theme-surface), 0.5) 50%,
+    rgba(var(--v-theme-surface), 0.3) 100%
+  ) !important;
+}
+
+// Subtle animations
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(var(--v-theme-primary), 0);
+  }
+}
+
+.pulse-on-hover:hover {
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+// Sharp corners option (remove for rounded look)
+.sharp-corners {
+  .v-card, .v-btn, .v-chip, .v-field, .data-table {
+    border-radius: 4px !important;
+  }
+}
+
+// High contrast mode for better readability
+.high-contrast {
+  --surface-opacity: 0.9;
+  --border-opacity: 0.2;
+
+  .glass-surface, .glass-card {
+    background: rgba(var(--v-theme-surface), 0.95) !important;
+  }
+}

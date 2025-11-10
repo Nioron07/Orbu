@@ -1,0 +1,152 @@
+/**
+ * Typography Configuration for AcuNexus
+ * Using Inter font family for a modern, clean look
+ */
+
+// Import Inter font with different weights
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+// Font Variables
+$font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+$font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+// Font Weights
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// Base Typography Styles
+body {
+  font-family: $font-family-base;
+  font-weight: $font-weight-normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+// Code and Monospace
+code,
+pre,
+.font-mono {
+  font-family: $font-family-mono;
+}
+
+// Headings with optical sizing
+h1, .text-h1 {
+  font-weight: $font-weight-bold;
+  letter-spacing: -0.02em;
+}
+
+h2, .text-h2 {
+  font-weight: $font-weight-bold;
+  letter-spacing: -0.01em;
+}
+
+h3, .text-h3 {
+  font-weight: $font-weight-semibold;
+  letter-spacing: -0.01em;
+}
+
+h4, .text-h4 {
+  font-weight: $font-weight-semibold;
+}
+
+h5, .text-h5 {
+  font-weight: $font-weight-medium;
+}
+
+h6, .text-h6 {
+  font-weight: $font-weight-medium;
+}
+
+// Body Text
+.text-body-1 {
+  font-weight: $font-weight-normal;
+  letter-spacing: 0.01em;
+}
+
+.text-body-2 {
+  font-weight: $font-weight-normal;
+  letter-spacing: 0.01em;
+}
+
+// Subtitles
+.text-subtitle-1 {
+  font-weight: $font-weight-medium;
+  letter-spacing: 0;
+}
+
+.text-subtitle-2 {
+  font-weight: $font-weight-medium;
+  letter-spacing: 0;
+}
+
+// Captions and overlines
+.text-caption {
+  font-weight: $font-weight-normal;
+  letter-spacing: 0.02em;
+}
+
+.text-overline {
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+// Button text
+.v-btn {
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.02em;
+}
+
+// Utility font weight classes
+.font-normal {
+  font-weight: $font-weight-normal;
+}
+
+.font-medium {
+  font-weight: $font-weight-medium;
+}
+
+.font-semibold {
+  font-weight: $font-weight-semibold;
+}
+
+.font-bold {
+  font-weight: $font-weight-bold;
+}
+
+// Enhanced readability for labels
+.v-label,
+.v-field-label {
+  font-weight: $font-weight-medium;
+}
+
+// Table headers
+.v-data-table {
+  th {
+    font-weight: $font-weight-semibold;
+    letter-spacing: 0.02em;
+  }
+}
+
+// Navigation items
+.v-list-item-title {
+  font-weight: $font-weight-medium;
+}
+
+// Chips and badges
+.v-chip {
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.01em;
+}
+
+// Tab labels
+.v-tab {
+  font-weight: $font-weight-medium;
+  letter-spacing: 0.02em;
+}
