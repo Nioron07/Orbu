@@ -9,11 +9,13 @@
       class="gradient-app-bar"
       height="64"
     >
-      <!-- Small Logo and Brand -->
+      <!-- Logo and Brand -->
       <div class="d-flex align-center px-4">
         <v-img
           src="@/assets/AcuNexus_Logo_Big.png"
-          class="mr-3"
+          class="app-logo mr-3"
+          height="50"
+          width="150"
         />
       </div>
 
@@ -183,18 +185,29 @@ onMounted(async () => {
   border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity)) !important;
 }
 
+// Logo styling with frame
+.app-logo {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.95);
+
+  .v-theme--dark & {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
 // Global tooltip color fix for light/dark mode
 .v-tooltip .v-overlay__content {
-  // Light theme: dark tooltip with white text
-  .v-theme--light & {
-    background: rgba(97, 97, 97, 0.92) !important;
-    color: #FFFFFF !important;
-  }
+  // Light theme: dark tooltip with white text (standard)
+  background: rgba(97, 97, 97, 0.95) !important;
+  color: #FFFFFF !important;
 
-  // Dark theme: light tooltip with dark text
   .v-theme--dark & {
-    background: rgba(238, 238, 238, 0.92) !important;
-    color: rgba(0, 0, 0, 0.87) !important;
+    // Dark theme: keep dark tooltip with white text for consistency
+    background: rgba(97, 97, 97, 0.95) !important;
+    color: #FFFFFF !important;
   }
 }
 </style>

@@ -143,15 +143,6 @@
                 Selected Endpoints
               </div>
 
-              <v-switch
-                v-model="autoGenerateSchema"
-                label="Auto-generate schemas"
-                color="primary"
-                density="compact"
-                hide-details
-                class="mb-4"
-              />
-
               <v-divider class="mb-4" />
             </div>
 
@@ -282,7 +273,6 @@ const loadingServices = ref(false)
 const selectedMethods = ref<Record<string, string[]>>({})
 
 // Deployment
-const autoGenerateSchema = ref(true)
 const deploying = ref(false)
 const deploymentResult = ref<any>(null)
 
@@ -415,7 +405,7 @@ async function deployEndpoints() {
         return endpointsStore.deployService(props.clientId, {
           service_name: serviceName,
           methods: methods,
-          auto_generate_schema: autoGenerateSchema.value
+          auto_generate_schema: true
         })
       })
 
@@ -453,7 +443,6 @@ async function deployEndpoints() {
 function resetForm() {
   searchQuery.value = ''
   selectedMethods.value = {}
-  autoGenerateSchema.value = true
   deploymentResult.value = null
   expanded.value = []
 }

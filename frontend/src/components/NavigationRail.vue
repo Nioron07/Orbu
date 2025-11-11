@@ -1,30 +1,16 @@
 <template>
-  <v-navigation-drawer
-    rail
-    expand-on-hover
-    permanent
-    class="navigation-rail gradient-sidebar"
-  >
+  <v-navigation-drawer rail expand-on-hover permanent class="navigation-rail gradient-sidebar">
     <!-- Logo Section -->
-        <v-list class="navigation-rail__list">
-          <v-list-item
-        class="navigation-item"
-            prepend-avatar="@/assets/AcuNexus_Logo_Small_Transparent.png"
-            title="AcuNexus"
-          ></v-list-item>
-        </v-list>
-
+    <v-list>
+      <v-list-item prepend-avatar="@/assets/AcuNexus_Logo_Small.png">
+        <v-list-item-title class="logo-text ml-3">AcuNexus</v-list-item-title></v-list-item>
+    </v-list>
     <v-divider class="my-2"></v-divider>
 
     <!-- Navigation Items -->
     <v-list density="compact" nav class="navigation-rail__list">
-      <v-list-item
-        v-for="item in navigationItems"
-        :key="item.path"
-        :to="item.path"
-        class="navigation-item"
-        rounded="lg"
-      >
+      <v-list-item v-for="item in navigationItems" :key="item.path" :to="item.path" class="navigation-item"
+        rounded="lg">
         <template v-slot:prepend>
           <v-icon :icon="item.icon"></v-icon>
         </template>
@@ -123,6 +109,37 @@ const navigationItems = computed<NavigationItem[]>(() => [
   &.v-list-item--disabled {
     opacity: 0.5;
   }
+}
+
+// Logo section styling
+.logo-section {
+  display: flex;
+  align-items: center;
+  padding: 12px !important;
+  min-height: 72px;
+}
+
+.nav-logo {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+
+  .v-theme--dark & {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  }
+}
+
+.logo-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+// Show logo text on hover
+.navigation-rail:hover .logo-text {
+  opacity: 1;
 }
 
 // Fade transition for logo text
