@@ -73,7 +73,6 @@ def create_endpoint(client_id):
         - method_name: Name of the method (required)
         - display_name: User-friendly name (optional)
         - description: Description (optional)
-        - auto_generate_schema: If true, generate schema from method signature (default: true)
     """
     try:
         data = request.get_json()
@@ -103,32 +102,30 @@ def create_endpoint(client_id):
                 'error': 'Endpoint already exists for this service method'
             }), 409
 
-        # Generate schema if requested
-        request_schema = data.get('request_schema', {})
-        response_schema = data.get('response_schema', {})
+        # Always generate schemas from method signature
+        request_schema = {}
+        response_schema = {}
 
-        auto_generate = data.get('auto_generate_schema', True)
-        if auto_generate:
-            try:
-                # Get client connection to introspect method
-                acumatica_client = get_client_from_session(client_id)
-                if acumatica_client:
-                    service_attr = EndpointExecutor._pascal_to_snake(data['service_name'])
-                    service_obj = getattr(acumatica_client, service_attr, None)
+        try:
+            # Get client connection to introspect method
+            acumatica_client = get_client_from_session(client_id)
+            if acumatica_client:
+                service_attr = EndpointExecutor._pascal_to_snake(data['service_name'])
+                service_obj = getattr(acumatica_client, service_attr, None)
 
-                    if service_obj:
-                        complete_schema = SchemaService.get_complete_schema(
-                            service_obj,
-                            data['method_name']
-                        )
-                        request_schema = complete_schema['request_schema']
-                        response_schema = complete_schema['response_schema']
-                    else:
-                        logger.warning(f"Service {data['service_name']} not found for schema generation")
+                if service_obj:
+                    complete_schema = SchemaService.get_complete_schema(
+                        service_obj,
+                        data['method_name']
+                    )
+                    request_schema = complete_schema['request_schema']
+                    response_schema = complete_schema['response_schema']
                 else:
-                    logger.warning(f"Client not connected, cannot auto-generate schema")
-            except Exception as e:
-                logger.warning(f"Failed to auto-generate schema: {e}")
+                    logger.warning(f"Service {data['service_name']} not found for schema generation")
+            else:
+                logger.warning(f"Client not connected, cannot generate schema")
+        except Exception as e:
+            logger.warning(f"Failed to generate schema: {e}")
 
         # Create endpoint
         endpoint = Endpoint(
@@ -166,7 +163,6 @@ def deploy_service(client_id):
     Request body:
         - service_name: Name of the service (required)
         - methods: Optional list of specific methods to deploy (if empty, deploys all)
-        - auto_generate_schema: Auto-generate schemas (default: true)
     """
     try:
         data = request.get_json()
@@ -231,17 +227,16 @@ def deploy_service(client_id):
                     })
                     continue
 
-                # Generate schema
+                # Always generate schemas
                 request_schema = {}
                 response_schema = {}
 
-                if data.get('auto_generate_schema', True):
-                    try:
-                        complete_schema = SchemaService.get_complete_schema(service_obj, method_name)
-                        request_schema = complete_schema['request_schema']
-                        response_schema = complete_schema['response_schema']
-                    except Exception as e:
-                        logger.warning(f"Failed to generate schema for {method_name}: {e}")
+                try:
+                    complete_schema = SchemaService.get_complete_schema(service_obj, method_name)
+                    request_schema = complete_schema['request_schema']
+                    response_schema = complete_schema['response_schema']
+                except Exception as e:
+                    logger.warning(f"Failed to generate schema for {method_name}: {e}")
 
                 # Create endpoint
                 endpoint = Endpoint(
