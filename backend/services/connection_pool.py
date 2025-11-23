@@ -104,6 +104,11 @@ class ConnectionPool:
         username = encryption.decrypt(client.encrypted_username)
         password = encryption.decrypt(client.encrypted_password)
 
+        # Check if decryption failed
+        if not username or not password:
+            logger.error(f"Failed to decrypt credentials for client {client_id}")
+            raise Exception(f"Failed to decrypt client credentials. The encryption key may have changed. Please delete and recreate this client.")
+
         # Create Acumatica client
         acumatica_client = AcumaticaClient(
             base_url=client.base_url,

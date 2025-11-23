@@ -17,6 +17,8 @@ declare module 'vue' {
     EmptyState: typeof import('./components/EmptyState.vue')['default']
     EndpointBuilder: typeof import('./components/EndpointBuilder.vue')['default']
     LoadingState: typeof import('./components/LoadingState.vue')['default']
+    LogEntry: typeof import('./components/LogEntry.vue')['default']
+    LogViewer: typeof import('./components/LogViewer.vue')['default']
     NavigationRail: typeof import('./components/NavigationRail.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

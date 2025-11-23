@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AcuNexus Database Restore Script
+# Orbu Database Restore Script
 
 set -e
 
@@ -15,7 +15,7 @@ print_error() { echo -e "${RED}✗ $1${NC}"; }
 print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
 
 echo "=========================================="
-echo "     AcuNexus Database Restore"
+echo "     Orbu Database Restore"
 echo "=========================================="
 echo
 
@@ -28,7 +28,7 @@ else
 fi
 
 # Check if container is running
-if ! docker ps | grep -q acunexus-postgres; then
+if ! docker ps | grep -q orbu-postgres; then
     print_error "PostgreSQL container is not running."
     echo "Please start the services with: docker compose up -d"
     exit 1
@@ -44,7 +44,7 @@ fi
 
 echo "Available backups:"
 echo
-ls -lh "$BACKUP_DIR"/acunexus_backup_*.sql* 2>/dev/null | awk '{print NR". "$9" ("$5")"}'
+ls -lh "$BACKUP_DIR"/orbu_backup_*.sql* 2>/dev/null | awk '{print NR". "$9" ("$5")"}'
 
 if [ $? -ne 0 ]; then
     print_error "No backups found in $BACKUP_DIR"
@@ -56,7 +56,7 @@ read -p "Enter the backup file path (or number from list): " BACKUP_CHOICE
 
 # If user entered a number, get the actual filename
 if [[ "$BACKUP_CHOICE" =~ ^[0-9]+$ ]]; then
-    BACKUP_FILE=$(ls "$BACKUP_DIR"/acunexus_backup_*.sql* 2>/dev/null | sed -n "${BACKUP_CHOICE}p")
+    BACKUP_FILE=$(ls "$BACKUP_DIR"/orbu_backup_*.sql* 2>/dev/null | sed -n "${BACKUP_CHOICE}p")
 else
     BACKUP_FILE="$BACKUP_CHOICE"
 fi
@@ -103,12 +103,12 @@ docker compose stop backend
 
 # Drop and recreate database
 echo "Preparing database for restore..."
-docker exec acunexus-postgres psql -U ${POSTGRES_USER:-acunexus} -c "DROP DATABASE IF EXISTS ${POSTGRES_DB:-acunexus};"
-docker exec acunexus-postgres psql -U ${POSTGRES_USER:-acunexus} -c "CREATE DATABASE ${POSTGRES_DB:-acunexus};"
+docker exec orbu-postgres psql -U ${POSTGRES_USER:-orbu} -c "DROP DATABASE IF EXISTS ${POSTGRES_DB:-orbu};"
+docker exec orbu-postgres psql -U ${POSTGRES_USER:-orbu} -c "CREATE DATABASE ${POSTGRES_DB:-orbu};"
 
 # Restore backup
 echo "Restoring database..."
-docker exec -i acunexus-postgres psql -U ${POSTGRES_USER:-acunexus} ${POSTGRES_DB:-acunexus} < "$BACKUP_FILE"
+docker exec -i orbu-postgres psql -U ${POSTGRES_USER:-orbu} ${POSTGRES_DB:-orbu} < "$BACKUP_FILE"
 
 if [ $? -eq 0 ]; then
     print_success "Database restored successfully!"

@@ -30,7 +30,7 @@ export const useSettingsStore = defineStore('settings', () => {
   // Actions
   function loadSettings() {
     try {
-      const saved = localStorage.getItem('acunexus_settings');
+      const saved = localStorage.getItem('orbu_settings');
       if (saved) {
         const settings: SettingsState = JSON.parse(saved);
         autoConnectMode.value = settings.autoConnectMode || 'manual';
@@ -49,7 +49,7 @@ export const useSettingsStore = defineStore('settings', () => {
         defaultClientId: defaultClientId.value,
         lastConnectedClientId: lastConnectedClientId.value,
       };
-      localStorage.setItem('acunexus_settings', JSON.stringify(settings));
+      localStorage.setItem('orbu_settings', JSON.stringify(settings));
     } catch (error) {
       console.error('Failed to save settings:', error);
     }

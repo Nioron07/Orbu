@@ -243,17 +243,33 @@ export const useEndpointsStore = defineStore('endpoints', () => {
   }
 
   /**
-   * Get execution logs for an endpoint
+   * Get execution logs for an endpoint with filtering
    */
-  async function loadEndpointLogs(endpointId: string, limit: number = 100) {
+  async function loadEndpointLogs(
+    endpointId: string,
+    options: {
+      limit?: number;
+      offset?: number;
+      status?: number;
+      search?: string;
+      since?: string;
+      until?: string;
+    } = {}
+  ) {
     isLoading.value = true
     error.value = null
 
     try {
-      const response = await clientApi.getEndpointLogs(endpointId, limit)
+      const response = await clientApi.getEndpointLogs(endpointId, options)
       if (response.success) {
         endpointLogs.value = response.logs
-        return { success: true, logs: response.logs }
+        return {
+          success: true,
+          logs: response.logs,
+          total: response.total,
+          count: response.count,
+          offset: response.offset
+        }
       } else {
         error.value = response.error || 'Failed to load logs'
         return { success: false, error: error.value }

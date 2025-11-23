@@ -5,7 +5,7 @@
       <div>
         <h1 class="text-h5 font-weight-bold">Settings</h1>
         <p class="text-caption text-medium-emphasis mb-0">
-          Configure your AcuNexus preferences
+          Configure your Orbu preferences
         </p>
       </div>
     </div>

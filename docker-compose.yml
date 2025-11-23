@@ -1,24 +1,24 @@
-version: '3.8'
+name: orbu
 
 services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: acunexus-postgres
+    container_name: orbu-postgres
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-acunexus}
-      POSTGRES_USER: ${POSTGRES_USER:-acunexus}
+      POSTGRES_DB: ${POSTGRES_DB:-orbu}
+      POSTGRES_USER: ${POSTGRES_USER:-orbu}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-acunexus}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-orbu}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - acunexus-network
+      - orbu-network
     ports:
       - "${POSTGRES_PORT:-5432}:5432"  # Expose for development, remove in production
 
@@ -27,22 +27,21 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: acunexus-backend
+    container_name: orbu-backend
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       # Flask settings
-      FLASK_ENV: ${FLASK_ENV:-production}
       SECRET_KEY: ${SECRET_KEY:-generate-a-secure-secret-key}
 
       # Database connection
-      DATABASE_URL: postgresql://${POSTGRES_USER:-acunexus}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-acunexus}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-orbu}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-orbu}
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB:-acunexus}
-      POSTGRES_USER: ${POSTGRES_USER:-acunexus}
+      POSTGRES_DB: ${POSTGRES_DB:-orbu}
+      POSTGRES_USER: ${POSTGRES_USER:-orbu}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
 
       # Encryption key for credentials
@@ -55,16 +54,15 @@ services:
       DOCKER_ENV: "true"
     volumes:
       - ./backend:/app  # Read-only mount for code (development)
-      - backend_logs:/app/logs
       - backend_sessions:/app/flask_session  # Session storage
     networks:
-      - acunexus-network
+      - orbu-network
     command: gunicorn --bind 0.0.0.0:5000 --workers 1 --timeout 120 --reload app:app
 
   # Frontend Builder
   frontend:
     image: node:20-alpine
-    container_name: acunexus-frontend
+    container_name: orbu-frontend
     restart: "no"  # Only runs to build, then exits
     working_dir: /app
     volumes:
@@ -72,13 +70,13 @@ services:
       - frontend_dist:/app/dist  # Share dist output
       - /app/node_modules  # Prevent overwriting node_modules
     networks:
-      - acunexus-network
+      - orbu-network
     command: sh -c "npm ci --silent && npm run build && echo 'Build completed successfully'"
 
   # Nginx Reverse Proxy & Static File Server
   nginx:
     image: nginx:alpine
-    container_name: acunexus-nginx
+    container_name: orbu-nginx
     restart: unless-stopped
     ports:
       - "${NGINX_PORT:-8080}:80"
@@ -94,36 +92,15 @@ services:
       backend:
         condition: service_started
     networks:
-      - acunexus-network
+      - orbu-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Frontend builder (development only)
-  frontend-dev:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: acunexus-frontend-dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules  # Prevent node_modules from being overwritten
-    environment:
-      - VITE_API_URL=http://localhost:8080/api
-    command: npm run dev -- --host 0.0.0.0
-    ports:
-      - "3000:3000"
-    networks:
-      - acunexus-network
-    profiles:
-      - development
-
 volumes:
   postgres_data:
-    driver: local
-  backend_logs:
     driver: local
   backend_sessions:
     driver: local
@@ -133,7 +110,7 @@ volumes:
     driver: local
 
 networks:
-  acunexus-network:
+  orbu-network:
     driver: bridge
     ipam:
       config:

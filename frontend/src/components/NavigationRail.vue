@@ -2,8 +2,12 @@
   <v-navigation-drawer rail expand-on-hover permanent class="navigation-rail gradient-sidebar">
     <!-- Logo Section -->
     <v-list>
-      <v-list-item prepend-avatar="@/assets/AcuNexus_Logo_Small.png">
-        <v-list-item-title class="logo-text ml-3">AcuNexus</v-list-item-title></v-list-item>
+      <v-list-item>
+        <v-avatar>
+      <v-img
+        src="..\assets\Orbu_Small_Transparent_Logo.png"
+      ></v-img></v-avatar>
+      </v-list-item>
     </v-list>
     <v-divider class="my-2"></v-divider>
 

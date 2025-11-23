@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# AcuNexus Setup Script
-# This script helps set up the AcuNexus Docker environment
+# Orbu Setup Script
+# This script helps set up the Orbu Docker environment
 
 set -e
 
 echo "=========================================="
-echo "     AcuNexus Docker Setup Script"
+echo "     Orbu Docker Setup Script"
 echo "=========================================="
 echo
 
@@ -47,44 +47,16 @@ setup_env() {
     if [ ! -f .env ]; then
         print_info "Creating .env file from template..."
         cp .env.example .env
+        print_success ".env file created"
 
-        # Generate encryption key
-        print_info "Generating encryption key..."
-        ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" 2>/dev/null || echo "")
-
-        if [ -z "$ENCRYPTION_KEY" ]; then
-            print_warning "Could not generate encryption key automatically."
-            print_info "Please run: python3 -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
-            print_info "And add it to your .env file as ENCRYPTION_KEY="
+        # Use the dedicated key generation script
+        print_info "Generating encryption and secret keys..."
+        if command -v python3 &> /dev/null; then
+            python3 scripts/generate_keys.py
+            print_success "Keys generated and saved to .env file"
         else
-            # Update .env file with generated key
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                sed -i '' "s/ENCRYPTION_KEY=your-encryption-key-here/ENCRYPTION_KEY=$ENCRYPTION_KEY/" .env
-            else
-                # Linux
-                sed -i "s/ENCRYPTION_KEY=your-encryption-key-here/ENCRYPTION_KEY=$ENCRYPTION_KEY/" .env
-            fi
-            print_success "Encryption key generated and saved"
-        fi
-
-        # Generate secret key
-        print_info "Generating Flask secret key..."
-        SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))" 2>/dev/null || echo "")
-
-        if [ -z "$SECRET_KEY" ]; then
-            print_warning "Could not generate secret key automatically."
-            print_info "Please generate a secure secret key and add it to your .env file"
-        else
-            # Update .env file with generated key
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                sed -i '' "s/SECRET_KEY=your-secret-key-here-generate-with-script/SECRET_KEY=$SECRET_KEY/" .env
-            else
-                # Linux
-                sed -i "s/SECRET_KEY=your-secret-key-here-generate-with-script/SECRET_KEY=$SECRET_KEY/" .env
-            fi
-            print_success "Secret key generated and saved"
+            print_warning "Python3 not found. Skipping key generation."
+            print_info "Please run: python3 scripts/generate_keys.py"
         fi
 
         print_warning "Please review and update the .env file with your specific settings"
@@ -94,36 +66,10 @@ setup_env() {
     fi
 }
 
-# Build frontend
-build_frontend() {
-    print_info "Building frontend..."
-
-    if [ ! -d "frontend/dist" ]; then
-        cd frontend
-
-        # Install dependencies
-        if [ ! -d "node_modules" ]; then
-            print_info "Installing frontend dependencies..."
-            npm install
-        fi
-
-        # Build for production
-        print_info "Building frontend for production..."
-        npm run build
-
-        cd ..
-        print_success "Frontend built successfully"
-    else
-        print_success "Frontend dist folder already exists"
-    fi
-}
-
 # Create necessary directories
 create_directories() {
     print_info "Creating necessary directories..."
-    mkdir -p frontend/dist
-    mkdir -p backend/logs
-    mkdir -p nginx/logs
+    mkdir -p backups
     print_success "Directories created"
 }
 
@@ -148,7 +94,7 @@ wait_for_services() {
     # Wait for PostgreSQL
     echo -n "Waiting for PostgreSQL..."
     for i in {1..30}; do
-        if docker exec acunexus-postgres pg_isready -U acunexus &> /dev/null; then
+        if docker exec orbu-postgres pg_isready -U orbu &> /dev/null; then
             echo " Ready!"
             break
         fi
@@ -172,7 +118,7 @@ wait_for_services() {
 
 # Main setup flow
 main() {
-    echo "Starting AcuNexus setup..."
+    echo "Starting Orbu setup..."
     echo
 
     # Check prerequisites
@@ -185,13 +131,6 @@ main() {
     # Create directories
     create_directories
 
-    # Build frontend (optional, can be skipped if using development mode)
-    read -p "Do you want to build the frontend for production? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        build_frontend
-    fi
-
     # Start services
     read -p "Do you want to start the Docker services now? (y/n) " -n 1 -r
     echo
@@ -203,7 +142,7 @@ main() {
         print_success "Setup completed successfully!"
         echo
         echo "=========================================="
-        echo "AcuNexus is now running!"
+        echo "Orbu is now running!"
         echo
         echo "Access the application at:"
         echo "  → http://localhost:8080"

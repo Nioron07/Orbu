@@ -7,10 +7,13 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime, timedelta, timezone
 from easy_acumatica import AcumaticaClient
 import uuid
+import logging
 
 from database import db
 from models import Client, ConnectionLog, ClientMetadataCache
 from encryption import get_encryption_service
+
+logger = logging.getLogger(__name__)
 
 # Create blueprint
 clients_bp = Blueprint('clients', __name__, url_prefix='/api/v1/clients')
@@ -334,115 +337,6 @@ def delete_client(client_id):
         }), 500
 
 
-@clients_bp.route('/<uuid:client_id>/test', methods=['POST'])
-def test_client_connection(client_id):
-    """
-    Test connection to a client without storing the session.
-
-    Args:
-        client_id: UUID of the client
-
-    Returns:
-        JSON response with connection test result
-    """
-    try:
-        client = Client.query.get(client_id)
-        if not client:
-            return jsonify({
-                'success': False,
-                'error': 'Client not found'
-            }), 404
-
-        # Decrypt credentials
-        encryption = get_encryption_service()
-        username = encryption.decrypt(client.encrypted_username)
-        password = encryption.decrypt(client.encrypted_password)
-
-        # Create temporary client to test connection
-        test_kwargs = {
-            'base_url': client.base_url,
-            'username': username,
-            'password': password,
-            'tenant': client.tenant,
-            'persistent_login': False,  # Don't persist for test
-            'retry_on_idle_logout': False,
-            'cache_methods': False  # Don't cache for test
-        }
-
-        # Only add optional parameters if they have values
-        if client.branch:
-            test_kwargs['branch'] = client.branch
-        if client.endpoint_name:
-            test_kwargs['endpoint_name'] = client.endpoint_name
-        if client.endpoint_version:
-            test_kwargs['endpoint_version'] = client.endpoint_version
-        if client.locale:
-            test_kwargs['locale'] = client.locale
-        if client.verify_ssl is not None:
-            test_kwargs['verify_ssl'] = client.verify_ssl
-        if client.timeout:
-            test_kwargs['timeout'] = client.timeout
-        if client.rate_limit_calls_per_second:
-            test_kwargs['rate_limit_calls_per_second'] = client.rate_limit_calls_per_second
-
-        acumatica_client = AcumaticaClient(**test_kwargs)
-
-        # Try to login
-        try:
-            acumatica_client.login()
-            session_info = {
-                'user': username,
-                'company': client.tenant,
-                'branch': client.branch or 'Default',
-                'endpoint': client.endpoint_name
-            }
-
-            # Log successful test
-            log = ConnectionLog(
-                client_id=client_id,
-                event_type='test',
-                success=True,
-                user_agent=request.headers.get('User-Agent'),
-                ip_address=request.remote_addr,
-                session_info=session_info
-            )
-            db.session.add(log)
-            db.session.commit()
-
-            # Logout immediately since this is just a test
-            acumatica_client.logout()
-
-            return jsonify({
-                'success': True,
-                'message': 'Connection successful',
-                'session_info': session_info
-            }), 200
-
-        except Exception as login_error:
-            # Log failed test
-            log = ConnectionLog(
-                client_id=client_id,
-                event_type='test',
-                success=False,
-                error_message=str(login_error),
-                user_agent=request.headers.get('User-Agent'),
-                ip_address=request.remote_addr
-            )
-            db.session.add(log)
-            db.session.commit()
-
-            return jsonify({
-                'success': False,
-                'error': f'Connection failed: {str(login_error)}'
-            }), 400
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
 @clients_bp.route('/<uuid:client_id>/connect', methods=['POST'])
 def connect_to_client(client_id):
     """
@@ -482,6 +376,16 @@ def connect_to_client(client_id):
         encryption = get_encryption_service()
         username = encryption.decrypt(client.encrypted_username)
         password = encryption.decrypt(client.encrypted_password)
+
+        # Check if decryption failed
+        if not username or not password:
+            logger.error(f"Failed to decrypt credentials for client {client_id}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to decrypt client credentials. The encryption key may have changed. Please delete and recreate this client with the current encryption key.'
+            }), 500
+
+        logger.info(f"Connecting to client {client_id}: base_url={client.base_url}, tenant={client.tenant}")
 
         # Create AcumaticaClient instance
         connect_kwargs = {

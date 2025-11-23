@@ -1,5 +1,5 @@
 """
-API Key Authentication Middleware for AcuNexus
+API Key Authentication Middleware for Orbu
 """
 
 from functools import wraps

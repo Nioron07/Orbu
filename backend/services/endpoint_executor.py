@@ -117,6 +117,8 @@ class EndpointExecutor:
                 executed_at=datetime.now(timezone.utc),
                 duration_ms=duration_ms,
                 status_code=200,
+                request_method=request.method,
+                request_path=request.path,
                 ip_address=EndpointExecutor._get_client_ip(),
                 user_agent=request.headers.get('User-Agent'),
                 request_data=request_body,
@@ -150,6 +152,8 @@ class EndpointExecutor:
                     duration_ms=duration_ms,
                     status_code=500,
                     error_message=str(e),
+                    request_method=request.method,
+                    request_path=request.path,
                     ip_address=EndpointExecutor._get_client_ip(),
                     user_agent=request.headers.get('User-Agent'),
                     request_data=request_body
