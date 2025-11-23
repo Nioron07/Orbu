@@ -1,5 +1,5 @@
 """
-AcuNexus Backend API
+Orbu Backend API
 Flask application for managing multiple Acumatica connections
 """
 
@@ -8,7 +8,6 @@ import sys
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_session import Session
-from dotenv import load_dotenv
 import logging
 from datetime import timedelta
 
@@ -18,9 +17,8 @@ from encryption import init_encryption
 from api.clients import clients_bp
 from api.endpoints import endpoints_bp
 from services.connection_pool import init_connection_pool
-
-# Load environment variables
-load_dotenv()
+from services.log_cleanup import log_cleanup_service
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Configure logging
 logging.basicConfig(
@@ -93,7 +91,7 @@ def health_check():
 def root():
     """Root endpoint"""
     return jsonify({
-        "name": "AcuNexus API",
+        "name": "Orbu API",
         "version": "2.0.0",
         "description": "Multi-client Acumatica management system",
         "endpoints": {
@@ -113,6 +111,20 @@ with app.app_context():
         # Initialize connection pool
         init_connection_pool()
         logger.info("Connection pool initialized")
+
+        # Initialize background scheduler for log cleanup
+        scheduler = BackgroundScheduler()
+        # Run cleanup every hour
+        scheduler.add_job(
+            func=log_cleanup_service.cleanup_old_logs,
+            trigger='interval',
+            hours=1,
+            id='log_cleanup',
+            name='Clean up old endpoint execution logs',
+            replace_existing=True
+        )
+        scheduler.start()
+        logger.info("Background scheduler started for log cleanup (runs every hour)")
 
     except Exception as e:
         logger.error(f"Failed to initialize application: {e}")

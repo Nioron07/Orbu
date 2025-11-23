@@ -9,15 +9,6 @@
       class="gradient-app-bar"
       height="64"
     >
-      <!-- Logo and Brand -->
-      <div class="d-flex align-center px-4">
-        <v-img
-          src="@/assets/AcuNexus_Logo_Big.png"
-          class="app-logo mr-3"
-          height="50"
-          width="150"
-        />
-      </div>
 
       <v-spacer />
 
@@ -127,7 +118,7 @@ async function handleAutoConnect() {
 // Load theme preference, settings, and clients
 onMounted(async () => {
   // Load saved theme or default to dark
-  const savedTheme = (localStorage.getItem('acunexus_theme') as 'light' | 'dark') || 'dark';
+  const savedTheme = (localStorage.getItem('orbu_theme') as 'light' | 'dark') || 'dark';
   appStore.setTheme(savedTheme);
   theme.global.name.value = savedTheme;
 

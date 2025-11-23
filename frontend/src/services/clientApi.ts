@@ -98,6 +98,7 @@ export interface Endpoint {
   request_schema: any;
   response_schema: any;
   is_active: boolean;
+  log_retention_hours: number;
   url_path: string;
   created_at: string;
   updated_at: string;
@@ -121,8 +122,12 @@ export interface EndpointExecution {
   duration_ms: number;
   status_code: number;
   error_message?: string;
+  request_method?: string;
+  request_path?: string;
   ip_address?: string;
   user_agent?: string;
+  request_data?: any;
+  response_data?: any;
 }
 
 export interface CreateEndpointRequest {
@@ -140,6 +145,7 @@ export interface DeployServiceRequest {
   service_name: string;
   methods?: string[];
   auto_generate_schema?: boolean;
+  log_retention_hours?: number;
 }
 
 class ClientApiService {
@@ -397,10 +403,28 @@ class ClientApiService {
   }
 
   /**
-   * Get execution logs for an endpoint
+   * Get execution logs for an endpoint with filtering
    */
-  async getEndpointLogs(endpointId: string, limit: number = 100) {
-    const response = await this.axiosInstance.get(`/v1/endpoints/${endpointId}/logs`, { params: { limit } });
+  async getEndpointLogs(
+    endpointId: string,
+    options: {
+      limit?: number;
+      offset?: number;
+      status?: number;
+      search?: string;
+      since?: string;
+      until?: string;
+    } = {}
+  ) {
+    const params = {
+      limit: options.limit || 50,
+      offset: options.offset || 0,
+      ...(options.status && { status: options.status }),
+      ...(options.search && { search: options.search }),
+      ...(options.since && { since: options.since }),
+      ...(options.until && { until: options.until }),
+    };
+    const response = await this.axiosInstance.get(`/v1/endpoints/${endpointId}/logs`, { params });
     return response.data;
   }
 

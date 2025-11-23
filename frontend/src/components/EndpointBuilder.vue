@@ -48,6 +48,7 @@
                 :headers="headers"
                 :items="filteredServices"
                 :loading="loadingServices"
+                loading-text="Loading services and method details..."
                 :items-per-page="-1"
                 density="compact"
                 item-value="name"
@@ -191,6 +192,22 @@
               </v-list>
             </div>
 
+            <!-- Deployment Settings -->
+            <div v-if="selectedCount > 0 && !deploymentResult" class="pa-6 border-t">
+              <div class="text-subtitle-2 mb-3">Deployment Settings</div>
+              <v-text-field
+                v-model.number="logRetentionHours"
+                type="number"
+                label="Log Retention (hours)"
+                hint="How long to keep execution logs"
+                persistent-hint
+                variant="outlined"
+                density="compact"
+                :min="1"
+                :max="8760"
+              />
+            </div>
+
             <!-- Deployment result -->
             <div v-if="deploymentResult" class="pa-6 border-t">
               <v-alert
@@ -275,6 +292,7 @@ const selectedMethods = ref<Record<string, string[]>>({})
 // Deployment
 const deploying = ref(false)
 const deploymentResult = ref<any>(null)
+const logRetentionHours = ref(24) // Default 24 hours
 
 // Table headers
 const headers = [
@@ -405,7 +423,8 @@ async function deployEndpoints() {
         return endpointsStore.deployService(props.clientId, {
           service_name: serviceName,
           methods: methods,
-          auto_generate_schema: true
+          auto_generate_schema: true,
+          log_retention_hours: logRetentionHours.value
         })
       })
 
@@ -445,6 +464,7 @@ function resetForm() {
   selectedMethods.value = {}
   deploymentResult.value = null
   expanded.value = []
+  logRetentionHours.value = 24
 }
 
 function close() {

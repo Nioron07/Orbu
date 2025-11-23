@@ -9,8 +9,8 @@
         <!-- Left: App Name and Version -->
         <v-col cols="auto">
           <div class="d-flex align-center gap-2">
-            <span class="text-subtitle-2 font-weight-bold">AcuNexus</span>
-            <v-chip size="x-small" variant="tonal" color="primary">v0.1.2</v-chip>
+            <span class="text-subtitle-2 font-weight-bold">Orbu</span>
+            <v-chip size="x-small" variant="tonal" color="primary">v0.1.3</v-chip>
           </div>
         </v-col>
 
@@ -19,7 +19,7 @@
           <div class="d-flex align-center gap-4">
             <!-- GitHub Repo -->
             <v-btn
-              href="https://github.com/Nioron07/AcuNexus"
+              href="https://github.com/Nioron07/Orbu"
               target="_blank"
               variant="text"
               size="small"
@@ -49,7 +49,7 @@
 
             <!-- License -->
             <v-btn
-              href="https://github.com/Nioron07/AcuNexus/blob/main/LICENSE"
+              href="https://github.com/Nioron07/Orbu/blob/main/LICENSE"
               target="_blank"
               variant="text"
               size="small"
@@ -64,7 +64,7 @@
         <!-- Right: Report Issue -->
         <v-col cols="auto">
           <v-btn
-            href="https://github.com/Nioron07/AcuNexus/issues/new"
+            href="https://github.com/Nioron07/Orbu/issues/new"
             target="_blank"
             variant="tonal"
             size="small"

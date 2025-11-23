@@ -1,5 +1,5 @@
 """
-Utility functions for the AcuNexus backend
+Utility functions for the Orbu backend
 """
 
 from flask import session

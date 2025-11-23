@@ -1,5 +1,5 @@
 """
-Database models for AcuNexus.
+Database models for Orbu.
 """
 
 import uuid
@@ -213,6 +213,9 @@ class Endpoint(db.Model):
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
 
+    # Log retention (in hours, default 24 hours)
+    log_retention_hours = Column(Integer, default=24, nullable=False)
+
     # Metadata
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -241,6 +244,7 @@ class Endpoint(db.Model):
             'request_schema': self.request_schema,
             'response_schema': self.response_schema,
             'is_active': self.is_active,
+            'log_retention_hours': self.log_retention_hours,
             'url_path': self.get_url_path(),
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
@@ -269,6 +273,8 @@ class EndpointExecution(db.Model):
     error_message = Column(Text)
 
     # Request context
+    request_method = Column(String(10))  # GET, POST, PUT, DELETE, etc.
+    request_path = Column(String(500))
     ip_address = Column(String(45))
     user_agent = Column(Text)
 
@@ -288,8 +294,12 @@ class EndpointExecution(db.Model):
             'duration_ms': self.duration_ms,
             'status_code': self.status_code,
             'error_message': self.error_message,
+            'request_method': self.request_method,
+            'request_path': self.request_path,
             'ip_address': self.ip_address,
             'user_agent': self.user_agent,
+            'request_data': self.request_data,
+            'response_data': self.response_data,
         }
 
     def __repr__(self):

@@ -6,7 +6,7 @@ Manages deployed endpoints for exposing Acumatica service methods as REST APIs.
 
 import logging
 from flask import Blueprint, request, jsonify
-from models import Endpoint, Client
+from models import Endpoint, Client, EndpointExecution
 from database import db
 from auth import require_api_key
 from services.endpoint_executor import EndpointExecutor
@@ -136,7 +136,8 @@ def create_endpoint(client_id):
             description=data.get('description'),
             request_schema=request_schema,
             response_schema=response_schema,
-            is_active=data.get('is_active', True)
+            is_active=data.get('is_active', True),
+            log_retention_hours=data.get('log_retention_hours', 24)
         )
 
         db.session.add(endpoint)
@@ -163,6 +164,7 @@ def deploy_service(client_id):
     Request body:
         - service_name: Name of the service (required)
         - methods: Optional list of specific methods to deploy (if empty, deploys all)
+        - log_retention_hours: Optional retention period for logs (default: 24)
     """
     try:
         data = request.get_json()
@@ -246,7 +248,8 @@ def deploy_service(client_id):
                     display_name=f"{data['service_name']}.{method_name}",
                     request_schema=request_schema,
                     response_schema=response_schema,
-                    is_active=True
+                    is_active=True,
+                    log_retention_hours=data.get('log_retention_hours', 24)
                 )
 
                 db.session.add(endpoint)
@@ -317,6 +320,7 @@ def update_endpoint(endpoint_id):
         - description
         - request_schema
         - response_schema
+        - log_retention_hours
     """
     try:
         endpoint = Endpoint.query.get(endpoint_id)
@@ -335,6 +339,8 @@ def update_endpoint(endpoint_id):
             endpoint.request_schema = data['request_schema']
         if 'response_schema' in data:
             endpoint.response_schema = data['response_schema']
+        if 'log_retention_hours' in data:
+            endpoint.log_retention_hours = data['log_retention_hours']
 
         db.session.commit()
 
@@ -429,10 +435,15 @@ def deactivate_endpoint(endpoint_id):
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>/logs', methods=['GET'])
 def get_endpoint_logs(endpoint_id):
     """
-    Get execution logs for an endpoint.
+    Get execution logs for an endpoint with filtering and pagination.
 
     Query params:
-        - limit: Number of logs to return (default: 100, max: 1000)
+        - limit: Number of logs to return (default: 50, max: 100)
+        - offset: Number of logs to skip (default: 0)
+        - status: Filter by status code (e.g., 200, 500)
+        - search: Search in error_message, request_data, response_data
+        - since: ISO timestamp - only logs after this time
+        - until: ISO timestamp - only logs before this time
     """
     try:
         endpoint = Endpoint.query.get(endpoint_id)
@@ -440,14 +451,56 @@ def get_endpoint_logs(endpoint_id):
         if not endpoint:
             return jsonify({'success': False, 'error': 'Endpoint not found'}), 404
 
-        limit = min(int(request.args.get('limit', 100)), 1000)
+        # Parse query parameters
+        limit = min(int(request.args.get('limit', 50)), 100)
+        offset = int(request.args.get('offset', 0))
+        status_filter = request.args.get('status')
+        search_query = request.args.get('search', '').strip()
+        since = request.args.get('since')
+        until = request.args.get('until')
 
-        logs = EndpointExecutor.get_execution_logs(str(endpoint_id), limit=limit)
+        # Build query
+        query = EndpointExecution.query.filter_by(endpoint_id=endpoint_id)
+
+        # Apply filters
+        if status_filter:
+            query = query.filter(EndpointExecution.status_code == int(status_filter))
+
+        if since:
+            from dateutil import parser
+            since_dt = parser.isoparse(since)
+            query = query.filter(EndpointExecution.executed_at >= since_dt)
+
+        if until:
+            from dateutil import parser
+            until_dt = parser.isoparse(until)
+            query = query.filter(EndpointExecution.executed_at <= until_dt)
+
+        if search_query:
+            # Search in error_message and JSON fields
+            search_filter = db.or_(
+                EndpointExecution.error_message.ilike(f'%{search_query}%'),
+                EndpointExecution.request_data.cast(db.String).ilike(f'%{search_query}%'),
+                EndpointExecution.response_data.cast(db.String).ilike(f'%{search_query}%')
+            )
+            query = query.filter(search_filter)
+
+        # Get total count before pagination
+        total_count = query.count()
+
+        # Apply pagination and ordering
+        logs = query.order_by(EndpointExecution.executed_at.desc())\
+            .offset(offset)\
+            .limit(limit)\
+            .all()
 
         return jsonify({
             'success': True,
-            'logs': logs,
-            'count': len(logs)
+            'logs': [log.to_dict() for log in logs],
+            'count': len(logs),
+            'total': total_count,
+            'offset': offset,
+            'limit': limit
         })
 
     except Exception as e:

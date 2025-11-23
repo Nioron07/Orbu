@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# AcuNexus Database Backup Script
+# Orbu Database Backup Script
 
 set -e
 
 # Configuration
 BACKUP_DIR="./backups"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="acunexus_backup_${TIMESTAMP}.sql"
-ENCRYPTED_BACKUP_FILE="acunexus_backup_${TIMESTAMP}.sql.enc"
+BACKUP_FILE="orbu_backup_${TIMESTAMP}.sql"
+ENCRYPTED_BACKUP_FILE="orbu_backup_${TIMESTAMP}.sql.enc"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -24,7 +24,7 @@ print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
 mkdir -p "$BACKUP_DIR"
 
 echo "=========================================="
-echo "     AcuNexus Database Backup"
+echo "     Orbu Database Backup"
 echo "=========================================="
 echo
 
@@ -37,7 +37,7 @@ else
 fi
 
 # Check if container is running
-if ! docker ps | grep -q acunexus-postgres; then
+if ! docker ps | grep -q orbu-postgres; then
     print_error "PostgreSQL container is not running."
     echo "Please start the services with: docker compose up -d"
     exit 1
@@ -45,7 +45,7 @@ fi
 
 # Create backup
 echo "Creating database backup..."
-docker exec acunexus-postgres pg_dump -U ${POSTGRES_USER:-acunexus} ${POSTGRES_DB:-acunexus} > "$BACKUP_DIR/$BACKUP_FILE"
+docker exec orbu-postgres pg_dump -U ${POSTGRES_USER:-orbu} ${POSTGRES_DB:-orbu} > "$BACKUP_DIR/$BACKUP_FILE"
 
 if [ $? -eq 0 ]; then
     print_success "Backup created: $BACKUP_DIR/$BACKUP_FILE"
@@ -73,7 +73,7 @@ if [ $? -eq 0 ]; then
 
     # Clean up old backups (keep last 7 days)
     echo "Cleaning up old backups..."
-    find "$BACKUP_DIR" -name "acunexus_backup_*.sql*" -mtime +7 -delete
+    find "$BACKUP_DIR" -name "orbu_backup_*.sql*" -mtime +7 -delete
     print_success "Old backups cleaned up (keeping last 7 days)"
 
     echo

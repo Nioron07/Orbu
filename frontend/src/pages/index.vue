@@ -6,7 +6,7 @@
         <div class="hero-section gradient-bg-subtle">
           <div class="hero-content">
             <h1 class="text-h3 font-weight-bold mb-4">
-              Welcome to <span class="gradient-text-primary">AcuNexus</span>
+              Welcome to <span class="gradient-text-primary">Orbu</span>
             </h1>
             <p class="text-h6 mb-6" style="opacity: 0.9;">
               Browse and explore your Acumatica REST API endpoints with an intuitive GUI

@@ -245,6 +245,12 @@
       :endpoint="endpointToTest"
     />
 
+    <!-- Log Viewer Dialog -->
+    <LogViewer
+      v-model="showLogsDialog"
+      :endpoint="endpointToViewLogs"
+    />
+
     <!-- Bulk Activate Confirmation Dialog -->
     <v-dialog v-model="showBulkActivateDialog" max-width="600">
       <v-card>
@@ -405,6 +411,7 @@ import type { Endpoint } from '@/services/clientApi'
 import EndpointBuilder from '@/components/EndpointBuilder.vue'
 import TestEndpointDialog from '@/components/TestEndpointDialog.vue'
 import SchemaViewer from '@/components/SchemaViewer.vue'
+import LogViewer from '@/components/LogViewer.vue'
 
 const clientsStore = useClientsStore()
 const endpointsStore = useEndpointsStore()
@@ -428,8 +435,10 @@ const showActivateDialog = ref(false)
 const showDeactivateDialog = ref(false)
 const showDeleteDialog = ref(false)
 const showTestDialog = ref(false)
+const showLogsDialog = ref(false)
 const endpointToAction = ref<Endpoint | null>(null)
 const endpointToTest = ref<Endpoint | null>(null)
+const endpointToViewLogs = ref<Endpoint | null>(null)
 
 // Computed
 const filteredEndpoints = computed(() => {
@@ -483,9 +492,9 @@ async function testEndpoint(endpoint: Endpoint) {
   showTestDialog.value = true
 }
 
-async function viewLogs(endpoint: Endpoint) {
-  // TODO: Implement logs dialog
-  showSnackbar('Logs viewer coming soon!', 'info')
+function viewLogs(endpoint: Endpoint) {
+  endpointToViewLogs.value = endpoint
+  showLogsDialog.value = true
 }
 
 function confirmActivateEndpoint(endpoint: Endpoint) {

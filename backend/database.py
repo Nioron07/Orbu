@@ -1,5 +1,5 @@
 """
-Database configuration and initialization for AcuNexus.
+Database configuration and initialization for Orbu.
 """
 
 import os
@@ -23,11 +23,11 @@ def init_database(app):
     # Handle Docker Compose PostgreSQL URL format
     if not database_url:
         # Build URL from individual components for local development
-        db_user = os.getenv('POSTGRES_USER', 'acunexus')
+        db_user = os.getenv('POSTGRES_USER', 'orbu')
         db_pass = os.getenv('POSTGRES_PASSWORD', 'changeme')
         db_host = os.getenv('POSTGRES_HOST', 'localhost')
         db_port = os.getenv('POSTGRES_PORT', '5432')
-        db_name = os.getenv('POSTGRES_DB', 'acunexus')
+        db_name = os.getenv('POSTGRES_DB', 'orbu')
         database_url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
     # SQLAlchemy configuration

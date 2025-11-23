@@ -1,6 +1,6 @@
-# AcuNexus
+# Orbu
 
-AcuNexus is a self-hosted web application for managing multiple Acumatica ERP instances and deploying REST API endpoints. Built on [Easy-Acumatica](https://github.com/Nioron07/Easy-Acumatica), a Python library for simplified Acumatica REST API integration.
+Orbu is a self-hosted integration studio for Acumatica ERP. Manage multiple Acumatica instances and deploy REST API endpoints with ease. Built on [Easy-Acumatica](https://github.com/Nioron07/Easy-Acumatica), a Python library for simplified Acumatica REST API integration.
 
 ## Features
 
@@ -18,40 +18,84 @@ AcuNexus is a self-hosted web application for managing multiple Acumatica ERP in
 - **Database**: PostgreSQL
 - **Deployment**: Docker Compose
 
-## Setup
+## Quick Start
 
-### 1. Clone Repository
+### Automated Setup (Recommended)
 
-```bash
-git clone https://github.com/Nioron07/AcuNexus.git
-cd AcuNexus
+**Windows (PowerShell):**
+```powershell
+# Clone repository
+git clone https://github.com/Nioron07/Orbu.git
+cd Orbu
+
+# Run setup script
+.\scripts\setup.ps1
 ```
 
-### 2. Configure Environment
-
+**Linux/macOS (Bash):**
 ```bash
-# Copy environment template
-cp .env.example .env
+# Clone repository
+git clone https://github.com/Nioron07/Orbu.git
+cd Orbu
 
-# Generate encryption key
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-
-# Update .env with generated keys
+# Run setup script
+bash scripts/setup.sh
 ```
 
-### 3. Start Services
+The setup script will:
+- Check Docker and Docker Compose installation
+- Create `.env` file from template
+- Generate encryption and secret keys
+- Start all services
+- Wait for services to be healthy
 
-```bash
-# Build and start all services
+Access the application at http://localhost:8080
+
+### Manual Setup
+
+If you prefer manual setup:
+
+**Windows (PowerShell):**
+```powershell
+# 1. Clone repository
+git clone https://github.com/Nioron07/Orbu.git
+cd Orbu
+
+# 2. Create and configure environment
+Copy-Item .env.example .env
+python scripts/generate_keys.py  # Generates keys and saves to .env
+
+# 3. Update database password in .env (important!)
+# Edit .env and change POSTGRES_PASSWORD to a secure password
+
+# 4. Start services
 docker compose up -d
 
-# Check status
+# 5. Check status
 docker compose ps
 ```
 
-### 4. Access Application
+**Linux/macOS (Bash):**
+```bash
+# 1. Clone repository
+git clone https://github.com/Nioron07/Orbu.git
+cd Orbu
 
-Open http://localhost:8080 in your browser.
+# 2. Create and configure environment
+cp .env.example .env
+python3 scripts/generate_keys.py  # Generates keys and saves to .env
+
+# 3. Update database password in .env (important!)
+# Edit .env and change POSTGRES_PASSWORD to a secure password
+
+# 4. Start services
+docker compose up -d
+
+# 5. Check status
+docker compose ps
+```
+
+Access the application at http://localhost:8080
 
 ## Usage
 
@@ -103,8 +147,8 @@ Key environment variables in `.env`:
 
 ```env
 # Database
-POSTGRES_DB=acunexus
-POSTGRES_USER=acunexus
+POSTGRES_DB=orbu
+POSTGRES_USER=orbu
 POSTGRES_PASSWORD=your-secure-password
 
 # Encryption (REQUIRED)

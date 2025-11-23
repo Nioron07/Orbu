@@ -1,3 +1,3 @@
 """
-Services package for AcuNexus
+Services package for Orbu
 """
