@@ -61,6 +61,7 @@
                   <v-checkbox-btn
                     :model-value="isServiceSelected(item.name)"
                     :indeterminate="isServiceIndeterminate(item.name)"
+                    :disabled="isServiceFullyDeployed(item.name)"
                     @click.stop="toggleService(item.name)"
                   />
                 </template>
@@ -75,9 +76,19 @@
 
                 <!-- Method count -->
                 <template #item.method_count="{ item }">
-                  <v-chip size="small" variant="tonal">
-                    {{ item.method_count }} method{{ item.method_count === 1 ? '' : 's' }}
-                  </v-chip>
+                  <div class="d-flex align-center gap-1">
+                    <v-chip size="small" variant="tonal">
+                      {{ item.method_count }} method{{ item.method_count === 1 ? '' : 's' }}
+                    </v-chip>
+                    <v-chip
+                      v-if="getAvailableMethodsCount(item.name) < item.method_count"
+                      size="small"
+                      color="success"
+                      variant="tonal"
+                    >
+                      {{ item.method_count - getAvailableMethodsCount(item.name) }} deployed
+                    </v-chip>
+                  </div>
                 </template>
 
                 <!-- Expanded row content (methods) -->
@@ -89,10 +100,12 @@
                           v-for="method in item.methods"
                           :key="method.name"
                           class="method-item"
+                          :class="{ 'method-deployed': isMethodDeployed(item.name, method.name) }"
                         >
                           <template #prepend>
                             <v-checkbox-btn
                               :model-value="isMethodSelected(item.name, method.name)"
+                              :disabled="isMethodDeployed(item.name, method.name)"
                               @click.stop="toggleMethod(item.name, method.name)"
                             />
                           </template>
@@ -103,6 +116,15 @@
                           </v-list-item-title>
 
                           <template #append>
+                            <v-chip
+                              v-if="isMethodDeployed(item.name, method.name)"
+                              size="x-small"
+                              color="success"
+                              variant="tonal"
+                              class="mr-2"
+                            >
+                              Deployed
+                            </v-chip>
                             <v-chip
                               v-if="method.parameter_count > 0"
                               size="x-small"
@@ -264,11 +286,14 @@ import { clientApi } from '@/services/clientApi'
 
 interface Props {
   clientId: string
+  serviceGroupId: string
   clientConnected?: boolean
+  deployedMethods?: Record<string, string[]>
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  clientConnected: false
+  clientConnected: false,
+  deployedMethods: () => ({})
 })
 
 const emit = defineEmits<{
@@ -366,16 +391,31 @@ function isServiceSelected(serviceName: string): boolean {
   const service = services.value.find(s => s.name === serviceName)
   if (!service) return false
 
+  const deployedForService = props.deployedMethods[serviceName] || []
+  const availableMethods = service.methods.filter((m: any) => !deployedForService.includes(m.name))
+  if (availableMethods.length === 0) return false
+
   const selectedForService = selectedMethods.value[serviceName] || []
-  return selectedForService.length === service.methods.length && service.methods.length > 0
+  return availableMethods.every((m: any) => selectedForService.includes(m.name))
 }
 
 function isServiceIndeterminate(serviceName: string): boolean {
-  const selectedForService = selectedMethods.value[serviceName] || []
   const service = services.value.find(s => s.name === serviceName)
   if (!service) return false
 
-  return selectedForService.length > 0 && selectedForService.length < service.methods.length
+  const deployedForService = props.deployedMethods[serviceName] || []
+  const availableMethods = service.methods.filter((m: any) => !deployedForService.includes(m.name))
+  const selectedForService = selectedMethods.value[serviceName] || []
+
+  return selectedForService.length > 0 && selectedForService.length < availableMethods.length
+}
+
+function isServiceFullyDeployed(serviceName: string): boolean {
+  const service = services.value.find(s => s.name === serviceName)
+  if (!service) return false
+
+  const deployedForService = props.deployedMethods[serviceName] || []
+  return service.methods.every((m: any) => deployedForService.includes(m.name))
 }
 
 function isMethodSelected(serviceName: string, methodName: string): boolean {
@@ -383,18 +423,33 @@ function isMethodSelected(serviceName: string, methodName: string): boolean {
   return selectedForService.includes(methodName)
 }
 
+function isMethodDeployed(serviceName: string, methodName: string): boolean {
+  const deployedForService = props.deployedMethods[serviceName] || []
+  return deployedForService.includes(methodName)
+}
+
+function getAvailableMethodsCount(serviceName: string): number {
+  const service = services.value.find(s => s.name === serviceName)
+  if (!service) return 0
+  const deployedForService = props.deployedMethods[serviceName] || []
+  return service.methods.filter((m: any) => !deployedForService.includes(m.name)).length
+}
+
 function toggleService(serviceName: string) {
   const service = services.value.find(s => s.name === serviceName)
   if (!service) return
 
-  const isCurrentlySelected = isServiceSelected(serviceName)
+  const deployedForService = props.deployedMethods[serviceName] || []
+  const availableMethods = service.methods.filter((m: any) => !deployedForService.includes(m.name))
+  const selectedForService = selectedMethods.value[serviceName] || []
+  const allAvailableSelected = availableMethods.every((m: any) => selectedForService.includes(m.name))
 
-  if (isCurrentlySelected) {
+  if (allAvailableSelected) {
     // Deselect all methods
     selectedMethods.value[serviceName] = []
   } else {
-    // Select all methods
-    selectedMethods.value[serviceName] = service.methods.map((m: any) => m.name)
+    // Select all available (non-deployed) methods
+    selectedMethods.value[serviceName] = availableMethods.map((m: any) => m.name)
   }
 }
 
@@ -420,7 +475,7 @@ async function deployEndpoints() {
     const deploymentPromises = Object.entries(selectedMethods.value)
       .filter(([_, methods]) => methods.length > 0)
       .map(([serviceName, methods]) => {
-        return endpointsStore.deployService(props.clientId, {
+        return endpointsStore.deployService(props.clientId, props.serviceGroupId, {
           service_name: serviceName,
           methods: methods,
           auto_generate_schema: true,
@@ -488,6 +543,11 @@ function close() {
 
   &:hover {
     background-color: rgba(var(--v-theme-primary), 0.08);
+  }
+
+  &.method-deployed {
+    opacity: 0.6;
+    border-left-color: rgb(var(--v-theme-success));
   }
 }
 

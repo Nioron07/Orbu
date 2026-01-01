@@ -6,7 +6,7 @@ Manages deployed endpoints for exposing Acumatica service methods as REST APIs.
 
 import logging
 from flask import Blueprint, request, jsonify
-from models import Endpoint, Client, EndpointExecution
+from models import Endpoint, Client, EndpointExecution, ServiceGroup
 from database import db
 from auth import require_api_key
 from services.endpoint_executor import EndpointExecutor
@@ -24,10 +24,10 @@ endpoints_bp = Blueprint('endpoints', __name__, url_prefix='/api/v1')
 # Management Endpoints (for frontend - no API key required, uses sessions)
 # ============================================================================
 
-@endpoints_bp.route('/clients/<uuid:client_id>/endpoints', methods=['GET'])
-def list_client_endpoints(client_id):
+@endpoints_bp.route('/clients/<uuid:client_id>/service-groups/<uuid:service_group_id>/endpoints', methods=['GET'])
+def list_service_group_endpoints(client_id, service_group_id):
     """
-    List all endpoints for a specific client.
+    List all endpoints for a specific service group.
 
     Query params:
         - is_active: Filter by active status (true/false)
@@ -35,8 +35,13 @@ def list_client_endpoints(client_id):
         - method_name: Filter by method name
     """
     try:
+        # Check service group exists
+        service_group = ServiceGroup.query.filter_by(id=service_group_id, client_id=client_id).first()
+        if not service_group:
+            return jsonify({'success': False, 'error': 'Service group not found'}), 404
+
         # Build query
-        query = Endpoint.query.filter_by(client_id=client_id)
+        query = Endpoint.query.filter_by(service_group_id=service_group_id)
 
         # Apply filters
         if request.args.get('is_active'):
@@ -63,10 +68,10 @@ def list_client_endpoints(client_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@endpoints_bp.route('/clients/<uuid:client_id>/endpoints', methods=['POST'])
-def create_endpoint(client_id):
+@endpoints_bp.route('/clients/<uuid:client_id>/service-groups/<uuid:service_group_id>/endpoints', methods=['POST'])
+def create_endpoint(client_id, service_group_id):
     """
-    Create a single endpoint for a client.
+    Create a single endpoint for a service group.
 
     Request body:
         - service_name: Name of the Acumatica service (required)
@@ -84,14 +89,14 @@ def create_endpoint(client_id):
                 'error': 'service_name and method_name are required'
             }), 400
 
-        # Check if client exists
-        client = Client.query.get(client_id)
-        if not client:
-            return jsonify({'success': False, 'error': 'Client not found'}), 404
+        # Check if service group exists
+        service_group = ServiceGroup.query.filter_by(id=service_group_id, client_id=client_id).first()
+        if not service_group:
+            return jsonify({'success': False, 'error': 'Service group not found'}), 404
 
-        # Check if endpoint already exists
+        # Check if endpoint already exists in this service group
         existing = Endpoint.query.filter_by(
-            client_id=client_id,
+            service_group_id=service_group_id,
             service_name=data['service_name'],
             method_name=data['method_name']
         ).first()
@@ -99,7 +104,7 @@ def create_endpoint(client_id):
         if existing:
             return jsonify({
                 'success': False,
-                'error': 'Endpoint already exists for this service method'
+                'error': 'Endpoint already exists for this service method in this service group'
             }), 409
 
         # Always generate schemas from method signature
@@ -130,6 +135,7 @@ def create_endpoint(client_id):
         # Create endpoint
         endpoint = Endpoint(
             client_id=client_id,
+            service_group_id=service_group_id,
             service_name=data['service_name'],
             method_name=data['method_name'],
             display_name=data.get('display_name'),
@@ -156,10 +162,10 @@ def create_endpoint(client_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@endpoints_bp.route('/clients/<uuid:client_id>/endpoints/batch', methods=['POST'])
-def deploy_service(client_id):
+@endpoints_bp.route('/clients/<uuid:client_id>/service-groups/<uuid:service_group_id>/endpoints/batch', methods=['POST'])
+def deploy_service(client_id, service_group_id):
     """
-    Deploy all methods of a service as endpoints.
+    Deploy all methods of a service as endpoints in a service group.
 
     Request body:
         - service_name: Name of the service (required)
@@ -176,10 +182,10 @@ def deploy_service(client_id):
                 'error': 'service_name is required'
             }), 400
 
-        # Check if client exists and is connected
-        client = Client.query.get(client_id)
-        if not client:
-            return jsonify({'success': False, 'error': 'Client not found'}), 404
+        # Check if service group exists
+        service_group = ServiceGroup.query.filter_by(id=service_group_id, client_id=client_id).first()
+        if not service_group:
+            return jsonify({'success': False, 'error': 'Service group not found'}), 404
 
         # Get client connection
         acumatica_client = get_client_from_session(client_id)
@@ -215,9 +221,9 @@ def deploy_service(client_id):
 
         for method_name in methods_to_deploy:
             try:
-                # Check if already exists
+                # Check if already exists in this service group
                 existing = Endpoint.query.filter_by(
-                    client_id=client_id,
+                    service_group_id=service_group_id,
                     service_name=data['service_name'],
                     method_name=method_name
                 ).first()
@@ -225,7 +231,7 @@ def deploy_service(client_id):
                 if existing:
                     skipped_endpoints.append({
                         'method_name': method_name,
-                        'reason': 'Already exists'
+                        'reason': 'Already exists in this service group'
                     })
                     continue
 
@@ -243,6 +249,7 @@ def deploy_service(client_id):
                 # Create endpoint
                 endpoint = Endpoint(
                     client_id=client_id,
+                    service_group_id=service_group_id,
                     service_name=data['service_name'],
                     method_name=method_name,
                     display_name=f"{data['service_name']}.{method_name}",
@@ -523,9 +530,13 @@ def test_endpoint(endpoint_id):
 
         request_body = request.get_json() or {}
 
+        # Get service group name for the endpoint
+        service_group_name = endpoint.service_group.name if endpoint.service_group else 'default'
+
         # Execute the endpoint
         response, status_code = EndpointExecutor.execute_endpoint(
             str(endpoint.client_id),
+            service_group_name,
             endpoint.service_name,
             endpoint.method_name,
             request_body
@@ -542,11 +553,13 @@ def test_endpoint(endpoint_id):
 # Execution Endpoints (for external services - API key required)
 # ============================================================================
 
-@endpoints_bp.route('/endpoints/<uuid:client_id>/<service_name>/<method_name>', methods=['POST'])
+@endpoints_bp.route('/endpoints/<uuid:client_id>/<service_group_name>/<service_name>/<method_name>', methods=['POST'])
 @require_api_key
-def execute_endpoint(client_id, service_name, method_name):
+def execute_endpoint(client_id, service_group_name, service_name, method_name):
     """
     Execute a deployed endpoint (external API - requires API key).
+
+    URL structure: /api/v1/endpoints/{client_id}/{service_group_name}/{service_name}/{method_name}
 
     Headers:
         - X-API-Key: API key for the client
@@ -573,6 +586,7 @@ def execute_endpoint(client_id, service_name, method_name):
         # Execute the endpoint
         response, status_code = EndpointExecutor.execute_endpoint(
             str(client_id),
+            service_group_name,
             service_name,
             method_name,
             request_body

@@ -186,6 +186,56 @@ class ConnectionLog(db.Model):
         return f'<ConnectionLog {self.event_type} for client {self.client_id}>'
 
 
+class ServiceGroup(db.Model):
+    """
+    Represents a logical grouping of endpoints within a client.
+    Allows organizing endpoints into categories like 'Inventory App', 'Customer App', etc.
+    """
+    __tablename__ = 'service_groups'
+
+    # Primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Foreign key to client
+    client_id = Column(UUID(as_uuid=True), db.ForeignKey('clients.id', ondelete='CASCADE'), nullable=False)
+
+    # Service group information
+    name = Column(String(255), nullable=False)  # URL-safe slug, e.g., 'inventory-app'
+    display_name = Column(String(255))  # Human-readable name, e.g., 'Inventory App'
+    description = Column(Text)
+
+    # Status
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationship
+    client = db.relationship('Client', backref=db.backref('service_groups', lazy='dynamic', cascade='all, delete-orphan'))
+
+    # Unique constraint - one service group name per client
+    __table_args__ = (
+        db.UniqueConstraint('client_id', 'name', name='unique_service_group_per_client'),
+    )
+
+    def to_dict(self):
+        """Convert service group to dictionary for API responses."""
+        return {
+            'id': str(self.id),
+            'client_id': str(self.client_id),
+            'name': self.name,
+            'display_name': self.display_name,
+            'description': self.description,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+    def __repr__(self):
+        return f'<ServiceGroup {self.name} for client {self.client_id}>'
+
+
 class Endpoint(db.Model):
     """
     Represents a deployed endpoint that exposes an Acumatica service method as a REST API.
@@ -197,6 +247,9 @@ class Endpoint(db.Model):
 
     # Foreign key to client
     client_id = Column(UUID(as_uuid=True), db.ForeignKey('clients.id', ondelete='CASCADE'), nullable=False)
+
+    # Foreign key to service group
+    service_group_id = Column(UUID(as_uuid=True), db.ForeignKey('service_groups.id', ondelete='CASCADE'), nullable=False)
 
     # Service and method information
     service_name = Column(String(255), nullable=False)  # e.g., 'SalesOrder'
@@ -220,23 +273,28 @@ class Endpoint(db.Model):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationship
+    # Relationships
     client = db.relationship('Client', backref=db.backref('endpoints', lazy='dynamic', cascade='all, delete-orphan'))
+    service_group = db.relationship('ServiceGroup', backref=db.backref('endpoints', lazy='dynamic', cascade='all, delete-orphan'))
 
-    # Unique constraint - one endpoint per client/service/method combination
+    # Unique constraint - one endpoint per service_group/service/method combination
+    # This allows the same endpoint to exist in different service groups
     __table_args__ = (
-        db.UniqueConstraint('client_id', 'service_name', 'method_name', name='unique_endpoint_per_method'),
+        db.UniqueConstraint('service_group_id', 'service_name', 'method_name', name='unique_endpoint_per_service_group'),
     )
 
     def get_url_path(self):
         """Generate the URL path for this endpoint."""
-        return f"/api/v1/endpoints/{self.client_id}/{self.service_name}/{self.method_name}"
+        service_group_name = self.service_group.name if self.service_group else 'default'
+        return f"/api/v1/endpoints/{self.client_id}/{service_group_name}/{self.service_name}/{self.method_name}"
 
     def to_dict(self):
         """Convert endpoint to dictionary for API responses."""
         return {
             'id': str(self.id),
             'client_id': str(self.client_id),
+            'service_group_id': str(self.service_group_id),
+            'service_group_name': self.service_group.name if self.service_group else None,
             'service_name': self.service_name,
             'method_name': self.method_name,
             'display_name': self.display_name,

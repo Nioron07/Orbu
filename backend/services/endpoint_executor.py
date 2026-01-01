@@ -14,7 +14,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from flask import request
-from models import Endpoint, EndpointExecution, Client
+from models import Endpoint, EndpointExecution, Client, ServiceGroup
 from database import db
 from services.connection_pool import get_connection_pool
 
@@ -27,6 +27,7 @@ class EndpointExecutor:
     @staticmethod
     def execute_endpoint(
         client_id: str,
+        service_group_name: str,
         service_name: str,
         method_name: str,
         request_body: Dict[str, Any]
@@ -36,6 +37,7 @@ class EndpointExecutor:
 
         Args:
             client_id: UUID of the client
+            service_group_name: Name of the service group (URL slug)
             service_name: Name of the Acumatica service
             method_name: Name of the method to execute
             request_body: Request parameters from the POST body
@@ -48,9 +50,21 @@ class EndpointExecutor:
         execution_log = None
 
         try:
-            # Find the endpoint
-            endpoint = Endpoint.query.filter_by(
+            # Find the service group first
+            service_group = ServiceGroup.query.filter_by(
                 client_id=client_id,
+                name=service_group_name
+            ).first()
+
+            if not service_group:
+                return {
+                    'success': False,
+                    'error': f'Service group not found: {service_group_name}'
+                }, 404
+
+            # Find the endpoint within the service group
+            endpoint = Endpoint.query.filter_by(
+                service_group_id=service_group.id,
                 service_name=service_name,
                 method_name=method_name
             ).first()

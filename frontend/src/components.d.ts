@@ -25,6 +25,7 @@ declare module 'vue' {
     SchemaTree: typeof import('./components/SchemaTree.vue')['default']
     SchemaTreeNode: typeof import('./components/SchemaTreeNode.vue')['default']
     SchemaViewer: typeof import('./components/SchemaViewer.vue')['default']
+    ServiceGroupDialog: typeof import('./components/ServiceGroupDialog.vue')['default']
     TestEndpointDialog: typeof import('./components/TestEndpointDialog.vue')['default']
   }
 }

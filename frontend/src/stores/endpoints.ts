@@ -41,14 +41,14 @@ export const useEndpointsStore = defineStore('endpoints', () => {
   // Actions
 
   /**
-   * Load all endpoints for a client
+   * Load all endpoints for a service group
    */
-  async function loadEndpoints(clientId: string, filters?: { is_active?: boolean; service_name?: string; method_name?: string }) {
+  async function loadEndpoints(clientId: string, serviceGroupId: string, filters?: { is_active?: boolean; service_name?: string; method_name?: string }) {
     isLoading.value = true
     error.value = null
 
     try {
-      const response = await clientApi.listEndpoints(clientId, filters)
+      const response = await clientApi.listEndpoints(clientId, serviceGroupId, filters)
       if (response.success) {
         endpoints.value = response.endpoints
         return { success: true, endpoints: response.endpoints }
@@ -65,14 +65,14 @@ export const useEndpointsStore = defineStore('endpoints', () => {
   }
 
   /**
-   * Create a single endpoint
+   * Create a single endpoint in a service group
    */
-  async function createEndpoint(clientId: string, data: CreateEndpointRequest) {
+  async function createEndpoint(clientId: string, serviceGroupId: string, data: CreateEndpointRequest) {
     isDeploying.value = true
     error.value = null
 
     try {
-      const response = await clientApi.createEndpoint(clientId, data)
+      const response = await clientApi.createEndpoint(clientId, serviceGroupId, data)
       if (response.success) {
         endpoints.value.push(response.endpoint)
         return { success: true, endpoint: response.endpoint }
@@ -89,17 +89,17 @@ export const useEndpointsStore = defineStore('endpoints', () => {
   }
 
   /**
-   * Deploy all methods of a service as endpoints
+   * Deploy all methods of a service as endpoints in a service group
    */
-  async function deployService(clientId: string, data: DeployServiceRequest) {
+  async function deployService(clientId: string, serviceGroupId: string, data: DeployServiceRequest) {
     isDeploying.value = true
     error.value = null
 
     try {
-      const response = await clientApi.deployService(clientId, data)
+      const response = await clientApi.deployService(clientId, serviceGroupId, data)
       if (response.success) {
-        // Reload endpoints for this client
-        await loadEndpoints(clientId)
+        // Reload endpoints for this service group
+        await loadEndpoints(clientId, serviceGroupId)
         return {
           success: true,
           created: response.created,

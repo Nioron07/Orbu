@@ -59,6 +59,11 @@ const navigationItems = computed<NavigationItem[]>(() => [
     path: '/clients',
   },
   {
+    title: 'Service Groups',
+    icon: 'mdi-folder-multiple',
+    path: '/service-groups',
+  },
+  {
     title: 'Endpoints',
     icon: 'mdi-api',
     path: '/endpoints',

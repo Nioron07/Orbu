@@ -6,10 +6,41 @@
         <p class="text-medium-emphasis">Manage deployed API endpoints for your Acumatica services</p>
       </div>
       <v-spacer />
+
+      <!-- Service Group Selector -->
+      <v-select
+        v-if="clientsStore.activeClient && serviceGroups.length > 0"
+        :model-value="selectedServiceGroupId"
+        @update:model-value="handleServiceGroupChange"
+        :items="serviceGroupItems"
+        :loading="serviceGroupsStore.isLoading"
+        label="Service Group"
+        variant="outlined"
+        density="compact"
+        hide-details
+        class="mr-4"
+        style="max-width: 250px;"
+      >
+        <template #selection="{ item }">
+          <div class="d-flex align-center">
+            <v-icon start size="small" :color="selectedServiceGroup?.is_active ? 'success' : 'grey'">
+              mdi-folder
+            </v-icon>
+            {{ item.title }}
+          </div>
+        </template>
+        <template #item="{ item, props: itemProps }">
+          <v-list-item v-if="item.raw?.type !== 'divider'" v-bind="itemProps" />
+          <v-divider v-else class="my-1" />
+        </template>
+      </v-select>
+
       <EndpointBuilder
-        v-if="clientsStore.activeClient"
+        v-if="clientsStore.activeClient && selectedServiceGroupId"
         :client-id="clientsStore.activeClient.id!"
+        :service-group-id="selectedServiceGroupId"
         :client-connected="clientsStore.isConnected"
+        :deployed-methods="deployedMethods"
         @deployed="handleDeployed"
       />
     </div>
@@ -395,6 +426,15 @@
       </v-card>
     </v-dialog>
 
+    <!-- Service Group Dialog -->
+    <ServiceGroupDialog
+      v-model="showServiceGroupDialog"
+      :service-group="serviceGroupToEdit"
+      :client-id="clientsStore.activeClient?.id"
+      @saved="handleServiceGroupSaved"
+      @close="showServiceGroupDialog = false"
+    />
+
     <!-- Snackbar -->
     <v-snackbar v-model="snackbar" :color="snackbarColor">
       {{ snackbarMessage }}
@@ -406,15 +446,18 @@
 import { ref, computed, watch } from 'vue'
 import { useClientsStore } from '@/stores/clients'
 import { useEndpointsStore } from '@/stores/endpoints'
+import { useServiceGroupsStore } from '@/stores/serviceGroups'
 import { useClipboard } from '@vueuse/core'
-import type { Endpoint } from '@/services/clientApi'
+import type { Endpoint, ServiceGroup } from '@/services/clientApi'
 import EndpointBuilder from '@/components/EndpointBuilder.vue'
 import TestEndpointDialog from '@/components/TestEndpointDialog.vue'
 import SchemaViewer from '@/components/SchemaViewer.vue'
 import LogViewer from '@/components/LogViewer.vue'
+import ServiceGroupDialog from '@/components/ServiceGroupDialog.vue'
 
 const clientsStore = useClientsStore()
 const endpointsStore = useEndpointsStore()
+const serviceGroupsStore = useServiceGroupsStore()
 const { copy } = useClipboard()
 
 // State
@@ -426,6 +469,12 @@ const selectedEndpoints = ref<Endpoint[]>([]) // Array of endpoint objects
 const snackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
+
+// Service group state
+const selectedServiceGroupId = ref<string | null>(null)
+const showServiceGroupDialog = ref(false)
+const serviceGroupToEdit = ref<ServiceGroup | null>(null)
+const deployedMethods = ref<Record<string, string[]>>({})
 
 // Dialog state
 const showBulkActivateDialog = ref(false)
@@ -457,6 +506,36 @@ const filteredEndpoints = computed(() => {
 // Computed
 const selectedCount = computed(() => selectedEndpoints.value.length)
 
+const serviceGroups = computed(() => serviceGroupsStore.serviceGroups)
+
+const selectedServiceGroup = computed(() => {
+  if (!selectedServiceGroupId.value) return null
+  return serviceGroups.value.find(sg => sg.id === selectedServiceGroupId.value) || null
+})
+
+type ServiceGroupItem = {
+  title: string
+  value: string
+  props: { subtitle?: string; prependIcon?: string }
+  type?: 'divider'
+}
+
+const serviceGroupItems = computed((): ServiceGroupItem[] => {
+  const items: ServiceGroupItem[] = serviceGroups.value.map(sg => ({
+    title: sg.display_name || sg.name,
+    value: sg.id,
+    props: {
+      subtitle: sg.is_active ? `${sg.endpoint_count || 0} endpoints` : 'Inactive'
+    }
+  }))
+  // Add divider and "Create New" option
+  return [
+    ...items,
+    { type: 'divider', title: '', value: '', props: {} },
+    { title: 'Create New Service Group', value: '__create__', props: { prependIcon: 'mdi-plus' } }
+  ]
+})
+
 // Table headers
 const headers = [
   { title: 'Status', key: 'is_active', sortable: true },
@@ -466,14 +545,54 @@ const headers = [
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const }
 ]
 
-// Watch active client
+// Watch active client - load service groups
 watch(() => clientsStore.activeClient, async (client) => {
   if (client?.id) {
-    await endpointsStore.loadEndpoints(client.id)
+    // Load service groups for this client
+    await serviceGroupsStore.loadServiceGroups(client.id)
+    // Auto-select first service group if none selected
+    const firstGroup = serviceGroups.value[0]
+    if (firstGroup && !selectedServiceGroupId.value) {
+      selectedServiceGroupId.value = firstGroup.id
+    }
   } else {
     endpointsStore.endpoints = []
+    serviceGroupsStore.$reset()
+    selectedServiceGroupId.value = null
   }
 }, { immediate: true })
+
+// Watch selected service group - load endpoints
+watch(selectedServiceGroupId, async (serviceGroupId) => {
+  if (clientsStore.activeClient?.id && serviceGroupId && serviceGroupId !== '__create__') {
+    await endpointsStore.loadEndpoints(clientsStore.activeClient.id, serviceGroupId)
+    await loadDeployedMethods()
+  } else {
+    endpointsStore.endpoints = []
+    deployedMethods.value = {}
+  }
+})
+
+// Load deployed methods for filtering in EndpointBuilder
+async function loadDeployedMethods() {
+  if (!clientsStore.activeClient?.id || !selectedServiceGroupId.value) {
+    deployedMethods.value = {}
+    return
+  }
+
+  try {
+    const response = await serviceGroupsStore.getDeployedMethods(
+      clientsStore.activeClient.id,
+      selectedServiceGroupId.value
+    )
+    if (response.success) {
+      deployedMethods.value = response.deployed_methods || {}
+    }
+  } catch (error) {
+    console.error('Failed to load deployed methods:', error)
+    deployedMethods.value = {}
+  }
+}
 
 // Methods
 function copyUrl(url: string) {
@@ -546,10 +665,40 @@ async function deleteEndpoint(endpoint: Endpoint) {
 }
 
 async function handleDeployed() {
-  if (clientsStore.activeClient?.id) {
-    await endpointsStore.loadEndpoints(clientsStore.activeClient.id)
+  const clientId = clientsStore.activeClient?.id
+  if (clientId && selectedServiceGroupId.value) {
+    await endpointsStore.loadEndpoints(clientId, selectedServiceGroupId.value)
+    await loadDeployedMethods()
+    // Reload service groups to update endpoint counts
+    await serviceGroupsStore.loadServiceGroups(clientId)
   }
   showSnackbar('Endpoints deployed successfully!', 'success')
+}
+
+function handleServiceGroupChange(value: string | null) {
+  if (value === '__create__') {
+    // Reset selection and open create dialog
+    const firstGroup = serviceGroups.value[0]
+    selectedServiceGroupId.value = firstGroup?.id ?? null
+    serviceGroupToEdit.value = null
+    showServiceGroupDialog.value = true
+  } else {
+    selectedServiceGroupId.value = value
+  }
+}
+
+async function handleServiceGroupSaved() {
+  showServiceGroupDialog.value = false
+  const clientId = clientsStore.activeClient?.id
+  if (clientId) {
+    await serviceGroupsStore.loadServiceGroups(clientId)
+    // Select the newly created service group (it will be the first one due to desc ordering)
+    const firstGroup = serviceGroups.value[0]
+    if (firstGroup && !selectedServiceGroupId.value) {
+      selectedServiceGroupId.value = firstGroup.id
+    }
+  }
+  showSnackbar('Service group saved', 'success')
 }
 
 async function bulkActivate() {

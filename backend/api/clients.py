@@ -10,7 +10,7 @@ import uuid
 import logging
 
 from database import db
-from models import Client, ConnectionLog, ClientMetadataCache
+from models import Client, ConnectionLog, ClientMetadataCache, ServiceGroup
 from encryption import get_encryption_service
 
 logger = logging.getLogger(__name__)
@@ -183,6 +183,19 @@ def create_client():
         # Save to database
         db.session.add(client)
         db.session.commit()
+
+        # Create default service group for the client
+        default_service_group = ServiceGroup(
+            client_id=client.id,
+            name='default',
+            display_name='Default',
+            description='Default service group for endpoints',
+            is_active=True
+        )
+        db.session.add(default_service_group)
+        db.session.commit()
+
+        logger.info(f"Created client {client.id} with default service group")
 
         # Show full API key only on creation
         return jsonify({

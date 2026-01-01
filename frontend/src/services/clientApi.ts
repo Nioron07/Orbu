@@ -87,10 +87,32 @@ export interface ModelDetails {
   schema: any;
 }
 
+// Service Group interfaces
+export interface ServiceGroup {
+  id: string;
+  client_id: string;
+  name: string;
+  display_name?: string;
+  description?: string;
+  is_active: boolean;
+  endpoint_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateServiceGroupRequest {
+  name: string;
+  display_name?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
 // Endpoint interfaces
 export interface Endpoint {
   id: string;
   client_id: string;
+  service_group_id: string;
+  service_group_name?: string;
   service_name: string;
   method_name: string;
   display_name?: string;
@@ -336,29 +358,95 @@ class ClientApiService {
     return response.data;
   }
 
+  // ========== Service Group Management ==========
+
+  /**
+   * List all service groups for a client
+   */
+  async listServiceGroups(clientId: string, params?: { is_active?: boolean }) {
+    const response = await this.axiosInstance.get(`/v1/clients/${clientId}/service-groups`, { params });
+    return response.data;
+  }
+
+  /**
+   * Create a new service group
+   */
+  async createServiceGroup(clientId: string, data: CreateServiceGroupRequest) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/service-groups`, data);
+    return response.data;
+  }
+
+  /**
+   * Get service group details
+   */
+  async getServiceGroup(clientId: string, serviceGroupId: string) {
+    const response = await this.axiosInstance.get(`/v1/clients/${clientId}/service-groups/${serviceGroupId}`);
+    return response.data;
+  }
+
+  /**
+   * Update a service group
+   */
+  async updateServiceGroup(clientId: string, serviceGroupId: string, updates: Partial<ServiceGroup>) {
+    const response = await this.axiosInstance.put(`/v1/clients/${clientId}/service-groups/${serviceGroupId}`, updates);
+    return response.data;
+  }
+
+  /**
+   * Delete a service group
+   */
+  async deleteServiceGroup(clientId: string, serviceGroupId: string) {
+    const response = await this.axiosInstance.delete(`/v1/clients/${clientId}/service-groups/${serviceGroupId}`);
+    return response.data;
+  }
+
+  /**
+   * Activate a service group
+   */
+  async activateServiceGroup(clientId: string, serviceGroupId: string) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/service-groups/${serviceGroupId}/activate`);
+    return response.data;
+  }
+
+  /**
+   * Deactivate a service group
+   */
+  async deactivateServiceGroup(clientId: string, serviceGroupId: string) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/service-groups/${serviceGroupId}/deactivate`);
+    return response.data;
+  }
+
+  /**
+   * Get deployed methods for a service group (for filtering in deploy dialog)
+   */
+  async getDeployedMethods(clientId: string, serviceGroupId: string) {
+    const response = await this.axiosInstance.get(`/v1/clients/${clientId}/service-groups/${serviceGroupId}/deployed-methods`);
+    return response.data;
+  }
+
   // ========== Endpoint Management ==========
 
   /**
-   * List all endpoints for a client
+   * List all endpoints for a service group
    */
-  async listEndpoints(clientId: string, params?: { is_active?: boolean; service_name?: string; method_name?: string }) {
-    const response = await this.axiosInstance.get(`/v1/clients/${clientId}/endpoints`, { params });
+  async listEndpoints(clientId: string, serviceGroupId: string, params?: { is_active?: boolean; service_name?: string; method_name?: string }) {
+    const response = await this.axiosInstance.get(`/v1/clients/${clientId}/service-groups/${serviceGroupId}/endpoints`, { params });
     return response.data;
   }
 
   /**
-   * Create a single endpoint
+   * Create a single endpoint in a service group
    */
-  async createEndpoint(clientId: string, data: CreateEndpointRequest) {
-    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/endpoints`, data);
+  async createEndpoint(clientId: string, serviceGroupId: string, data: CreateEndpointRequest) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/service-groups/${serviceGroupId}/endpoints`, data);
     return response.data;
   }
 
   /**
-   * Deploy all methods of a service as endpoints
+   * Deploy all methods of a service as endpoints in a service group
    */
-  async deployService(clientId: string, data: DeployServiceRequest) {
-    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/endpoints/batch`, data);
+  async deployService(clientId: string, serviceGroupId: string, data: DeployServiceRequest) {
+    const response = await this.axiosInstance.post(`/v1/clients/${clientId}/service-groups/${serviceGroupId}/endpoints/batch`, data);
     return response.data;
   }
 
@@ -439,9 +527,9 @@ class ClientApiService {
   /**
    * Execute an endpoint using API key (for external services)
    */
-  async executeEndpoint(clientId: string, serviceName: string, methodName: string, requestBody: any, apiKey: string) {
+  async executeEndpoint(clientId: string, serviceGroupName: string, serviceName: string, methodName: string, requestBody: any, apiKey: string) {
     const response = await this.axiosInstance.post(
-      `/v1/endpoints/${clientId}/${serviceName}/${methodName}`,
+      `/v1/endpoints/${clientId}/${serviceGroupName}/${serviceName}/${methodName}`,
       requestBody,
       {
         headers: {

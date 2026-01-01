@@ -22,6 +22,7 @@ declare module 'vue-router/auto-routes' {
     '/clients/': RouteRecordInfo<'/clients/', '/clients', Record<never, never>, Record<never, never>>,
     '/endpoints/': RouteRecordInfo<'/endpoints/', '/endpoints', Record<never, never>, Record<never, never>>,
     '/ModelBrowser': RouteRecordInfo<'/ModelBrowser', '/ModelBrowser', Record<never, never>, Record<never, never>>,
+    '/service-groups/': RouteRecordInfo<'/service-groups/', '/service-groups', Record<never, never>, Record<never, never>>,
     '/ServiceBrowser': RouteRecordInfo<'/ServiceBrowser', '/ServiceBrowser', Record<never, never>, Record<never, never>>,
     '/settings': RouteRecordInfo<'/settings', '/settings', Record<never, never>, Record<never, never>>,
   }
@@ -51,6 +52,10 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/ModelBrowser.vue': {
       routes: '/ModelBrowser'
+      views: never
+    }
+    'src/pages/service-groups/index.vue': {
+      routes: '/service-groups/'
       views: never
     }
     'src/pages/ServiceBrowser.vue': {
