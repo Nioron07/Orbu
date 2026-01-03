@@ -528,12 +528,7 @@ const serviceGroupItems = computed((): ServiceGroupItem[] => {
       subtitle: sg.is_active ? `${sg.endpoint_count || 0} endpoints` : 'Inactive'
     }
   }))
-  // Add divider and "Create New" option
-  return [
-    ...items,
-    { type: 'divider', title: '', value: '', props: {} },
-    { title: 'Create New Service Group', value: '__create__', props: { prependIcon: 'mdi-plus' } }
-  ]
+  return items
 })
 
 // Table headers

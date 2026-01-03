@@ -125,7 +125,7 @@
 
           <!-- Actions Column -->
           <template v-slot:item.actions="{ item }">
-            <div class="d-flex gap-1 justify-end">
+            <div class="d-flex justify-end">
               <v-tooltip text="View Endpoints" location="top">
                 <template v-slot:activator="{ props }">
                   <v-btn
@@ -134,6 +134,7 @@
                     size="small"
                     variant="tonal"
                     color="primary"
+                    class="mr-2"
                     @click="viewEndpoints(item)"
                   />
                 </template>
@@ -146,6 +147,7 @@
                     icon="mdi-pencil"
                     size="small"
                     variant="tonal"
+                    class="mr-2"
                     @click="editServiceGroup(item)"
                   />
                 </template>

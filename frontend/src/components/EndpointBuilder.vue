@@ -22,10 +22,10 @@
       </v-card-title>
 
       <v-card-text class="pa-0">
-        <v-row no-gutters style="height: 700px;">
+        <v-row no-gutters class="dialog-content">
           <!-- Left side: Services table -->
-          <v-col cols="8" class="border-e">
-            <div class="pa-6">
+          <v-col cols="8" class="border-e d-flex flex-column">
+            <div class="pa-6 pb-0">
               <v-text-field
                 v-model="searchQuery"
                 prepend-inner-icon="mdi-magnify"
@@ -43,7 +43,9 @@
                   Please connect to the client first to browse available services.
                 </div>
               </v-alert>
+            </div>
 
+            <div class="services-table-container">
               <v-data-table
                 :headers="headers"
                 :items="filteredServices"
@@ -55,6 +57,8 @@
                 :expanded="expanded"
                 show-expand
                 class="services-table"
+                fixed-header
+                hide-default-footer
               >
                 <!-- Service checkbox column -->
                 <template #item.select="{ item }">
@@ -159,7 +163,7 @@
           </v-col>
 
           <!-- Right side: Shopping cart -->
-          <v-col cols="4" class="d-flex flex-column">
+          <v-col cols="4" class="d-flex flex-column cart-column">
             <div class="pa-6">
               <div class="text-h6 mb-4">
                 <v-icon start>mdi-cart</v-icon>
@@ -169,8 +173,8 @@
               <v-divider class="mb-4" />
             </div>
 
-            <!-- Selected methods list with fixed height -->
-            <div class="cart-list-container">
+            <!-- Selected methods list with scrollable area -->
+            <div class="cart-list-container flex-grow-1">
               <!-- Empty state -->
               <div v-if="selectedCount === 0" class="text-center py-8">
                 <v-icon size="48" color="grey-lighten-1">mdi-cart-outline</v-icon>
@@ -214,63 +218,66 @@
               </v-list>
             </div>
 
-            <!-- Deployment Settings -->
-            <div v-if="selectedCount > 0 && !deploymentResult" class="pa-6 border-t">
-              <div class="text-subtitle-2 mb-3">Deployment Settings</div>
-              <v-text-field
-                v-model.number="logRetentionHours"
-                type="number"
-                label="Log Retention (hours)"
-                hint="How long to keep execution logs"
-                persistent-hint
-                variant="outlined"
-                density="compact"
-                :min="1"
-                :max="8760"
-              />
-            </div>
+            <!-- Bottom sticky section -->
+            <div class="cart-footer">
+              <!-- Deployment Settings -->
+              <div v-if="selectedCount > 0 && !deploymentResult" class="pa-6 pt-4 border-t">
+                <div class="text-subtitle-2 mb-3">Deployment Settings</div>
+                <v-text-field
+                  v-model.number="logRetentionHours"
+                  type="number"
+                  label="Log Retention (hours)"
+                  hint="How long to keep execution logs"
+                  persistent-hint
+                  variant="outlined"
+                  density="compact"
+                  :min="1"
+                  :max="8760"
+                />
+              </div>
 
-            <!-- Deployment result -->
-            <div v-if="deploymentResult" class="pa-6 border-t">
-              <v-alert
-                :type="deploymentResult.success ? 'success' : 'error'"
-                variant="tonal"
-                density="comfortable"
-              >
-                <div class="text-subtitle-2 mb-2">{{ deploymentResult.message }}</div>
-                <div v-if="deploymentResult.summary" class="text-caption">
-                  <div class="mb-1">Created: {{ deploymentResult.summary.created_count }}</div>
-                  <div class="mb-1">Skipped: {{ deploymentResult.summary.skipped_count }}</div>
-                  <div v-if="deploymentResult.summary.error_count > 0">
-                    Errors: {{ deploymentResult.summary.error_count }}
+              <!-- Deployment result -->
+              <div v-if="deploymentResult" class="pa-6 pt-4 border-t">
+                <v-alert
+                  :type="deploymentResult.success ? 'success' : 'error'"
+                  variant="tonal"
+                  density="comfortable"
+                >
+                  <div class="text-subtitle-2 mb-2">{{ deploymentResult.message }}</div>
+                  <div v-if="deploymentResult.summary" class="text-caption">
+                    <div class="mb-1">Created: {{ deploymentResult.summary.created_count }}</div>
+                    <div class="mb-1">Skipped: {{ deploymentResult.summary.skipped_count }}</div>
+                    <div v-if="deploymentResult.summary.error_count > 0">
+                      Errors: {{ deploymentResult.summary.error_count }}
+                    </div>
                   </div>
-                </div>
-              </v-alert>
-            </div>
+                </v-alert>
+              </div>
 
-            <!-- Actions -->
-            <div class="pa-6 border-t">
-              <v-btn
-                v-if="!deploymentResult"
-                color="primary"
-                block
-                size="large"
-                :disabled="selectedCount === 0"
-                :loading="deploying"
-                @click="deployEndpoints"
-              >
-                <v-icon start>mdi-rocket-launch</v-icon>
-                Deploy {{ selectedCount }} Endpoint{{ selectedCount === 1 ? '' : 's' }}
-              </v-btn>
-              <v-btn
-                v-else
-                color="primary"
-                block
-                size="large"
-                @click="close"
-              >
-                Done
-              </v-btn>
+              <!-- Actions -->
+              <div class="pa-6 pt-4 border-t">
+                <v-btn
+                  v-if="!deploymentResult"
+                  color="primary"
+                  block
+                  size="large"
+                  :disabled="selectedCount === 0"
+                  :loading="deploying"
+                  @click="deployEndpoints"
+                >
+                  <v-icon start>mdi-rocket-launch</v-icon>
+                  Deploy {{ selectedCount }} Endpoint{{ selectedCount === 1 ? '' : 's' }}
+                </v-btn>
+                <v-btn
+                  v-else
+                  color="primary"
+                  block
+                  size="large"
+                  @click="close"
+                >
+                  Done
+                </v-btn>
+              </div>
             </div>
           </v-col>
         </v-row>
@@ -528,9 +535,36 @@ function close() {
 </script>
 
 <style scoped lang="scss">
+// Main dialog content with fixed height
+.dialog-content {
+  height: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+// Left column - services table
+.services-table-container {
+  flex: 1;
+  overflow: hidden;
+  padding: 0 24px 24px 24px;
+  min-height: 0;
+}
+
 .services-table {
+  height: 100%;
+
   :deep(.v-data-table__tr) {
     cursor: pointer;
+  }
+
+  :deep(.v-table__wrapper) {
+    max-height: 750px;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+  }
+
+  :deep(.v-data-table-footer) {
+    display: none;
   }
 }
 
@@ -551,11 +585,21 @@ function close() {
   }
 }
 
+// Right column - cart
+.cart-column {
+  max-height: 100%;
+  overflow: hidden;
+}
+
 .cart-list-container {
-  flex: 1;
-  max-height: 400px;
   overflow-y: auto;
   padding: 0 24px;
+  min-height: 0; // Important for flex scrolling
+}
+
+.cart-footer {
+  flex-shrink: 0;
+  background-color: rgb(var(--v-theme-surface));
 }
 
 .selected-method-item {

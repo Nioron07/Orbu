@@ -62,6 +62,13 @@ class EndpointExecutor:
                     'error': f'Service group not found: {service_group_name}'
                 }, 404
 
+            # Check if service group is active
+            if not service_group.is_active:
+                return {
+                    'success': False,
+                    'error': 'Service group is inactive'
+                }, 403
+
             # Find the endpoint within the service group
             endpoint = Endpoint.query.filter_by(
                 service_group_id=service_group.id,

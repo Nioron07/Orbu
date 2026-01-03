@@ -75,8 +75,25 @@ function Setup-Env {
         }
 
         if ($pythonCmd) {
-            & $pythonCmd scripts/generate_keys.py
-            Print-Success "Keys generated and saved to .env file"
+            # Install required package for key generation
+            Print-Info "Installing required Python package (cryptography)..."
+            & $pythonCmd -m pip install cryptography --quiet --disable-pip-version-check
+
+            if ($LASTEXITCODE -eq 0) {
+                & $pythonCmd scripts/generate_keys.py
+                if ($LASTEXITCODE -eq 0) {
+                    Print-Success "Keys generated and saved to .env file"
+                }
+                else {
+                    Print-Error "Failed to generate keys"
+                    Print-Info "Please run manually: python scripts/generate_keys.py"
+                }
+            }
+            else {
+                Print-Warning "Failed to install cryptography package"
+                Print-Info "Please install manually: pip install cryptography"
+                Print-Info "Then run: python scripts/generate_keys.py"
+            }
         }
         else {
             Print-Warning "Python not found. Skipping key generation."
