@@ -1,9 +1,16 @@
 """
 Client management API endpoints.
 Handles CRUD operations for Acumatica client configurations.
+
+Architecture:
+- Client configurations are stored in the database
+- Acumatica connections are managed via a per-instance connection pool
+- Connection state is tracked in the database for frontend visibility
+- Each Cloud Run instance maintains its own connection pool
+- Connections are created on-demand and cached for reuse
 """
 
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta, timezone
 from easy_acumatica import AcumaticaClient
 import uuid
@@ -12,61 +19,44 @@ import logging
 from database import db
 from models import Client, ConnectionLog, ClientMetadataCache, ServiceGroup
 from encryption import get_encryption_service
+from services.connection_pool import get_connection_pool
 
 logger = logging.getLogger(__name__)
 
 # Create blueprint
 clients_bp = Blueprint('clients', __name__, url_prefix='/api/v1/clients')
 
-# Store active client connections in memory (will be replaced with Redis in production)
-active_clients = {}
 
-
-def get_client_from_session(client_id):
+def get_client_connection(client_id):
     """
-    Get an active AcumaticaClient instance from session.
+    Get an Acumatica client connection from the pool.
+    Creates a new connection if one doesn't exist.
 
     Args:
         client_id: UUID of the client
 
     Returns:
-        AcumaticaClient instance or None
+        AcumaticaClient instance
+
+    Raises:
+        Exception if connection fails
     """
-    session_key = f'client_{client_id}'
-    return active_clients.get(session_key)
+    pool = get_connection_pool()
+    return pool.get_connection(str(client_id))
 
 
-def store_client_in_session(client_id, acumatica_client):
+def disconnect_client(client_id):
     """
-    Store an AcumaticaClient instance in session.
+    Disconnect a client from the pool.
 
     Args:
         client_id: UUID of the client
-        acumatica_client: AcumaticaClient instance
+
+    Returns:
+        True if disconnected, False if not in pool
     """
-    session_key = f'client_{client_id}'
-    active_clients[session_key] = acumatica_client
-    session['active_client_id'] = str(client_id)
-
-
-def remove_client_from_session(client_id):
-    """
-    Remove an AcumaticaClient instance from session.
-
-    Args:
-        client_id: UUID of the client
-    """
-    session_key = f'client_{client_id}'
-    if session_key in active_clients:
-        try:
-            # Try to logout gracefully
-            active_clients[session_key].logout()
-        except:
-            pass
-        del active_clients[session_key]
-
-    if 'active_client_id' in session and session['active_client_id'] == str(client_id):
-        del session['active_client_id']
+    pool = get_connection_pool()
+    return pool.disconnect(str(client_id))
 
 
 @clients_bp.route('', methods=['GET'])
@@ -282,21 +272,24 @@ def update_client(client_id):
 
         # Handle credential updates separately (need encryption)
         encryption = get_encryption_service()
+        credentials_changed = False
         if 'username' in data and data['username']:
             client.encrypted_username = encryption.encrypt(data['username'])
+            credentials_changed = True
         if 'password' in data and data['password']:
             client.encrypted_password = encryption.encrypt(data['password'])
+            credentials_changed = True
 
         # Update timestamp
         client.updated_at = datetime.now(timezone.utc)
 
-        # If client is currently connected and credentials changed, disconnect
-        if ('username' in data or 'password' in data) and get_client_from_session(client_id):
-            remove_client_from_session(client_id)
+        # If credentials changed, disconnect from pool to force reconnect with new credentials
+        if credentials_changed:
+            disconnect_client(client_id)
 
-        # If client is being deactivated and currently connected, disconnect
-        if 'is_active' in data and not data['is_active'] and get_client_from_session(client_id):
-            remove_client_from_session(client_id)
+        # If client is being deactivated, disconnect from pool
+        if 'is_active' in data and not data['is_active']:
+            disconnect_client(client_id)
 
         db.session.commit()
 
@@ -332,9 +325,8 @@ def delete_client(client_id):
                 'error': 'Client not found'
             }), 404
 
-        # Disconnect if connected
-        if get_client_from_session(client_id):
-            remove_client_from_session(client_id)
+        # Disconnect from pool if connected
+        disconnect_client(client_id)
 
         # Delete from database (cascade will handle related records)
         db.session.delete(client)
@@ -353,24 +345,21 @@ def delete_client(client_id):
 @clients_bp.route('/<uuid:client_id>/connect', methods=['POST'])
 def connect_to_client(client_id):
     """
-    Connect to a client and establish a session.
+    Connect to a client (validates credentials and adds to connection pool).
+
+    This endpoint:
+    1. Validates the client exists and is active
+    2. Attempts to establish an Acumatica connection
+    3. Stores the connection in the pool for reuse
+    4. Updates last_connected_at timestamp
 
     Args:
         client_id: UUID of the client
 
     Returns:
-        JSON response with session information
+        JSON response with connection status
     """
     try:
-        # Check if already connected
-        existing_client = get_client_from_session(client_id)
-        if existing_client:
-            return jsonify({
-                'success': True,
-                'message': 'Already connected to this client',
-                'client_id': str(client_id)
-            }), 200
-
         client = Client.query.get(client_id)
         if not client:
             return jsonify({
@@ -385,59 +374,11 @@ def connect_to_client(client_id):
                 'error': 'This client is currently inactive. Please activate it before connecting.'
             }), 403
 
-        # Decrypt credentials
-        encryption = get_encryption_service()
-        username = encryption.decrypt(client.encrypted_username)
-        password = encryption.decrypt(client.encrypted_password)
-
-        # Check if decryption failed
-        if not username or not password:
-            logger.error(f"Failed to decrypt credentials for client {client_id}")
-            return jsonify({
-                'success': False,
-                'error': 'Failed to decrypt client credentials. The encryption key may have changed. Please delete and recreate this client with the current encryption key.'
-            }), 500
-
         logger.info(f"Connecting to client {client_id}: base_url={client.base_url}, tenant={client.tenant}")
 
-        # Create AcumaticaClient instance
-        connect_kwargs = {
-            'base_url': client.base_url,
-            'username': username,
-            'password': password,
-            'tenant': client.tenant,
-        }
-
-        # Only add optional parameters if they have values
-        if client.branch:
-            connect_kwargs['branch'] = client.branch
-        if client.endpoint_name:
-            connect_kwargs['endpoint_name'] = client.endpoint_name
-        if client.endpoint_version:
-            connect_kwargs['endpoint_version'] = client.endpoint_version
-        if client.locale:
-            connect_kwargs['locale'] = client.locale
-        if client.verify_ssl is not None:
-            connect_kwargs['verify_ssl'] = client.verify_ssl
-        if client.persistent_login is not None:
-            connect_kwargs['persistent_login'] = client.persistent_login
-        if client.retry_on_idle_logout is not None:
-            connect_kwargs['retry_on_idle_logout'] = client.retry_on_idle_logout
-        if client.timeout:
-            connect_kwargs['timeout'] = client.timeout
-        if client.rate_limit_calls_per_second:
-            connect_kwargs['rate_limit_calls_per_second'] = client.rate_limit_calls_per_second
-        if client.cache_methods is not None:
-            connect_kwargs['cache_methods'] = client.cache_methods
-
-        acumatica_client = AcumaticaClient(**connect_kwargs)
-
-        # Try to login
+        # Try to get/create connection via pool
         try:
-            acumatica_client.login()
-
-            # Store in session
-            store_client_in_session(client_id, acumatica_client)
+            acumatica_client = get_client_connection(client_id)
 
             # Update last connected timestamp
             client.last_connected_at = datetime.now(timezone.utc)
@@ -493,7 +434,7 @@ def connect_to_client(client_id):
 @clients_bp.route('/<uuid:client_id>/disconnect', methods=['POST'])
 def disconnect_from_client(client_id):
     """
-    Disconnect from a client and clear session.
+    Disconnect from a client (removes from connection pool).
 
     Args:
         client_id: UUID of the client
@@ -502,16 +443,8 @@ def disconnect_from_client(client_id):
         JSON response confirming disconnection
     """
     try:
-        # Check if connected
-        acumatica_client = get_client_from_session(client_id)
-        if not acumatica_client:
-            return jsonify({
-                'success': True,
-                'message': 'Not connected to this client'
-            }), 200
-
-        # Remove from session
-        remove_client_from_session(client_id)
+        # Remove from pool
+        was_connected = disconnect_client(client_id)
 
         # Log disconnection
         log = ConnectionLog(
@@ -526,7 +459,7 @@ def disconnect_from_client(client_id):
 
         return jsonify({
             'success': True,
-            'message': 'Disconnected successfully'
+            'message': 'Disconnected successfully' if was_connected else 'Not connected to this client'
         }), 200
 
     except Exception as e:
@@ -561,44 +494,17 @@ def rebuild_client(client_id):
                 'error': 'Client not found'
             }), 404
 
-        was_connected = get_client_from_session(client_id) is not None
-
-        # Step 1: Disconnect if currently connected
-        if was_connected:
-            remove_client_from_session(client_id)
+        # Step 1: Disconnect from pool
+        was_connected = disconnect_client(client_id)
 
         # Step 2: Clear cached metadata (this invalidates the cache)
         ClientMetadataCache.query.filter_by(client_id=client_id).delete()
         db.session.commit()
 
-        # Step 3: Reconnect to get fresh client instance
+        # Step 3: Reconnect if client is active
         if client.is_active:
-            # Get decrypted credentials
-            encryption_service = get_encryption_service()
-            decrypted_username = encryption_service.decrypt(client.encrypted_username)
-            decrypted_password = encryption_service.decrypt(client.encrypted_password)
-
-            # Create new client instance with force_rebuild to bypass cache
-            client_kwargs = {
-                'base_url': client.base_url,
-                'username': decrypted_username,
-                'password': decrypted_password,
-                'tenant': client.tenant,
-                'force_rebuild': True  # Force rebuild to bypass any cached data
-            }
-
-            # Only add optional parameters if they have values
-            if client.branch:
-                client_kwargs['branch'] = client.branch
-            if client.endpoint_name:
-                client_kwargs['endpoint_name'] = client.endpoint_name
-            if client.endpoint_version:
-                client_kwargs['endpoint_version'] = client.endpoint_version
-
-            acumatica_client = AcumaticaClient(**client_kwargs)
-
-            # Store in session
-            store_client_in_session(client_id, acumatica_client)
+            pool = get_connection_pool()
+            pool.refresh_connection(str(client_id))
 
             # Update last connected timestamp
             client.last_connected_at = datetime.now(timezone.utc)
@@ -691,9 +597,8 @@ def deactivate_client(client_id):
                 'error': 'Client not found'
             }), 404
 
-        # Disconnect if currently connected
-        if get_client_from_session(client_id):
-            remove_client_from_session(client_id)
+        # Disconnect from pool
+        was_connected = disconnect_client(client_id)
 
         # Set client as inactive
         client.is_active = False
@@ -704,7 +609,7 @@ def deactivate_client(client_id):
             'success': True,
             'message': 'Client deactivated successfully',
             'client': client.to_dict(),
-            'was_connected': get_client_from_session(client_id) is not None
+            'was_connected': was_connected
         }), 200
 
     except Exception as e:
@@ -791,7 +696,8 @@ def regenerate_api_key(client_id):
 @clients_bp.route('/<uuid:client_id>/services', methods=['GET'])
 def list_client_services(client_id):
     """
-    List available services for a connected client.
+    List available services for a client.
+    Automatically connects if not already connected.
 
     Args:
         client_id: UUID of the client
@@ -803,13 +709,22 @@ def list_client_services(client_id):
         JSON response with list of services
     """
     try:
-        # Get active client
-        acumatica_client = get_client_from_session(client_id)
-        if not acumatica_client:
+        # Get client from database first to validate it exists
+        client = Client.query.get(client_id)
+        if not client:
             return jsonify({
                 'success': False,
-                'error': 'Client not connected. Please connect first.'
+                'error': 'Client not found'
+            }), 404
+
+        if not client.is_active:
+            return jsonify({
+                'success': False,
+                'error': 'Client is inactive. Please activate it first.'
             }), 400
+
+        # Get connection from pool (creates if needed)
+        acumatica_client = get_client_connection(client_id)
 
         # Check cache first
         cache_key = 'services_list'
@@ -875,7 +790,8 @@ def list_client_services(client_id):
 @clients_bp.route('/<uuid:client_id>/services/<service_name>', methods=['GET'])
 def get_client_service_details(client_id, service_name):
     """
-    Get details of a specific service for a connected client.
+    Get details of a specific service for a client.
+    Automatically connects if not already connected.
 
     Args:
         client_id: UUID of the client
@@ -884,18 +800,25 @@ def get_client_service_details(client_id, service_name):
     Returns:
         JSON response with service details
     """
-    import logging
     import inspect
-    logger = logging.getLogger(__name__)
 
     try:
-        # Get active client
-        acumatica_client = get_client_from_session(client_id)
-        if not acumatica_client:
+        # Get client from database first to validate it exists
+        client = Client.query.get(client_id)
+        if not client:
             return jsonify({
                 'success': False,
-                'error': 'Client not connected. Please connect first.'
+                'error': 'Client not found'
+            }), 404
+
+        if not client.is_active:
+            return jsonify({
+                'success': False,
+                'error': 'Client is inactive. Please activate it first.'
             }), 400
+
+        # Get connection from pool (creates if needed)
+        acumatica_client = get_client_connection(client_id)
 
         # Get the service object directly
         # Convert PascalCase service name to snake_case (no pluralization in 0.5.6+)
@@ -978,7 +901,8 @@ def get_client_service_details(client_id, service_name):
 @clients_bp.route('/<uuid:client_id>/models', methods=['GET'])
 def list_client_models(client_id):
     """
-    List available models for a connected client.
+    List available models for a client.
+    Automatically connects if not already connected.
 
     Args:
         client_id: UUID of the client
@@ -990,13 +914,22 @@ def list_client_models(client_id):
         JSON response with list of models
     """
     try:
-        # Get active client
-        acumatica_client = get_client_from_session(client_id)
-        if not acumatica_client:
+        # Get client from database first to validate it exists
+        client = Client.query.get(client_id)
+        if not client:
             return jsonify({
                 'success': False,
-                'error': 'Client not connected. Please connect first.'
+                'error': 'Client not found'
+            }), 404
+
+        if not client.is_active:
+            return jsonify({
+                'success': False,
+                'error': 'Client is inactive. Please activate it first.'
             }), 400
+
+        # Get connection from pool (creates if needed)
+        acumatica_client = get_client_connection(client_id)
 
         # Check cache first
         cache_key = 'models_list'
@@ -1061,7 +994,8 @@ def list_client_models(client_id):
 @clients_bp.route('/<uuid:client_id>/models/<model_name>', methods=['GET'])
 def get_client_model_details(client_id, model_name):
     """
-    Get details of a specific model for a connected client.
+    Get details of a specific model for a client.
+    Automatically connects if not already connected.
 
     Args:
         client_id: UUID of the client
@@ -1070,17 +1004,23 @@ def get_client_model_details(client_id, model_name):
     Returns:
         JSON response with model details
     """
-    import logging
-    logger = logging.getLogger(__name__)
-
     try:
-        # Get active client
-        acumatica_client = get_client_from_session(client_id)
-        if not acumatica_client:
+        # Get client from database first to validate it exists
+        client = Client.query.get(client_id)
+        if not client:
             return jsonify({
                 'success': False,
-                'error': 'Client not connected. Please connect first.'
+                'error': 'Client not found'
+            }), 404
+
+        if not client.is_active:
+            return jsonify({
+                'success': False,
+                'error': 'Client is inactive. Please activate it first.'
             }), 400
+
+        # Get connection from pool (creates if needed)
+        acumatica_client = get_client_connection(client_id)
 
         # Get the model class directly
         try:

@@ -15,85 +15,27 @@ Orbu is a self-hosted integration studio for Acumatica ERP. Manage multiple Acum
 
 - **Frontend**: Vue 3 + Vuetify 3 + TypeScript
 - **Backend**: Flask + SQLAlchemy + Easy-Acumatica
-- **Database**: PostgreSQL
-- **Deployment**: Docker Compose
+- **Database**: PostgreSQL (Cloud SQL in production)
+- **Deployment**: Docker Compose (local) / Cloud Run (production)
 
 ## Quick Start
 
-### Automated Setup (Recommended)
+**Prerequisites:** Docker and Docker Compose
 
-**Windows (PowerShell):**
-```powershell
-# Clone repository
-git clone https://github.com/Nioron07/Orbu.git
-cd Orbu
-
-# Run setup script
-.\scripts\setup.ps1
-```
-
-**Linux/macOS (Bash):**
 ```bash
 # Clone repository
 git clone https://github.com/Nioron07/Orbu.git
 cd Orbu
 
-# Run setup script
-bash scripts/setup.sh
-```
-
-The setup script will:
-- Check Docker and Docker Compose installation
-- Create `.env` file from template
-- Generate encryption and secret keys
-- Start all services
-- Wait for services to be healthy
-
-Access the application at http://localhost:8080
-
-### Manual Setup
-
-If you prefer manual setup:
-
-**Windows (PowerShell):**
-```powershell
-# 1. Clone repository
-git clone https://github.com/Nioron07/Orbu.git
-cd Orbu
-
-# 2. Create and configure environment
-Copy-Item .env.example .env
-python scripts/generate_keys.py  # Generates keys and saves to .env
-
-# 3. Update database password in .env (important!)
-# Edit .env and change POSTGRES_PASSWORD to a secure password
-
-# 4. Start services
+# Start Orbu
 docker compose up -d
-
-# 5. Check status
-docker compose ps
 ```
 
-**Linux/macOS (Bash):**
-```bash
-# 1. Clone repository
-git clone https://github.com/Nioron07/Orbu.git
-cd Orbu
-
-# 2. Create and configure environment
-cp .env.example .env
-python3 scripts/generate_keys.py  # Generates keys and saves to .env
-
-# 3. Update database password in .env (important!)
-# Edit .env and change POSTGRES_PASSWORD to a secure password
-
-# 4. Start services
-docker compose up -d
-
-# 5. Check status
-docker compose ps
-```
+The container will automatically:
+- Start PostgreSQL database
+- Generate encryption keys and secrets
+- Create database schema
+- Start Nginx (frontend) and Flask (backend)
 
 Access the application at http://localhost:8080
 
@@ -143,20 +85,119 @@ X-API-Key: {your-api-key}
 
 ## Configuration
 
-Key environment variables in `.env`:
+Configuration is optional. Sensible defaults are provided for local development.
+
+**Environment variables** (in `.env`):
 
 ```env
 # Database
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
 POSTGRES_DB=orbu
 POSTGRES_USER=orbu
-POSTGRES_PASSWORD=your-secure-password
+POSTGRES_PASSWORD=devpassword
 
-# Encryption (REQUIRED)
-ENCRYPTION_KEY=your-fernet-key
+# Application
+CORS_ORIGINS=*
+PORT=8080
 
-# Flask
-SECRET_KEY=your-secret-key
+# GCP (production only)
+# GCP_PROJECT_ID=your-project-id
 ```
+
+## GCP Production Deployment
+
+Orbu is designed for Google Cloud Run with Cloud SQL.
+
+### Prerequisites
+
+- GCP Project with billing enabled
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed
+- Docker installed
+
+### Automated Deployment (Recommended)
+
+Run the interactive deployment script:
+
+```bash
+python gcp/deploy.py
+```
+
+This script will:
+1. Create/configure Cloud SQL instance
+2. Setup Secret Manager (PostgreSQL password)
+3. Create service account with proper permissions
+4. Update cloudrun-service.yaml with your values
+5. Build and push Docker image
+6. Deploy to Cloud Run
+
+### Manual Deployment
+
+<details>
+<summary>Click to expand manual steps</summary>
+
+#### Setup Cloud SQL
+
+```bash
+# Create Cloud SQL instance
+gcloud sql instances create orbu-db \
+  --database-version=POSTGRES_15 \
+  --tier=db-f1-micro \
+  --region=us-central1
+
+# Create database
+gcloud sql databases create orbu --instance=orbu-db
+
+# Create user
+gcloud sql users create orbu --instance=orbu-db --password=YOUR_PASSWORD
+```
+
+#### Setup Secret Manager
+
+```bash
+# Store PostgreSQL password (must match Cloud SQL user password)
+echo -n "YOUR_PASSWORD" | gcloud secrets create orbu-postgres-password --data-file=-
+
+# Note: The encryption key is auto-generated on first deploy
+```
+
+#### Create Service Account
+
+```bash
+# Create service account
+gcloud iam service-accounts create orbu-sa
+
+# Grant Secret Manager Admin (to auto-create encryption key on first deploy)
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:orbu-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/secretmanager.admin"
+
+# Grant Cloud SQL access
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:orbu-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/cloudsql.client"
+```
+
+#### Build & Deploy
+
+```bash
+# Build and push image
+docker build -t gcr.io/${PROJECT_ID}/orbu:latest .
+docker push gcr.io/${PROJECT_ID}/orbu:latest
+
+# Update gcp/cloudrun-service.yaml with your values:
+# - <PROJECT_ID>
+# - <REGION>
+# - <INSTANCE_NAME>
+
+# Deploy
+gcloud run services replace gcp/cloudrun-service.yaml --region=us-central1
+
+# Get URL
+gcloud run services describe orbu --region=us-central1 --format='value(status.url)'
+```
+
+</details>
 
 ## Development
 
@@ -181,20 +222,21 @@ npm run dev
 ### View Logs
 
 ```bash
-# All services
-docker compose logs
-
-# Specific service
-docker compose logs backend
-docker compose logs frontend
+docker compose logs -f
 ```
 
-### Rebuild Services
+### Restart
 
 ```bash
-# Rebuild and restart
 docker compose down
 docker compose up -d --build
+```
+
+### Clean Slate
+
+```bash
+docker compose down -v
+docker compose up -d
 ```
 
 ## License

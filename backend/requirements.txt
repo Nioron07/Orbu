@@ -9,11 +9,7 @@ Flask-Migrate==4.0.5
 psycopg2-binary==2.9.9
 
 # Security & Encryption
-cryptography==41.0.7
-
-# Session Management
-Flask-Session==0.5.0
-redis==5.0.1
+cryptography>=42.0.0
 
 # Acumatica Integration
 easy-acumatica>=0.5.11
@@ -29,3 +25,7 @@ python-dateutil==2.8.2
 
 # Background Tasks
 APScheduler==3.10.4
+
+# GCP Integration
+google-cloud-secret-manager==2.17.0
+cloud-sql-python-connector[pg8000]==1.12.1

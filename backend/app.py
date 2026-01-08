@@ -7,9 +7,7 @@ import os
 import sys
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_session import Session
 import logging
-from datetime import timedelta
 
 # Import our modules
 from database import init_database
@@ -33,12 +31,6 @@ app = Flask(__name__)
 
 # Configuration
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-me')
-app.config['SESSION_TYPE'] = 'filesystem'  # Will upgrade to redis later
-app.config['SESSION_PERMANENT'] = False
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cookies to be sent with top-level navigation
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to cookies
 
 # CORS configuration - allow all origins in development, restrict in production
 cors_origins = os.getenv('CORS_ORIGINS', 'http://localhost:8080')
@@ -49,7 +41,6 @@ CORS(app,
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
 # Initialize extensions
-Session(app)
 db = init_database(app)
 init_encryption(app)
 

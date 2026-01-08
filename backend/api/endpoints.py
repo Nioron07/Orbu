@@ -11,7 +11,7 @@ from database import db
 from auth import require_api_key
 from services.endpoint_executor import EndpointExecutor
 from services.schema_service import SchemaService
-from api.clients import get_client_from_session
+from services.connection_pool import get_connection_pool
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -112,23 +112,21 @@ def create_endpoint(client_id, service_group_id):
         response_schema = {}
 
         try:
-            # Get client connection to introspect method
-            acumatica_client = get_client_from_session(client_id)
-            if acumatica_client:
-                service_attr = EndpointExecutor._pascal_to_snake(data['service_name'])
-                service_obj = getattr(acumatica_client, service_attr, None)
+            # Get client connection from pool to introspect method
+            pool = get_connection_pool()
+            acumatica_client = pool.get_connection(str(client_id))
+            service_attr = EndpointExecutor._pascal_to_snake(data['service_name'])
+            service_obj = getattr(acumatica_client, service_attr, None)
 
-                if service_obj:
-                    complete_schema = SchemaService.get_complete_schema(
-                        service_obj,
-                        data['method_name']
-                    )
-                    request_schema = complete_schema['request_schema']
-                    response_schema = complete_schema['response_schema']
-                else:
-                    logger.warning(f"Service {data['service_name']} not found for schema generation")
+            if service_obj:
+                complete_schema = SchemaService.get_complete_schema(
+                    service_obj,
+                    data['method_name']
+                )
+                request_schema = complete_schema['request_schema']
+                response_schema = complete_schema['response_schema']
             else:
-                logger.warning(f"Client not connected, cannot generate schema")
+                logger.warning(f"Service {data['service_name']} not found for schema generation")
         except Exception as e:
             logger.warning(f"Failed to generate schema: {e}")
 
@@ -187,12 +185,14 @@ def deploy_service(client_id, service_group_id):
         if not service_group:
             return jsonify({'success': False, 'error': 'Service group not found'}), 404
 
-        # Get client connection
-        acumatica_client = get_client_from_session(client_id)
-        if not acumatica_client:
+        # Get client connection from pool
+        try:
+            pool = get_connection_pool()
+            acumatica_client = pool.get_connection(str(client_id))
+        except Exception as e:
             return jsonify({
                 'success': False,
-                'error': 'Client not connected. Please connect to the client first.'
+                'error': f'Failed to connect to client: {str(e)}'
             }), 400
 
         # Get service object
