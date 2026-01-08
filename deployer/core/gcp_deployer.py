@@ -252,6 +252,14 @@ class GCPDeployer(BaseDeployer):
 
         return True
 
+    def _get_subprocess_flags(self) -> dict:
+        """Get platform-specific subprocess flags to hide console window on Windows."""
+        flags = {}
+        if os.name == 'nt':
+            # Hide console window on Windows
+            flags['creationflags'] = subprocess.CREATE_NO_WINDOW
+        return flags
+
     def build_and_push(self, config: DeploymentConfig, source_path: str) -> bool:
         """Build Docker image and push to GCR."""
         gcp_config: GCPConfig = config.platform_config
@@ -276,7 +284,8 @@ class GCPDeployer(BaseDeployer):
         try:
             result = subprocess.run(
                 ["docker", "build", "--no-cache", "-t", image, "."],
-                capture_output=True, text=True
+                capture_output=True, text=True,
+                **self._get_subprocess_flags()
             )
             if result.returncode != 0:
                 error_msg = result.stderr[:500] if result.stderr else "Unknown error"
@@ -288,7 +297,8 @@ class GCPDeployer(BaseDeployer):
             self.update_progress("push", DeploymentStatus.IN_PROGRESS, "Pushing image to GCR...")
             result = subprocess.run(
                 ["docker", "push", image],
-                capture_output=True, text=True
+                capture_output=True, text=True,
+                **self._get_subprocess_flags()
             )
             if result.returncode != 0:
                 error_msg = result.stderr[:500] if result.stderr else "Unknown error"
@@ -306,6 +316,8 @@ class GCPDeployer(BaseDeployer):
         project_id = gcp_config.project_id
         region = gcp_config.region
         image = f"gcr.io/{project_id}/orbu:latest"
+
+        self.update_progress("deploy", DeploymentStatus.IN_PROGRESS, "Preparing Cloud Run deployment...")
 
         # Build deploy command
         deploy_cmd = (
@@ -337,17 +349,29 @@ class GCPDeployer(BaseDeployer):
         elif config.db_connection_method == 'python_connector':
             deploy_cmd += f" --update-secrets=CLOUD_SQL_CONNECTION=orbu-cloud-sql-connection:latest"
 
+        self.update_progress("deploy", DeploymentStatus.IN_PROGRESS, "Deploying to Cloud Run (this may take a few minutes)...")
+
         result = subprocess.run(deploy_cmd, shell=True, capture_output=True, text=True)
 
         if result.returncode != 0:
-            self.update_progress("deploy", DeploymentStatus.FAILED, result.stderr)
+            # Format error message - prefer stderr, fall back to stdout
+            error_output = result.stderr or result.stdout or "Unknown error"
+            error_msg = error_output[:500] if len(error_output) > 500 else error_output
+            self.update_progress("deploy", DeploymentStatus.FAILED, f"Cloud Run deploy failed: {error_msg}")
             return None
+
+        self.update_progress("deploy", DeploymentStatus.IN_PROGRESS, "Retrieving service URL...")
 
         # Get service URL
         url = self._run_cmd(
             f"gcloud run services describe orbu --region={region} --project={project_id} --format='value(status.url)'",
             check=False
         )
+
+        if url:
+            self.update_progress("deploy", DeploymentStatus.SUCCESS, f"Deployed to {url}")
+        else:
+            self.update_progress("deploy", DeploymentStatus.SUCCESS, "Deployed (URL retrieval failed)")
 
         return url
 
