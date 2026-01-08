@@ -275,22 +275,24 @@ class GCPDeployer(BaseDeployer):
 
         try:
             result = subprocess.run(
-                f"docker build --no-cache -t {image} .",
-                shell=True, capture_output=False
+                ["docker", "build", "--no-cache", "-t", image, "."],
+                capture_output=True, text=True
             )
             if result.returncode != 0:
-                self.update_progress("build", DeploymentStatus.FAILED, "Docker build failed")
+                error_msg = result.stderr[:500] if result.stderr else "Unknown error"
+                self.update_progress("build", DeploymentStatus.FAILED, f"Docker build failed: {error_msg}")
                 return False
             self.update_progress("build", DeploymentStatus.SUCCESS, "Docker image built")
 
             # Push image
             self.update_progress("push", DeploymentStatus.IN_PROGRESS, "Pushing image to GCR...")
             result = subprocess.run(
-                f"docker push {image}",
-                shell=True, capture_output=False
+                ["docker", "push", image],
+                capture_output=True, text=True
             )
             if result.returncode != 0:
-                self.update_progress("push", DeploymentStatus.FAILED, "Docker push failed")
+                error_msg = result.stderr[:500] if result.stderr else "Unknown error"
+                self.update_progress("push", DeploymentStatus.FAILED, f"Docker push failed: {error_msg}")
                 return False
             self.update_progress("push", DeploymentStatus.SUCCESS, "Image pushed to GCR")
 

@@ -137,10 +137,10 @@ class StepProject(WizardStep):
         self.update()
 
         try:
-            # Get current project
+            # Get current project (use shell=True for Windows compatibility)
             current = subprocess.run(
-                ["gcloud", "config", "get-value", "project"],
-                capture_output=True, text=True
+                "gcloud config get-value project",
+                shell=True, capture_output=True, text=True
             )
             current_project = current.stdout.strip()
             if current_project and current_project != "(unset)":
@@ -148,8 +148,8 @@ class StepProject(WizardStep):
 
             # Get list of projects
             result = subprocess.run(
-                ["gcloud", "projects", "list", "--format=value(projectId)"],
-                capture_output=True, text=True
+                "gcloud projects list --format=value(projectId)",
+                shell=True, capture_output=True, text=True
             )
 
             if result.returncode == 0 and result.stdout:
@@ -160,13 +160,19 @@ class StepProject(WizardStep):
                     foreground='green'
                 )
             else:
+                error_hint = result.stderr[:100] if result.stderr else "Unknown error"
                 self.status_label.config(
-                    text="Could not load projects. Enter project ID manually.",
+                    text=f"Could not load projects: {error_hint}",
                     foreground='orange'
                 )
+        except FileNotFoundError:
+            self.status_label.config(
+                text="gcloud not found. Is Google Cloud SDK installed?",
+                foreground='red'
+            )
         except Exception as e:
             self.status_label.config(
-                text=f"Error loading projects: {str(e)}",
+                text=f"Error: {str(e)}",
                 foreground='red'
             )
 
