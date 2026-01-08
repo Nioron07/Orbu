@@ -10,7 +10,7 @@
         <v-col cols="auto">
           <div class="d-flex align-center gap-2">
             <span class="text-subtitle-2 font-weight-bold mr-1">Orbu</span>
-            <v-chip size="x-small" variant="tonal" color="primary">v0.1.6</v-chip>
+            <v-chip size="x-small" variant="tonal" color="primary">v0.1.7</v-chip>
           </div>
         </v-col>
 

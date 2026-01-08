@@ -11,7 +11,7 @@ import os
 import webbrowser
 from typing import Dict, Any
 
-from .wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController
 
 
 class PrerequisiteItem(ttk.Frame):

@@ -9,7 +9,7 @@ from tkinter import ttk, messagebox
 import subprocess
 from typing import Dict, Any, List
 
-from .wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController
 
 
 class StepProject(WizardStep):

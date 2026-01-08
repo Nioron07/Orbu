@@ -15,7 +15,7 @@ import urllib.request
 from typing import Optional, Callable
 from dataclasses import dataclass
 
-from .base_deployer import (
+from core.base_deployer import (
     BaseDeployer,
     DeploymentConfig,
     DeploymentStep,

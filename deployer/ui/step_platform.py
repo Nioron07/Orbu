@@ -9,7 +9,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Dict, Any
 
-from .wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController
 
 
 class PlatformCard(ttk.Frame):

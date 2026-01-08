@@ -14,9 +14,9 @@ import tempfile
 import shutil
 from typing import Dict, Any, Optional
 
-from .wizard import WizardStep, WizardController
-from ..core.base_deployer import DeploymentConfig, DeploymentStatus
-from ..core.gcp_deployer import GCPDeployer, GCPConfig
+from ui.wizard import WizardStep, WizardController
+from core.base_deployer import DeploymentConfig, DeploymentStatus
+from core.gcp_deployer import GCPDeployer, GCPConfig
 
 
 class StepDeploy(WizardStep):
