@@ -82,11 +82,12 @@ def build_add_data_args():
     for item in ORBU_SOURCE_ITEMS:
         source_path = PROJECT_ROOT / item
         if source_path.exists():
-            # Skip node_modules - it's huge and not needed (npm install runs in Docker)
-            if item == 'frontend':
-                # We need frontend but will exclude node_modules via .spec or copy selectively
-                add_data.append(f'--add-data={source_path}{separator}orbu_source/{item}')
+            if source_path.is_file():
+                # For single files, destination must be a directory (orbu_source/)
+                # The file will keep its original name inside that directory
+                add_data.append(f'--add-data={source_path}{separator}orbu_source')
             else:
+                # For directories, specify the full destination path
                 add_data.append(f'--add-data={source_path}{separator}orbu_source/{item}')
         else:
             print(f"WARNING: Source item not found: {source_path}")
