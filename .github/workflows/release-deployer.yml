@@ -11,6 +11,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -24,6 +25,7 @@ jobs:
             asset_name: orbu-deployer-macos
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -39,10 +41,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller
 
+      - name: Clean up large/unnecessary files before build
+        shell: bash
+        run: |
+          # Remove node_modules and build caches (not needed - Docker runs npm install)
+          rm -rf frontend/node_modules || true
+          rm -rf frontend/.vite || true
+          rm -rf frontend/dist || true
+          # Remove any __pycache__ directories
+          find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+          # Remove .git directory (not needed in bundle)
+          rm -rf .git || true
+
       - name: Build executable
         run: |
           cd deployer
           python build.py
+        timeout-minutes: 20
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

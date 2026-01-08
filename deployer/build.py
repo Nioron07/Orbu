@@ -73,7 +73,7 @@ def build_add_data_args():
     add_data = []
     separator = ';' if sys.platform == 'win32' else ':'
 
-    # Add assets folder
+    # Add assets folder (but not the icon, that's handled separately)
     assets_dir = SCRIPT_DIR / 'assets'
     if assets_dir.exists():
         add_data.append(f'--add-data={assets_dir}{separator}assets')
@@ -82,11 +82,28 @@ def build_add_data_args():
     for item in ORBU_SOURCE_ITEMS:
         source_path = PROJECT_ROOT / item
         if source_path.exists():
-            add_data.append(f'--add-data={source_path}{separator}orbu_source/{item}')
+            # Skip node_modules - it's huge and not needed (npm install runs in Docker)
+            if item == 'frontend':
+                # We need frontend but will exclude node_modules via .spec or copy selectively
+                add_data.append(f'--add-data={source_path}{separator}orbu_source/{item}')
+            else:
+                add_data.append(f'--add-data={source_path}{separator}orbu_source/{item}')
         else:
             print(f"WARNING: Source item not found: {source_path}")
 
     return add_data
+
+
+def get_icon_path():
+    """Get the appropriate icon path for the current platform."""
+    if sys.platform == 'darwin':
+        # macOS needs .icns format
+        icon_path = SCRIPT_DIR / 'assets' / 'icon.icns'
+    else:
+        # Windows and Linux use .ico
+        icon_path = SCRIPT_DIR / 'assets' / 'icon.ico'
+
+    return icon_path if icon_path.exists() else None
 
 
 def build():
@@ -111,9 +128,9 @@ def build():
         f'--specpath={SCRIPT_DIR}',
     ]
 
-    # Add icon if available
-    icon_path = SCRIPT_DIR / 'assets' / 'icon.ico'
-    if icon_path.exists():
+    # Add icon if available (platform-specific format)
+    icon_path = get_icon_path()
+    if icon_path:
         cmd.append(f'--icon={icon_path}')
 
     # Add data files
