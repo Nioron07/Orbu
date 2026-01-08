@@ -55,9 +55,9 @@ class StepDeploy(WizardStep):
 
         self.step_labels = {}
         steps = [
-            ("apis", "Enable GCP APIs"),
             ("secrets", "Create secrets"),
             ("permissions", "Configure permissions"),
+            ("apis", "Enable GCP APIs"),
             ("build", "Build Docker image"),
             ("push", "Push to registry"),
             ("deploy", "Deploy to Cloud Run"),
@@ -180,8 +180,8 @@ class StepDeploy(WizardStep):
 
         # Running from source - find project root
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # Go up from deployer/ui to project root
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+        # Go up from deployer/ui to project root (ui -> deployer -> project root)
+        project_root = os.path.dirname(os.path.dirname(current_dir))
 
         # Check if we're in the right place
         if os.path.exists(os.path.join(project_root, 'Dockerfile')):

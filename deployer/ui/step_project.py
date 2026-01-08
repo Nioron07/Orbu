@@ -138,10 +138,9 @@ class StepProject(WizardStep):
 
         try:
             # Get current project
-            null_redirect = "2>nul" if __import__('os').name == 'nt' else "2>/dev/null"
             current = subprocess.run(
-                f"gcloud config get-value project {null_redirect}",
-                shell=True, capture_output=True, text=True
+                ["gcloud", "config", "get-value", "project"],
+                capture_output=True, text=True
             )
             current_project = current.stdout.strip()
             if current_project and current_project != "(unset)":
@@ -149,8 +148,8 @@ class StepProject(WizardStep):
 
             # Get list of projects
             result = subprocess.run(
-                "gcloud projects list --format='value(projectId)'",
-                shell=True, capture_output=True, text=True
+                ["gcloud", "projects", "list", "--format=value(projectId)"],
+                capture_output=True, text=True
             )
 
             if result.returncode == 0 and result.stdout:
