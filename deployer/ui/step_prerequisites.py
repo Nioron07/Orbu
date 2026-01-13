@@ -11,33 +11,49 @@ import os
 import webbrowser
 from typing import Dict, Any
 
-from ui.wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController, COLORS
 
 
-class PrerequisiteItem(ttk.Frame):
+class PrerequisiteItem(tk.Frame):
     """A single prerequisite check item."""
 
     def __init__(self, parent, name: str, description: str):
-        super().__init__(parent)
+        super().__init__(parent, bg=COLORS['card_bg'])
 
         self.name = name
 
         # Status icon
-        self.status_label = ttk.Label(self, text="⏳", font=('Segoe UI', 12), width=3)
+        self.status_label = tk.Label(
+            self,
+            text="...",
+            font=('Segoe UI', 14),
+            width=3,
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
+        )
         self.status_label.pack(side=tk.LEFT)
 
         # Name and description
-        text_frame = ttk.Frame(self)
+        text_frame = tk.Frame(self, bg=COLORS['card_bg'])
         text_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=10)
 
-        name_label = ttk.Label(text_frame, text=name, font=('Segoe UI', 11, 'bold'))
+        name_label = tk.Label(
+            text_frame,
+            text=name,
+            font=('Segoe UI', 11, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text'],
+            anchor='w'
+        )
         name_label.pack(anchor=tk.W)
 
-        self.desc_label = ttk.Label(
+        self.desc_label = tk.Label(
             text_frame,
             text=description,
             font=('Segoe UI', 9),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary'],
+            anchor='w'
         )
         self.desc_label.pack(anchor=tk.W)
 
@@ -48,17 +64,17 @@ class PrerequisiteItem(ttk.Frame):
     def set_status(self, status: str, message: str = None, action_url: str = None):
         """Set the status of this prerequisite."""
         if status == 'checking':
-            self.status_label.config(text="⏳")
+            self.status_label.config(text="...", fg=COLORS['text_secondary'])
             self.action_button.pack_forget()
         elif status == 'success':
-            self.status_label.config(text="✓", foreground='green')
+            self.status_label.config(text="\u2713", fg=COLORS['success'])
             if message:
-                self.desc_label.config(text=message)
+                self.desc_label.config(text=message, fg=COLORS['text_secondary'])
             self.action_button.pack_forget()
         elif status == 'error':
-            self.status_label.config(text="✗", foreground='red')
+            self.status_label.config(text="\u2717", fg=COLORS['error'])
             if message:
-                self.desc_label.config(text=message, foreground='red')
+                self.desc_label.config(text=message, fg=COLORS['error'])
             if action_url:
                 self.action_url = action_url
                 self.action_button.pack(side=tk.RIGHT)
@@ -71,30 +87,33 @@ class PrerequisiteItem(ttk.Frame):
 class StepPrerequisites(WizardStep):
     """Prerequisites check step."""
 
-    def __init__(self, parent: ttk.Frame, wizard: WizardController, **kwargs):
+    def __init__(self, parent: tk.Frame, wizard: WizardController, **kwargs):
         super().__init__(parent, wizard)
 
         self.all_passed = False
 
         # Title
-        title = ttk.Label(
+        title = tk.Label(
             self,
             text="Checking Prerequisites",
-            font=('Segoe UI', 14, 'bold')
+            font=('Segoe UI', 14, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
-        title.pack(pady=(20, 10))
+        title.pack(pady=(30, 10))
 
-        subtitle = ttk.Label(
+        subtitle = tk.Label(
             self,
             text="The following tools must be installed to deploy Orbu",
             font=('Segoe UI', 10),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
         subtitle.pack(pady=(0, 30))
 
         # Prerequisites list
-        self.prereqs_frame = ttk.Frame(self)
-        self.prereqs_frame.pack(fill=tk.X, padx=50)
+        self.prereqs_frame = tk.Frame(self, bg=COLORS['card_bg'])
+        self.prereqs_frame.pack(fill=tk.X, padx=80)
 
         # Google Cloud SDK
         self.gcloud_item = PrerequisiteItem(
@@ -102,7 +121,7 @@ class StepPrerequisites(WizardStep):
             "Google Cloud SDK",
             "Command-line tools for GCP"
         )
-        self.gcloud_item.pack(fill=tk.X, pady=10)
+        self.gcloud_item.pack(fill=tk.X, pady=12)
 
         # Docker
         self.docker_item = PrerequisiteItem(
@@ -110,7 +129,7 @@ class StepPrerequisites(WizardStep):
             "Docker",
             "Container runtime for building images"
         )
-        self.docker_item.pack(fill=tk.X, pady=10)
+        self.docker_item.pack(fill=tk.X, pady=12)
 
         # GCloud Authentication
         self.auth_item = PrerequisiteItem(
@@ -118,7 +137,7 @@ class StepPrerequisites(WizardStep):
             "GCP Authentication",
             "Logged into your Google Cloud account"
         )
-        self.auth_item.pack(fill=tk.X, pady=10)
+        self.auth_item.pack(fill=tk.X, pady=12)
 
         # Recheck button
         self.recheck_button = ttk.Button(
@@ -126,14 +145,15 @@ class StepPrerequisites(WizardStep):
             text="Check Again",
             command=self._run_checks
         )
-        self.recheck_button.pack(pady=20)
+        self.recheck_button.pack(pady=25)
 
         # Status message
-        self.status_label = ttk.Label(
+        self.status_label = tk.Label(
             self,
             text="",
             font=('Segoe UI', 10),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
         self.status_label.pack(pady=10)
 
@@ -171,13 +191,13 @@ class StepPrerequisites(WizardStep):
         if self.all_passed:
             self.status_label.config(
                 text="All prerequisites met! Click Next to continue.",
-                foreground='green'
+                fg=COLORS['success']
             )
             self.wizard.set_next_enabled(True)
         else:
             self.status_label.config(
                 text="Please install missing tools and check again.",
-                foreground='red'
+                fg=COLORS['error']
             )
             self.wizard.set_next_enabled(False)
 

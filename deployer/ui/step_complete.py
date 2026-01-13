@@ -9,17 +9,17 @@ from tkinter import ttk
 import webbrowser
 from typing import Dict, Any
 
-from ui.wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController, COLORS
 
 
 class StepComplete(WizardStep):
     """Completion step."""
 
-    def __init__(self, parent: ttk.Frame, wizard: WizardController, **kwargs):
+    def __init__(self, parent: tk.Frame, wizard: WizardController, **kwargs):
         super().__init__(parent, wizard)
 
         # Container for dynamic content
-        self.content_frame = ttk.Frame(self)
+        self.content_frame = tk.Frame(self, bg=COLORS['card_bg'])
         self.content_frame.pack(fill=tk.BOTH, expand=True)
 
     def on_enter(self):
@@ -42,42 +42,47 @@ class StepComplete(WizardStep):
     def _show_success(self, url: str):
         """Show success message and URL."""
         # Success icon
-        icon = ttk.Label(
+        icon = tk.Label(
             self.content_frame,
-            text="✓",
+            text="\u2713",
             font=('Segoe UI', 48),
-            foreground='green'
+            bg=COLORS['card_bg'],
+            fg=COLORS['success']
         )
-        icon.pack(pady=(50, 20))
+        icon.pack(pady=(40, 15))
 
         # Title
-        title = ttk.Label(
+        title = tk.Label(
             self.content_frame,
             text="Deployment Successful!",
             font=('Segoe UI', 18, 'bold'),
-            foreground='green'
+            bg=COLORS['card_bg'],
+            fg=COLORS['success']
         )
-        title.pack(pady=(0, 10))
+        title.pack(pady=(0, 8))
 
         # Subtitle
-        subtitle = ttk.Label(
+        subtitle = tk.Label(
             self.content_frame,
             text="Your Orbu instance is now running on Google Cloud Run",
             font=('Segoe UI', 11),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
-        subtitle.pack(pady=(0, 30))
+        subtitle.pack(pady=(0, 25))
 
         if url:
             # URL section
-            url_label = ttk.Label(
+            url_label = tk.Label(
                 self.content_frame,
                 text="Service URL:",
-                font=('Segoe UI', 10, 'bold')
+                font=('Segoe UI', 10, 'bold'),
+                bg=COLORS['card_bg'],
+                fg=COLORS['text']
             )
             url_label.pack()
 
-            url_frame = ttk.Frame(self.content_frame)
+            url_frame = tk.Frame(self.content_frame, bg=COLORS['card_bg'])
             url_frame.pack(pady=10)
 
             url_entry = ttk.Entry(
@@ -106,8 +111,8 @@ class StepComplete(WizardStep):
             copy_button.pack(side=tk.LEFT, padx=(10, 0))
 
             # Buttons
-            buttons_frame = ttk.Frame(self.content_frame)
-            buttons_frame.pack(pady=30)
+            buttons_frame = tk.Frame(self.content_frame, bg=COLORS['card_bg'])
+            buttons_frame.pack(pady=25)
 
             open_button = ttk.Button(
                 buttons_frame,
@@ -117,13 +122,15 @@ class StepComplete(WizardStep):
             open_button.pack(side=tk.LEFT, padx=10)
 
         # Info section
-        info_frame = ttk.Frame(self.content_frame)
-        info_frame.pack(pady=20)
+        info_frame = tk.Frame(self.content_frame, bg=COLORS['card_bg'])
+        info_frame.pack(pady=15, padx=80)
 
-        info_label = ttk.Label(
+        info_label = tk.Label(
             info_frame,
             text="Next Steps:",
-            font=('Segoe UI', 10, 'bold')
+            font=('Segoe UI', 10, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
         info_label.pack(anchor=tk.W)
 
@@ -134,70 +141,77 @@ class StepComplete(WizardStep):
         ]
 
         for step in steps:
-            step_label = ttk.Label(
+            step_label = tk.Label(
                 info_frame,
                 text=step,
                 font=('Segoe UI', 10),
-                foreground='#666'
+                bg=COLORS['card_bg'],
+                fg=COLORS['text_secondary']
             )
-            step_label.pack(anchor=tk.W, pady=2)
+            step_label.pack(anchor=tk.W, pady=3)
 
     def _show_failure(self):
         """Show failure message."""
         # Failure icon
-        icon = ttk.Label(
+        icon = tk.Label(
             self.content_frame,
-            text="✗",
+            text="\u2717",
             font=('Segoe UI', 48),
-            foreground='red'
+            bg=COLORS['card_bg'],
+            fg=COLORS['error']
         )
-        icon.pack(pady=(50, 20))
+        icon.pack(pady=(40, 15))
 
         # Title
-        title = ttk.Label(
+        title = tk.Label(
             self.content_frame,
             text="Deployment Failed",
             font=('Segoe UI', 18, 'bold'),
-            foreground='red'
+            bg=COLORS['card_bg'],
+            fg=COLORS['error']
         )
-        title.pack(pady=(0, 10))
+        title.pack(pady=(0, 8))
 
         # Subtitle
-        subtitle = ttk.Label(
+        subtitle = tk.Label(
             self.content_frame,
             text="There was an error during deployment",
             font=('Segoe UI', 11),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
-        subtitle.pack(pady=(0, 30))
+        subtitle.pack(pady=(0, 25))
 
         # Help text
-        help_frame = ttk.Frame(self.content_frame)
-        help_frame.pack(pady=20)
+        help_frame = tk.Frame(self.content_frame, bg=COLORS['card_bg'])
+        help_frame.pack(pady=15, padx=80)
 
-        help_label = ttk.Label(
+        help_label = tk.Label(
             help_frame,
             text="Troubleshooting:",
-            font=('Segoe UI', 10, 'bold')
+            font=('Segoe UI', 10, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
         help_label.pack(anchor=tk.W)
 
         tips = [
-            "• Check the deployment log for error details",
-            "• Verify your GCP project has billing enabled",
-            "• Ensure Cloud SQL instance exists and is accessible",
-            "• Confirm your database credentials are correct",
-            "• Make sure you have sufficient GCP permissions",
+            "\u2022 Check the deployment log for error details",
+            "\u2022 Verify your GCP project has billing enabled",
+            "\u2022 Ensure Cloud SQL instance exists and is accessible",
+            "\u2022 Confirm your database credentials are correct",
+            "\u2022 Make sure you have sufficient GCP permissions",
         ]
 
         for tip in tips:
-            tip_label = ttk.Label(
+            tip_label = tk.Label(
                 help_frame,
                 text=tip,
                 font=('Segoe UI', 10),
-                foreground='#666'
+                bg=COLORS['card_bg'],
+                fg=COLORS['text_secondary']
             )
-            tip_label.pack(anchor=tk.W, pady=2)
+            tip_label.pack(anchor=tk.W, pady=3)
 
     def get_data(self) -> Dict[str, Any]:
         """Return completion data."""

@@ -183,7 +183,9 @@ const activeClients = computed(() => clientsStore.activeClients);
 
 // Methods
 function handleThemeChange(newTheme: 'light' | 'dark') {
+  // Update both stores and the theme
   appStore.setTheme(newTheme);
+  settingsStore.setTheme(newTheme);
   theme.global.name.value = newTheme;
   showSnackbar(`Theme changed to ${newTheme} mode`, 'success');
 }

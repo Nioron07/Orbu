@@ -12,6 +12,7 @@ import subprocess
 import os
 import time
 import urllib.request
+import bcrypt
 from typing import Optional, Callable
 from dataclasses import dataclass
 
@@ -177,24 +178,54 @@ class GCPDeployer(BaseDeployer):
             if os.path.exists(temp_file):
                 os.remove(temp_file)
 
+    def _hash_password(self, password: str) -> str:
+        """Hash a password using bcrypt."""
+        return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def _get_service_name(self, config: DeploymentConfig) -> str:
+        """Get the service name based on org slug."""
+        org_slug = config.org_slug or 'orbu'
+        return f"{org_slug}-orbu"
+
+    def _get_secret_prefix(self, config: DeploymentConfig) -> str:
+        """Get the secret name prefix based on org slug."""
+        org_slug = config.org_slug or 'orbu'
+        return f"{org_slug}-orbu"
+
+    def _get_sa_name(self, config: DeploymentConfig) -> str:
+        """Get the service account name based on org slug."""
+        org_slug = config.org_slug or 'orbu'
+        return f"{org_slug}-orbu-sa"
+
     def setup_secrets(self, config: DeploymentConfig) -> bool:
         """Create secrets in Secret Manager."""
         gcp_config: GCPConfig = config.platform_config
         project_id = gcp_config.project_id
+        prefix = self._get_secret_prefix(config)
 
         # Enable Secret Manager API first
         self._run_cmd(f"gcloud services enable secretmanager.googleapis.com --project={project_id}", check=False)
 
         secrets = {
-            'orbu-postgres-host': config.db_host,
-            'orbu-postgres-db': config.db_name,
-            'orbu-postgres-user': config.db_user,
-            'orbu-postgres-password': config.db_password,
+            f'{prefix}-postgres-host': config.db_host,
+            f'{prefix}-postgres-db': config.db_name,
+            f'{prefix}-postgres-user': config.db_user,
+            f'{prefix}-postgres-password': config.db_password,
         }
 
         # Add Cloud SQL connection if using Python Connector
         if gcp_config.cloud_sql_connection and config.db_connection_method == 'python_connector':
-            secrets['orbu-cloud-sql-connection'] = gcp_config.cloud_sql_connection
+            secrets[f'{prefix}-cloud-sql-connection'] = gcp_config.cloud_sql_connection
+
+        # Add admin credentials (hash the password)
+        if config.admin_email and config.admin_password:
+            secrets[f'{prefix}-admin-email'] = config.admin_email
+            self.update_progress("secrets", DeploymentStatus.IN_PROGRESS, "Hashing admin password...")
+            secrets[f'{prefix}-admin-password-hash'] = self._hash_password(config.admin_password)
+
+        # Add organization name as a secret (for the app header)
+        if config.org_name:
+            secrets[f'{prefix}-org-name'] = config.org_name
 
         for secret_name, secret_value in secrets.items():
             if not secret_value:
@@ -209,8 +240,9 @@ class GCPDeployer(BaseDeployer):
         """Create service account and configure IAM permissions."""
         gcp_config: GCPConfig = config.platform_config
         project_id = gcp_config.project_id
-        sa_name = "orbu-sa"
+        sa_name = self._get_sa_name(config)
         sa_email = f"{sa_name}@{project_id}.iam.gserviceaccount.com"
+        display_name = f"{config.org_name or 'Orbu'} Service Account"
 
         null_redirect = "2>nul" if os.name == 'nt' else "2>/dev/null"
 
@@ -223,7 +255,7 @@ class GCPDeployer(BaseDeployer):
         if not existing:
             self.update_progress("permissions", DeploymentStatus.IN_PROGRESS, "Creating service account...")
             result = subprocess.run(
-                f'gcloud iam service-accounts create {sa_name} --display-name="Orbu Service Account" --project={project_id}',
+                f'gcloud iam service-accounts create {sa_name} --display-name="{display_name}" --project={project_id}',
                 shell=True, capture_output=True, text=True
             )
             if result.returncode != 0 and "already exists" not in result.stderr.lower():
@@ -264,7 +296,8 @@ class GCPDeployer(BaseDeployer):
         """Build Docker image and push to GCR."""
         gcp_config: GCPConfig = config.platform_config
         project_id = gcp_config.project_id
-        image = f"gcr.io/{project_id}/orbu:latest"
+        service_name = self._get_service_name(config)
+        image = f"gcr.io/{project_id}/{service_name}:latest"
 
         # Enable APIs
         self.update_progress("apis", DeploymentStatus.IN_PROGRESS, "Enabling required APIs...")
@@ -315,19 +348,32 @@ class GCPDeployer(BaseDeployer):
         gcp_config: GCPConfig = config.platform_config
         project_id = gcp_config.project_id
         region = gcp_config.region
-        image = f"gcr.io/{project_id}/orbu:latest"
+        service_name = self._get_service_name(config)
+        prefix = self._get_secret_prefix(config)
+        sa_name = self._get_sa_name(config)
+        image = f"gcr.io/{project_id}/{service_name}:latest"
 
         self.update_progress("deploy", DeploymentStatus.IN_PROGRESS, "Preparing Cloud Run deployment...")
 
-        # Build deploy command
+        # Build deploy command with dynamic secret names
+        secrets_list = (
+            f"POSTGRES_HOST={prefix}-postgres-host:latest,"
+            f"POSTGRES_DB={prefix}-postgres-db:latest,"
+            f"POSTGRES_USER={prefix}-postgres-user:latest,"
+            f"POSTGRES_PASSWORD={prefix}-postgres-password:latest,"
+            f"ADMIN_EMAIL={prefix}-admin-email:latest,"
+            f"ADMIN_PASSWORD_HASH={prefix}-admin-password-hash:latest,"
+            f"ORG_NAME={prefix}-org-name:latest"
+        )
+
         deploy_cmd = (
-            f"gcloud run deploy orbu "
+            f"gcloud run deploy {service_name} "
             f"--image={image} "
             f"--region={region} "
             f"--project={project_id} "
             f"--platform=managed "
             f"--allow-unauthenticated "
-            f"--service-account=orbu-sa@{project_id}.iam.gserviceaccount.com "
+            f"--service-account={sa_name}@{project_id}.iam.gserviceaccount.com "
             f"--cpu=2 "
             f"--memory=2Gi "
             f"--min-instances=1 "
@@ -337,17 +383,14 @@ class GCPDeployer(BaseDeployer):
             f"--execution-environment=gen2 "
             f"--cpu-boost "
             f"--set-env-vars=GCP_PROJECT_ID={project_id},CORS_ORIGINS=* "
-            f"--set-secrets=POSTGRES_HOST=orbu-postgres-host:latest,"
-            f"POSTGRES_DB=orbu-postgres-db:latest,"
-            f"POSTGRES_USER=orbu-postgres-user:latest,"
-            f"POSTGRES_PASSWORD=orbu-postgres-password:latest"
+            f"--set-secrets={secrets_list}"
         )
 
         # Add Cloud SQL connection if using unix socket
         if config.db_connection_method == 'unix_socket' and gcp_config.cloud_sql_connection:
             deploy_cmd += f" --add-cloudsql-instances={gcp_config.cloud_sql_connection}"
         elif config.db_connection_method == 'python_connector':
-            deploy_cmd += f" --update-secrets=CLOUD_SQL_CONNECTION=orbu-cloud-sql-connection:latest"
+            deploy_cmd += f" --update-secrets=CLOUD_SQL_CONNECTION={prefix}-cloud-sql-connection:latest"
 
         self.update_progress("deploy", DeploymentStatus.IN_PROGRESS, "Deploying to Cloud Run (this may take a few minutes)...")
 
@@ -362,18 +405,29 @@ class GCPDeployer(BaseDeployer):
 
         self.update_progress("deploy", DeploymentStatus.IN_PROGRESS, "Retrieving service URL...")
 
-        # Get service URL
-        url = self._run_cmd(
-            f"gcloud run services describe orbu --region={region} --project={project_id} --format='value(status.url)'",
-            check=False
-        )
+        # Get service URL - use double quotes for Windows compatibility
+        url_cmd = f'gcloud run services describe {service_name} --region={region} --project={project_id} --format="value(status.url)"'
+        url_result = subprocess.run(url_cmd, shell=True, capture_output=True, text=True)
 
-        if url:
+        if url_result.returncode == 0 and url_result.stdout.strip():
+            url = url_result.stdout.strip()
             self.update_progress("deploy", DeploymentStatus.SUCCESS, f"Deployed to {url}")
+            return url
         else:
-            self.update_progress("deploy", DeploymentStatus.SUCCESS, "Deployed (URL retrieval failed)")
+            # Deploy succeeded but couldn't get URL - try alternative method
+            self.update_progress("deploy", DeploymentStatus.IN_PROGRESS, "Trying alternative URL retrieval...")
+            list_cmd = f'gcloud run services list --region={region} --project={project_id} --format="value(URL)" --filter="SERVICE:{service_name}"'
+            list_result = subprocess.run(list_cmd, shell=True, capture_output=True, text=True)
 
-        return url
+            if list_result.returncode == 0 and list_result.stdout.strip():
+                url = list_result.stdout.strip()
+                self.update_progress("deploy", DeploymentStatus.SUCCESS, f"Deployed to {url}")
+                return url
+
+            # Still can't get URL - construct it manually (Cloud Run URL format is predictable)
+            fallback_url = f"https://{service_name}-{project_id[:20]}.{region}.run.app"
+            self.update_progress("deploy", DeploymentStatus.SUCCESS, f"Deployed (URL may be: {fallback_url})")
+            return fallback_url
 
     def verify_health(self, url: str) -> tuple[bool, str]:
         """Check if the deployed service is healthy."""

@@ -1,14 +1,19 @@
 <template>
   <v-app>
-    <!-- Navigation Rail Sidebar -->
-    <NavigationRail />
+    <!-- Navigation Rail Sidebar (only when authenticated) -->
+    <NavigationRail v-if="authStore.isAuthenticated" />
 
     <!-- Top App Bar -->
     <v-app-bar
+      v-if="authStore.isAuthenticated"
       elevation="0"
       class="gradient-app-bar"
       height="64"
     >
+      <!-- Organization Name / App Title -->
+      <div class="d-flex align-center px-4">
+        <span class="text-h6 font-weight-bold">{{ authStore.orgName }}</span>
+      </div>
 
       <v-spacer />
 
@@ -26,6 +31,41 @@
 
         <!-- Client Switcher -->
         <ClientSwitcher />
+
+        <!-- User Menu -->
+        <v-menu>
+          <template #activator="{ props }">
+            <v-btn
+              icon
+              variant="text"
+              v-bind="props"
+            >
+              <v-avatar color="primary" size="32">
+                <span class="text-white text-body-2">{{ userInitials }}</span>
+              </v-avatar>
+            </v-btn>
+          </template>
+          <v-list density="compact" min-width="200">
+            <v-list-item>
+              <v-list-item-title class="font-weight-bold">{{ authStore.userName }}</v-list-item-title>
+              <v-list-item-subtitle>{{ authStore.userEmail }}</v-list-item-subtitle>
+            </v-list-item>
+            <v-divider />
+            <v-list-item
+              v-if="authStore.isAdmin"
+              prepend-icon="mdi-account-group"
+              :to="{ path: '/admin/users' }"
+            >
+              <v-list-item-title>User Management</v-list-item-title>
+            </v-list-item>
+            <v-list-item
+              prepend-icon="mdi-logout"
+              @click="handleLogout"
+            >
+              <v-list-item-title>Logout</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </div>
     </v-app-bar>
 
@@ -38,16 +78,17 @@
       </router-view>
     </v-main>
 
-    <!-- Footer -->
-    <AppFooter />
+    <!-- Footer (only when authenticated) -->
+    <AppFooter v-if="authStore.isAuthenticated" />
   </v-app>
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useTheme } from 'vuetify';
 import { useAppStore } from '@/stores/app';
+import { useAuthStore } from '@/stores/auth';
 import { useClientsStore } from '@/stores/clients';
 import { useSettingsStore } from '@/stores/settings';
 import NavigationRail from '@/components/NavigationRail.vue';
@@ -57,22 +98,42 @@ import AppFooter from '@/components/AppFooter.vue';
 const router = useRouter();
 const theme = useTheme();
 const appStore = useAppStore();
+const authStore = useAuthStore();
 const clientsStore = useClientsStore();
 const settingsStore = useSettingsStore();
+
+// Computed
+const userInitials = computed(() => {
+  const name = authStore.userName || '';
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length >= 2) {
+    const first = parts[0] ?? '';
+    const last = parts[parts.length - 1] ?? '';
+    if (first.length > 0 && last.length > 0) {
+      return (first.charAt(0) + last.charAt(0)).toUpperCase();
+    }
+  }
+  return name.substring(0, 2).toUpperCase() || '??';
+});
 
 // Methods
 function toggleTheme() {
   appStore.toggleTheme();
+  settingsStore.setTheme(appStore.theme);
   theme.global.name.value = appStore.theme;
 }
 
-function logout() {
+async function handleLogout() {
   // Disconnect from any active client
   if (clientsStore.isConnected) {
     clientsStore.disconnectFromClient();
   }
-  // Navigate to home
-  router.push('/');
+  // Reset settings (clears localStorage so next user gets fresh settings)
+  settingsStore.reset();
+  // Logout from auth
+  await authStore.logout();
+  // Navigate to login
+  router.push('/login');
 }
 
 async function handleAutoConnect() {
@@ -117,19 +178,41 @@ async function handleAutoConnect() {
 
 // Load theme preference, settings, and clients
 onMounted(async () => {
-  // Load saved theme or default to dark
-  const savedTheme = (localStorage.getItem('orbu_theme') as 'light' | 'dark') || 'dark';
-  appStore.setTheme(savedTheme);
-  theme.global.name.value = savedTheme;
+  // Wait for auth initialization to complete before making API calls
+  // The router guard handles initialization, but we need to wait for it
+  if (!authStore.isInitialized) {
+    // Wait for initialization (router guard will trigger it)
+    await new Promise<void>((resolve) => {
+      const checkInit = () => {
+        if (authStore.isInitialized) {
+          resolve();
+        } else {
+          setTimeout(checkInit, 50);
+        }
+      };
+      checkInit();
+    });
+  }
 
-  // Load settings
-  settingsStore.loadSettings();
+  // Only proceed with API calls if authenticated (after initialization is complete)
+  if (authStore.isAuthenticated) {
+    // Load full settings from backend (login page may have already done this)
+    await settingsStore.loadSettings();
 
-  // Load clients
-  await clientsStore.loadClients();
+    // Apply theme from user's settings
+    appStore.setTheme(settingsStore.theme);
+    theme.global.name.value = settingsStore.theme;
 
-  // Attempt auto-connect if configured
-  await handleAutoConnect();
+    // Load clients
+    await clientsStore.loadClients();
+
+    // Attempt auto-connect if configured
+    await handleAutoConnect();
+  } else {
+    // Not authenticated - apply default dark theme
+    appStore.setTheme('dark');
+    theme.global.name.value = 'dark';
+  }
 });
 </script>
 

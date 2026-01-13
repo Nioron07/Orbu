@@ -9,7 +9,7 @@ from tkinter import ttk, messagebox
 import subprocess
 from typing import Dict, Any, List
 
-from ui.wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController, COLORS
 
 
 class StepProject(WizardStep):
@@ -31,40 +31,45 @@ class StepProject(WizardStep):
         "australia-southeast1",
     ]
 
-    def __init__(self, parent: ttk.Frame, wizard: WizardController, **kwargs):
+    def __init__(self, parent: tk.Frame, wizard: WizardController, **kwargs):
         super().__init__(parent, wizard)
 
         self.projects: List[str] = []
 
         # Title
-        title = ttk.Label(
+        title = tk.Label(
             self,
             text="GCP Project Configuration",
-            font=('Segoe UI', 14, 'bold')
+            font=('Segoe UI', 14, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
-        title.pack(pady=(20, 10))
+        title.pack(pady=(30, 10))
 
-        subtitle = ttk.Label(
+        subtitle = tk.Label(
             self,
             text="Select your Google Cloud project and deployment region",
             font=('Segoe UI', 10),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
         subtitle.pack(pady=(0, 30))
 
         # Form container
-        form_frame = ttk.Frame(self)
+        form_frame = tk.Frame(self, bg=COLORS['card_bg'])
         form_frame.pack(fill=tk.X, padx=100)
 
         # Project ID
-        project_label = ttk.Label(
+        project_label = tk.Label(
             form_frame,
             text="GCP Project ID",
-            font=('Segoe UI', 10, 'bold')
+            font=('Segoe UI', 10, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
         project_label.pack(anchor=tk.W, pady=(10, 5))
 
-        project_container = ttk.Frame(form_frame)
+        project_container = tk.Frame(form_frame, bg=COLORS['card_bg'])
         project_container.pack(fill=tk.X)
 
         self.project_var = tk.StringVar()
@@ -78,27 +83,30 @@ class StepProject(WizardStep):
 
         self.refresh_button = ttk.Button(
             project_container,
-            text="↻",
+            text="\u21bb",
             width=3,
             command=self._load_projects
         )
         self.refresh_button.pack(side=tk.LEFT, padx=(5, 0))
 
-        project_hint = ttk.Label(
+        project_hint = tk.Label(
             form_frame,
             text="Select from your available projects or enter a project ID",
             font=('Segoe UI', 9),
-            foreground='#888'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
         project_hint.pack(anchor=tk.W, pady=(2, 0))
 
         # Region
-        region_label = ttk.Label(
+        region_label = tk.Label(
             form_frame,
             text="Region",
-            font=('Segoe UI', 10, 'bold')
+            font=('Segoe UI', 10, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
-        region_label.pack(anchor=tk.W, pady=(20, 5))
+        region_label.pack(anchor=tk.W, pady=(25, 5))
 
         self.region_var = tk.StringVar(value="us-central1")
         self.region_combo = ttk.Combobox(
@@ -111,21 +119,24 @@ class StepProject(WizardStep):
         )
         self.region_combo.pack(fill=tk.X)
 
-        region_hint = ttk.Label(
+        region_hint = tk.Label(
             form_frame,
             text="Choose a region close to your users for best performance",
             font=('Segoe UI', 9),
-            foreground='#888'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
         region_hint.pack(anchor=tk.W, pady=(2, 0))
 
         # Status label
-        self.status_label = ttk.Label(
+        self.status_label = tk.Label(
             self,
             text="",
-            font=('Segoe UI', 10)
+            font=('Segoe UI', 10),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
-        self.status_label.pack(pady=20)
+        self.status_label.pack(pady=25)
 
     def on_enter(self):
         """Load projects when step becomes visible."""
@@ -133,7 +144,7 @@ class StepProject(WizardStep):
 
     def _load_projects(self):
         """Load available GCP projects."""
-        self.status_label.config(text="Loading projects...", foreground='#666')
+        self.status_label.config(text="Loading projects...", fg=COLORS['text_secondary'])
         self.update()
 
         try:
@@ -157,23 +168,23 @@ class StepProject(WizardStep):
                 self.project_combo['values'] = self.projects
                 self.status_label.config(
                     text=f"Found {len(self.projects)} project(s)",
-                    foreground='green'
+                    fg=COLORS['success']
                 )
             else:
                 error_hint = result.stderr[:100] if result.stderr else "Unknown error"
                 self.status_label.config(
                     text=f"Could not load projects: {error_hint}",
-                    foreground='orange'
+                    fg='#e65100'
                 )
         except FileNotFoundError:
             self.status_label.config(
                 text="gcloud not found. Is Google Cloud SDK installed?",
-                foreground='red'
+                fg=COLORS['error']
             )
         except Exception as e:
             self.status_label.config(
                 text=f"Error: {str(e)}",
-                foreground='red'
+                fg=COLORS['error']
             )
 
     def validate(self) -> bool:
@@ -190,7 +201,7 @@ class StepProject(WizardStep):
             return False
 
         # Validate project exists (optional check)
-        self.status_label.config(text="Validating project...", foreground='#666')
+        self.status_label.config(text="Validating project...", fg=COLORS['text_secondary'])
         self.update()
 
         try:
@@ -213,7 +224,7 @@ class StepProject(WizardStep):
                 shell=True, capture_output=True
             )
 
-            self.status_label.config(text="Project validated", foreground='green')
+            self.status_label.config(text="Project validated", fg=COLORS['success'])
             return True
 
         except Exception as e:

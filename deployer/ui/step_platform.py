@@ -9,68 +9,82 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Dict, Any
 
-from ui.wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController, COLORS
 
 
-class PlatformCard(ttk.Frame):
+class PlatformCard(tk.Frame):
     """A clickable card for platform selection."""
+
+    CARD_WIDTH = 200
+    CARD_HEIGHT = 140
 
     def __init__(self, parent, name: str, description: str, enabled: bool = True,
                  badge: str = None, on_click=None):
-        super().__init__(parent, padding=15)
+        super().__init__(
+            parent,
+            bg=COLORS['card_bg'] if enabled else COLORS['card_disabled'],
+            highlightbackground=COLORS['border'],
+            highlightthickness=1,
+            width=self.CARD_WIDTH,
+            height=self.CARD_HEIGHT
+        )
+        self.pack_propagate(False)  # Fixed size
 
         self.enabled = enabled
         self.on_click = on_click
         self.selected = False
+        self._bg_color = COLORS['card_bg'] if enabled else COLORS['card_disabled']
 
-        # Style based on enabled state
-        if enabled:
-            self.configure(style='Card.TFrame')
-        else:
-            self.configure(style='DisabledCard.TFrame')
+        # Inner padding frame
+        inner = tk.Frame(self, bg=self._bg_color, padx=15, pady=15)
+        inner.pack(fill=tk.BOTH, expand=True)
 
         # Platform name
-        name_label = ttk.Label(
-            self,
+        self.name_label = tk.Label(
+            inner,
             text=name,
             font=('Segoe UI', 12, 'bold'),
-            foreground='#333' if enabled else '#999'
+            fg=COLORS['text'] if enabled else '#999999',
+            bg=self._bg_color,
+            anchor='w'
         )
-        name_label.pack(anchor=tk.W)
+        self.name_label.pack(anchor=tk.W)
 
         # Badge (Coming Soon)
         if badge:
-            badge_label = ttk.Label(
-                self,
+            badge_frame = tk.Frame(inner, bg='#fff3e0', padx=6, pady=2)
+            badge_frame.pack(anchor=tk.W, pady=(8, 0))
+            badge_label = tk.Label(
+                badge_frame,
                 text=badge,
                 font=('Segoe UI', 9),
-                foreground='#ff6600',
-                background='#fff3e0',
-                padding=(5, 2)
+                fg='#e65100',
+                bg='#fff3e0'
             )
-            badge_label.pack(anchor=tk.W, pady=(5, 0))
+            badge_label.pack()
 
         # Description
-        desc_label = ttk.Label(
-            self,
+        self.desc_label = tk.Label(
+            inner,
             text=description,
             font=('Segoe UI', 9),
-            foreground='#666' if enabled else '#aaa',
-            wraplength=180
+            fg=COLORS['text_secondary'] if enabled else '#aaaaaa',
+            bg=self._bg_color,
+            wraplength=170,
+            justify='left',
+            anchor='w'
         )
-        desc_label.pack(anchor=tk.W, pady=(5, 0))
+        self.desc_label.pack(anchor=tk.W, pady=(10, 0))
 
-        # Bind click events
+        # Bind click events to all widgets
         if enabled:
-            self.bind('<Button-1>', self._on_click)
-            name_label.bind('<Button-1>', self._on_click)
-            desc_label.bind('<Button-1>', self._on_click)
-            self.bind('<Enter>', self._on_enter)
-            self.bind('<Leave>', self._on_leave)
+            for widget in [self, inner, self.name_label, self.desc_label]:
+                widget.bind('<Button-1>', self._on_click)
+                widget.bind('<Enter>', self._on_enter)
+                widget.bind('<Leave>', self._on_leave)
         else:
-            self.bind('<Button-1>', self._on_disabled_click)
-            name_label.bind('<Button-1>', self._on_disabled_click)
-            desc_label.bind('<Button-1>', self._on_disabled_click)
+            for widget in [self, inner, self.name_label, self.desc_label]:
+                widget.bind('<Button-1>', self._on_disabled_click)
 
     def _on_click(self, event):
         if self.on_click:
@@ -85,50 +99,63 @@ class PlatformCard(ttk.Frame):
 
     def _on_enter(self, event):
         if self.enabled and not self.selected:
-            self.configure(style='HoverCard.TFrame')
+            self._set_bg(COLORS['card_hover'])
 
     def _on_leave(self, event):
         if self.enabled and not self.selected:
-            self.configure(style='Card.TFrame')
+            self._set_bg(COLORS['card_bg'])
+
+    def _set_bg(self, color):
+        """Set background color for all widgets."""
+        self._bg_color = color
+        self.configure(bg=color)
+        for widget in self.winfo_children():
+            if isinstance(widget, tk.Frame):
+                widget.configure(bg=color)
+                for child in widget.winfo_children():
+                    if isinstance(child, tk.Label):
+                        child.configure(bg=color)
 
     def set_selected(self, selected: bool):
         self.selected = selected
         if selected:
-            self.configure(style='SelectedCard.TFrame')
+            self._set_bg(COLORS['card_selected'])
+            self.configure(highlightbackground=COLORS['primary'], highlightthickness=2)
         else:
-            self.configure(style='Card.TFrame')
+            self._set_bg(COLORS['card_bg'])
+            self.configure(highlightbackground=COLORS['border'], highlightthickness=1)
 
 
 class StepPlatform(WizardStep):
     """Platform selection step."""
 
-    def __init__(self, parent: ttk.Frame, wizard: WizardController, **kwargs):
+    def __init__(self, parent: tk.Frame, wizard: WizardController, **kwargs):
         super().__init__(parent, wizard)
 
         self.selected_platform = None
         self.cards = []
 
-        # Create custom styles
-        self._create_styles()
-
         # Title
-        title = ttk.Label(
+        title = tk.Label(
             self,
             text="Choose Your Cloud Platform",
-            font=('Segoe UI', 14, 'bold')
+            font=('Segoe UI', 14, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
-        title.pack(pady=(20, 10))
+        title.pack(pady=(30, 10))
 
-        subtitle = ttk.Label(
+        subtitle = tk.Label(
             self,
             text="Select the cloud platform where you want to deploy Orbu",
             font=('Segoe UI', 10),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
-        subtitle.pack(pady=(0, 30))
+        subtitle.pack(pady=(0, 40))
 
-        # Cards container
-        cards_frame = ttk.Frame(self)
+        # Cards container - centered
+        cards_frame = tk.Frame(self, bg=COLORS['card_bg'])
         cards_frame.pack(expand=True)
 
         # GCP Card
@@ -139,7 +166,7 @@ class StepPlatform(WizardStep):
             enabled=True,
             on_click=lambda: self._select_platform('gcp', self.gcp_card)
         )
-        self.gcp_card.pack(side=tk.LEFT, padx=10)
+        self.gcp_card.pack(side=tk.LEFT, padx=15, pady=10)
         self.cards.append(self.gcp_card)
 
         # Azure Card
@@ -150,7 +177,7 @@ class StepPlatform(WizardStep):
             enabled=False,
             badge="Coming Soon"
         )
-        self.azure_card.pack(side=tk.LEFT, padx=10)
+        self.azure_card.pack(side=tk.LEFT, padx=15, pady=10)
         self.cards.append(self.azure_card)
 
         # AWS Card
@@ -161,24 +188,8 @@ class StepPlatform(WizardStep):
             enabled=False,
             badge="Coming Soon"
         )
-        self.aws_card.pack(side=tk.LEFT, padx=10)
+        self.aws_card.pack(side=tk.LEFT, padx=15, pady=10)
         self.cards.append(self.aws_card)
-
-    def _create_styles(self):
-        """Create custom styles for cards."""
-        style = ttk.Style()
-
-        # Normal card
-        style.configure('Card.TFrame', background='#ffffff', relief='solid', borderwidth=1)
-
-        # Disabled card
-        style.configure('DisabledCard.TFrame', background='#f5f5f5', relief='solid', borderwidth=1)
-
-        # Hover card
-        style.configure('HoverCard.TFrame', background='#e3f2fd', relief='solid', borderwidth=1)
-
-        # Selected card
-        style.configure('SelectedCard.TFrame', background='#bbdefb', relief='solid', borderwidth=2)
 
     def _select_platform(self, platform: str, card: PlatformCard):
         """Handle platform selection."""

@@ -34,13 +34,21 @@ class DeploymentConfig:
     # Platform-agnostic
     platform: str  # 'gcp', 'azure', 'aws'
 
+    # Organization
+    org_name: str = ''  # Display name (e.g., "Nioron")
+    org_slug: str = ''  # URL-safe slug (e.g., "nioron")
+
     # Database
-    db_connection_method: str  # 'managed', 'external'
-    db_host: str
-    db_port: str
-    db_name: str
-    db_user: str
-    db_password: str
+    db_connection_method: str = ''  # 'managed', 'external'
+    db_host: str = ''
+    db_port: str = ''
+    db_name: str = ''
+    db_user: str = ''
+    db_password: str = ''
+
+    # Admin credentials
+    admin_email: str = ''
+    admin_password: str = ''  # Plain text, will be hashed before storage
 
     # Platform-specific (set by subclasses)
     platform_config: Dict[str, Any] = None

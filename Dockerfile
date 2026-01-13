@@ -84,12 +84,14 @@ RUN mkdir -p \
     /var/log/nginx \
     /tmp/flask_session \
     /tmp/.easy_acumatica_cache \
+    /app/backend/flask_session \
     && dos2unix /app/entrypoint.sh \
     && chmod +x /app/entrypoint.sh \
     && chown -R www-data:www-data /usr/share/nginx/html \
     && chown -R www-data:www-data /var/log/nginx \
     && chmod -R 777 /tmp/flask_session \
-    && chmod -R 777 /tmp/.easy_acumatica_cache
+    && chmod -R 777 /tmp/.easy_acumatica_cache \
+    && chmod -R 777 /app/backend/flask_session
 
 # Default environment variables
 ENV FLASK_APP=app.py \

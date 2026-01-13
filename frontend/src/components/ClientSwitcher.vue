@@ -107,12 +107,14 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useClientsStore } from '@/stores/clients';
+import { useAuthStore } from '@/stores/auth';
 import type { Client } from '@/services/clientApi';
 import LoadingState from './LoadingState.vue';
 import EmptyState from './EmptyState.vue';
 
 const router = useRouter();
 const clientsStore = useClientsStore();
+const authStore = useAuthStore();
 
 const connecting = ref<string | null>(null);
 
@@ -121,6 +123,10 @@ const clients = computed(() => clientsStore.activeClients);
 const loading = computed(() => clientsStore.isLoading);
 
 async function loadClients() {
+  // Only load clients if authenticated
+  if (!authStore.isAuthenticated) {
+    return;
+  }
   // Load clients into the store if not already loaded
   if (clientsStore.clients.length === 0) {
     await clientsStore.loadClients();

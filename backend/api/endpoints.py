@@ -9,6 +9,7 @@ from flask import Blueprint, request, jsonify
 from models import Endpoint, Client, EndpointExecution, ServiceGroup
 from database import db
 from auth import require_api_key
+from api.auth import require_auth
 from services.endpoint_executor import EndpointExecutor
 from services.schema_service import SchemaService
 from services.connection_pool import get_connection_pool
@@ -25,6 +26,7 @@ endpoints_bp = Blueprint('endpoints', __name__, url_prefix='/api/v1')
 # ============================================================================
 
 @endpoints_bp.route('/clients/<uuid:client_id>/service-groups/<uuid:service_group_id>/endpoints', methods=['GET'])
+@require_auth
 def list_service_group_endpoints(client_id, service_group_id):
     """
     List all endpoints for a specific service group.
@@ -69,6 +71,7 @@ def list_service_group_endpoints(client_id, service_group_id):
 
 
 @endpoints_bp.route('/clients/<uuid:client_id>/service-groups/<uuid:service_group_id>/endpoints', methods=['POST'])
+@require_auth
 def create_endpoint(client_id, service_group_id):
     """
     Create a single endpoint for a service group.
@@ -161,6 +164,7 @@ def create_endpoint(client_id, service_group_id):
 
 
 @endpoints_bp.route('/clients/<uuid:client_id>/service-groups/<uuid:service_group_id>/endpoints/batch', methods=['POST'])
+@require_auth
 def deploy_service(client_id, service_group_id):
     """
     Deploy all methods of a service as endpoints in a service group.
@@ -293,6 +297,7 @@ def deploy_service(client_id, service_group_id):
 
 
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>', methods=['GET'])
+@require_auth
 def get_endpoint(endpoint_id):
     """Get details of a specific endpoint."""
     try:
@@ -318,6 +323,7 @@ def get_endpoint(endpoint_id):
 
 
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>', methods=['PUT'])
+@require_auth
 def update_endpoint(endpoint_id):
     """
     Update an endpoint.
@@ -365,6 +371,7 @@ def update_endpoint(endpoint_id):
 
 
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>', methods=['DELETE'])
+@require_auth
 def delete_endpoint(endpoint_id):
     """Delete an endpoint."""
     try:
@@ -390,6 +397,7 @@ def delete_endpoint(endpoint_id):
 
 
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>/activate', methods=['POST'])
+@require_auth
 def activate_endpoint(endpoint_id):
     """Activate an endpoint."""
     try:
@@ -415,6 +423,7 @@ def activate_endpoint(endpoint_id):
 
 
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>/deactivate', methods=['POST'])
+@require_auth
 def deactivate_endpoint(endpoint_id):
     """Deactivate an endpoint."""
     try:
@@ -440,6 +449,7 @@ def deactivate_endpoint(endpoint_id):
 
 
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>/logs', methods=['GET'])
+@require_auth
 def get_endpoint_logs(endpoint_id):
     """
     Get execution logs for an endpoint with filtering and pagination.
@@ -516,6 +526,7 @@ def get_endpoint_logs(endpoint_id):
 
 
 @endpoints_bp.route('/endpoints/<uuid:endpoint_id>/test', methods=['POST'])
+@require_auth
 def test_endpoint(endpoint_id):
     """
     Test an endpoint with provided parameters (management UI only).

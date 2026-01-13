@@ -8,42 +8,39 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Dict, Any
 
-from ui.wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController, ScrollableFrame, COLORS
 
 
 class StepReview(WizardStep):
     """Review and confirm step."""
 
-    def __init__(self, parent: ttk.Frame, wizard: WizardController, **kwargs):
+    def __init__(self, parent: tk.Frame, wizard: WizardController, **kwargs):
         super().__init__(parent, wizard)
 
         # Title
-        title = ttk.Label(
+        title = tk.Label(
             self,
             text="Review Configuration",
-            font=('Segoe UI', 14, 'bold')
+            font=('Segoe UI', 14, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
         title.pack(pady=(20, 10))
 
-        subtitle = ttk.Label(
+        subtitle = tk.Label(
             self,
             text="Please review your settings before deploying",
             font=('Segoe UI', 10),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
-        subtitle.pack(pady=(0, 20))
+        subtitle.pack(pady=(0, 15))
 
         # Scrollable review area
-        canvas = tk.Canvas(self, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
-        self.review_frame = ttk.Frame(canvas)
+        self.scroll_container = ScrollableFrame(self, bg=COLORS['card_bg'])
+        self.scroll_container.pack(fill=tk.BOTH, expand=True, padx=30)
 
-        self.review_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=self.review_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=50)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.review_frame = self.scroll_container.scrollable_frame
 
         # Will be populated on_enter
         self.confirm_var = tk.BooleanVar(value=False)
@@ -55,6 +52,14 @@ class StepReview(WizardStep):
             widget.destroy()
 
         data = self.wizard.data
+
+        # Organization section
+        org_name = data.get('org_name', 'Not set')
+        org_slug = data.get('org_slug', 'orbu')
+        self._add_section("Organization", [
+            ("Name", org_name),
+            ("Resource Prefix", f"{org_slug}-orbu"),
+        ])
 
         # Platform section
         self._add_section("Platform", [
@@ -75,7 +80,7 @@ class StepReview(WizardStep):
             ("Connection Type", db_type_display),
             ("Database Name", data.get('db_name', 'Not set')),
             ("Username", data.get('db_user', 'Not set')),
-            ("Password", "••••••••"),  # Never show password
+            ("Password", "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"),  # Never show password
         ]
 
         if data.get('cloud_sql_connection'):
@@ -85,30 +90,41 @@ class StepReview(WizardStep):
 
         self._add_section("Database", db_items)
 
+        # Admin section
+        self._add_section("Admin Account", [
+            ("Email", data.get('admin_email', 'Not set')),
+            ("Password", "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"),  # Never show password
+        ])
+
         # Resources section
+        service_name = f"{org_slug}-orbu"
+        sa_name = f"{org_slug}-orbu-sa"
         self._add_section("Resources to Create", [
-            ("Secret Manager Secrets", "4 secrets (host, db, user, password)"),
-            ("Service Account", f"orbu-sa@{data.get('project_id', 'PROJECT')}.iam.gserviceaccount.com"),
-            ("Container Image", f"gcr.io/{data.get('project_id', 'PROJECT')}/orbu:latest"),
-            ("Cloud Run Service", "orbu"),
+            ("Secret Manager Secrets", f"7 secrets ({org_slug}-orbu-postgres-*, admin-*, org-name)"),
+            ("Service Account", f"{sa_name}@{data.get('project_id', 'PROJECT')}.iam.gserviceaccount.com"),
+            ("Container Image", f"gcr.io/{data.get('project_id', 'PROJECT')}/{service_name}:latest"),
+            ("Cloud Run Service", service_name),
         ])
 
         # Warning
-        warning_frame = ttk.Frame(self.review_frame)
+        warning_frame = tk.Frame(self.review_frame, bg='#fff3e0', padx=15, pady=10)
         warning_frame.pack(fill=tk.X, pady=20)
 
-        warning_icon = ttk.Label(
+        warning_icon = tk.Label(
             warning_frame,
-            text="⚠️",
-            font=('Segoe UI', 14)
+            text="\u26a0",
+            font=('Segoe UI', 14),
+            bg='#fff3e0',
+            fg='#e65100'
         )
         warning_icon.pack(side=tk.LEFT)
 
-        warning_text = ttk.Label(
+        warning_text = tk.Label(
             warning_frame,
             text="Deploying will create GCP resources that may incur charges.",
             font=('Segoe UI', 10),
-            foreground='#cc6600'
+            bg='#fff3e0',
+            fg='#e65100'
         )
         warning_text.pack(side=tk.LEFT, padx=10)
 
@@ -120,7 +136,11 @@ class StepReview(WizardStep):
             variable=self.confirm_var,
             command=self._on_confirm_change
         )
-        confirm_check.pack(anchor=tk.W, pady=10)
+        confirm_check.pack(anchor=tk.W, pady=15)
+
+        # Add some bottom padding
+        spacer = tk.Frame(self.review_frame, height=20, bg=COLORS['card_bg'])
+        spacer.pack()
 
         # Update button state
         self.wizard.set_next_text("Deploy")
@@ -129,31 +149,37 @@ class StepReview(WizardStep):
     def _add_section(self, title: str, items: list):
         """Add a section to the review."""
         # Section header
-        header = ttk.Label(
+        header = tk.Label(
             self.review_frame,
             text=title,
-            font=('Segoe UI', 11, 'bold')
+            font=('Segoe UI', 11, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
         header.pack(anchor=tk.W, pady=(15, 10))
 
         # Items
         for label, value in items:
-            item_frame = ttk.Frame(self.review_frame)
-            item_frame.pack(fill=tk.X, pady=2)
+            item_frame = tk.Frame(self.review_frame, bg=COLORS['card_bg'])
+            item_frame.pack(fill=tk.X, pady=3)
 
-            label_widget = ttk.Label(
+            label_widget = tk.Label(
                 item_frame,
                 text=f"{label}:",
                 font=('Segoe UI', 10),
-                foreground='#666',
-                width=25
+                bg=COLORS['card_bg'],
+                fg=COLORS['text_secondary'],
+                width=22,
+                anchor='w'
             )
             label_widget.pack(side=tk.LEFT)
 
-            value_widget = ttk.Label(
+            value_widget = tk.Label(
                 item_frame,
                 text=value,
-                font=('Segoe UI', 10, 'bold')
+                font=('Segoe UI', 10, 'bold'),
+                bg=COLORS['card_bg'],
+                fg=COLORS['text']
             )
             value_widget.pack(side=tk.LEFT)
 

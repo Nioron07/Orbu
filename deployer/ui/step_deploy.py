@@ -14,7 +14,7 @@ import tempfile
 import shutil
 from typing import Dict, Any, Optional
 
-from ui.wizard import WizardStep, WizardController
+from ui.wizard import WizardStep, WizardController, COLORS
 from core.base_deployer import DeploymentConfig, DeploymentStatus
 from core.gcp_deployer import GCPDeployer, GCPConfig
 
@@ -22,7 +22,7 @@ from core.gcp_deployer import GCPDeployer, GCPConfig
 class StepDeploy(WizardStep):
     """Deployment progress step."""
 
-    def __init__(self, parent: ttk.Frame, wizard: WizardController, **kwargs):
+    def __init__(self, parent: tk.Frame, wizard: WizardController, **kwargs):
         super().__init__(parent, wizard)
 
         self.deployer: Optional[GCPDeployer] = None
@@ -34,24 +34,27 @@ class StepDeploy(WizardStep):
         self.source_path: Optional[str] = None
 
         # Title
-        title = ttk.Label(
+        title = tk.Label(
             self,
             text="Deploying Orbu",
-            font=('Segoe UI', 14, 'bold')
+            font=('Segoe UI', 14, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
         title.pack(pady=(20, 10))
 
-        self.subtitle = ttk.Label(
+        self.subtitle = tk.Label(
             self,
             text="Please wait while Orbu is being deployed...",
             font=('Segoe UI', 10),
-            foreground='#666'
+            bg=COLORS['card_bg'],
+            fg=COLORS['text_secondary']
         )
         self.subtitle.pack(pady=(0, 20))
 
         # Progress steps
-        self.steps_frame = ttk.Frame(self)
-        self.steps_frame.pack(fill=tk.X, padx=50, pady=10)
+        self.steps_frame = tk.Frame(self, bg=COLORS['card_bg'])
+        self.steps_frame.pack(fill=tk.X, padx=60, pady=10)
 
         self.step_labels = {}
         steps = [
@@ -65,16 +68,35 @@ class StepDeploy(WizardStep):
         ]
 
         for step_id, step_name in steps:
-            frame = ttk.Frame(self.steps_frame)
-            frame.pack(fill=tk.X, pady=5)
+            frame = tk.Frame(self.steps_frame, bg=COLORS['card_bg'])
+            frame.pack(fill=tk.X, pady=6)
 
-            status_label = ttk.Label(frame, text="○", font=('Segoe UI', 12), width=3)
+            status_label = tk.Label(
+                frame,
+                text="\u25cb",
+                font=('Segoe UI', 12),
+                width=3,
+                bg=COLORS['card_bg'],
+                fg=COLORS['text_secondary']
+            )
             status_label.pack(side=tk.LEFT)
 
-            name_label = ttk.Label(frame, text=step_name, font=('Segoe UI', 10))
+            name_label = tk.Label(
+                frame,
+                text=step_name,
+                font=('Segoe UI', 10),
+                bg=COLORS['card_bg'],
+                fg=COLORS['text']
+            )
             name_label.pack(side=tk.LEFT)
 
-            detail_label = ttk.Label(frame, text="", font=('Segoe UI', 9), foreground='#888')
+            detail_label = tk.Label(
+                frame,
+                text="",
+                font=('Segoe UI', 9),
+                bg=COLORS['card_bg'],
+                fg=COLORS['text_secondary']
+            )
             detail_label.pack(side=tk.LEFT, padx=(10, 0))
 
             self.step_labels[step_id] = {
@@ -84,15 +106,17 @@ class StepDeploy(WizardStep):
             }
 
         # Log output
-        log_label = ttk.Label(
+        log_label = tk.Label(
             self,
             text="Deployment Log",
-            font=('Segoe UI', 10, 'bold')
+            font=('Segoe UI', 10, 'bold'),
+            bg=COLORS['card_bg'],
+            fg=COLORS['text']
         )
-        log_label.pack(anchor=tk.W, padx=50, pady=(20, 5))
+        log_label.pack(anchor=tk.W, padx=60, pady=(20, 5))
 
-        log_frame = ttk.Frame(self)
-        log_frame.pack(fill=tk.BOTH, expand=True, padx=50, pady=(0, 10))
+        log_frame = tk.Frame(self, bg=COLORS['card_bg'])
+        log_frame.pack(fill=tk.BOTH, expand=True, padx=60, pady=(0, 10))
 
         self.log_text = tk.Text(
             log_frame,
@@ -100,7 +124,10 @@ class StepDeploy(WizardStep):
             font=('Consolas', 9),
             bg='#1e1e1e',
             fg='#d4d4d4',
-            state=tk.DISABLED
+            state=tk.DISABLED,
+            relief='flat',
+            padx=10,
+            pady=10
         )
         self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -114,7 +141,7 @@ class StepDeploy(WizardStep):
             text="Cancel",
             command=self._on_cancel
         )
-        self.cancel_button.pack(pady=10)
+        self.cancel_button.pack(pady=15)
 
     def on_enter(self):
         """Start deployment when step becomes visible."""
@@ -132,7 +159,7 @@ class StepDeploy(WizardStep):
 
         # Reset step indicators
         for step_id, labels in self.step_labels.items():
-            labels['status'].config(text="○", foreground='#888')
+            labels['status'].config(text="\u25cb", fg=COLORS['text_secondary'])
             labels['detail'].config(text="")
 
         # Extract source code and start deployment
@@ -153,13 +180,13 @@ class StepDeploy(WizardStep):
         labels = self.step_labels[step_id]
 
         if status == DeploymentStatus.PENDING:
-            labels['status'].config(text="○", foreground='#888')
+            labels['status'].config(text="\u25cb", fg=COLORS['text_secondary'])
         elif status == DeploymentStatus.IN_PROGRESS:
-            labels['status'].config(text="◐", foreground='#2196f3')
+            labels['status'].config(text="\u25d4", fg=COLORS['primary'])
         elif status == DeploymentStatus.SUCCESS:
-            labels['status'].config(text="✓", foreground='green')
+            labels['status'].config(text="\u2713", fg=COLORS['success'])
         elif status == DeploymentStatus.FAILED:
-            labels['status'].config(text="✗", foreground='red')
+            labels['status'].config(text="\u2717", fg=COLORS['error'])
 
         if message:
             labels['detail'].config(text=message)
@@ -218,6 +245,8 @@ class StepDeploy(WizardStep):
             db_name=data.get('db_name'),
             db_user=data.get('db_user'),
             db_password=data.get('db_password'),
+            admin_email=data.get('admin_email', ''),
+            admin_password=data.get('admin_password', ''),
             platform_config=gcp_config
         )
 
@@ -291,14 +320,14 @@ class StepDeploy(WizardStep):
                 pass
 
         if success:
-            self.subtitle.config(text="Deployment completed successfully!", foreground='green')
-            self._log(f"\n✓ Deployment successful!")
+            self.subtitle.config(text="Deployment completed successfully!", fg=COLORS['success'])
+            self._log(f"\n\u2713 Deployment successful!")
             if url:
                 self._log(f"Service URL: {url}")
             self.cancel_button.config(text="Continue", command=self._on_continue)
         else:
-            self.subtitle.config(text="Deployment failed. See log for details.", foreground='red')
-            self._log("\n✗ Deployment failed")
+            self.subtitle.config(text="Deployment failed. See log for details.", fg=COLORS['error'])
+            self._log("\n\u2717 Deployment failed")
             self.cancel_button.config(text="Close", command=self._on_close)
 
     def _on_cancel(self):

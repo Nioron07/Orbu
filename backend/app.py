@@ -15,6 +15,7 @@ from encryption import init_encryption
 from api.clients import clients_bp
 from api.endpoints import endpoints_bp
 from api.service_groups import service_groups_bp
+from api.auth import auth_bp, init_admin_user
 from services.connection_pool import init_connection_pool
 from services.log_cleanup import log_cleanup_service
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -48,6 +49,7 @@ init_encryption(app)
 app.register_blueprint(clients_bp)
 app.register_blueprint(endpoints_bp)
 app.register_blueprint(service_groups_bp)
+app.register_blueprint(auth_bp)
 
 
 @app.errorhandler(Exception)
@@ -100,6 +102,9 @@ with app.app_context():
     try:
         db.create_all()
         logger.info("Database tables created/verified")
+
+        # Initialize admin user from environment variables
+        init_admin_user()
 
         # Initialize connection pool
         init_connection_pool()

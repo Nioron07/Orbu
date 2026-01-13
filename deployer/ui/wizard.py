@@ -3,8 +3,24 @@ Wizard Controller - Manages the multi-step deployment wizard.
 """
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from typing import Dict, Any, Optional, Type
+
+
+# Color scheme
+COLORS = {
+    'bg': '#f5f5f5',
+    'card_bg': '#ffffff',
+    'card_hover': '#e3f2fd',
+    'card_selected': '#bbdefb',
+    'card_disabled': '#eeeeee',
+    'primary': '#1976d2',
+    'success': '#388e3c',
+    'error': '#d32f2f',
+    'text': '#212121',
+    'text_secondary': '#666666',
+    'border': '#e0e0e0',
+}
 
 
 class WizardController:
@@ -20,69 +36,109 @@ class WizardController:
 
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.steps: list[ttk.Frame] = []
+        self.steps: list[tk.Frame] = []
         self.current_step = 0
         self.data: Dict[str, Any] = {}
 
         # Configure root window
         self.root.title("Orbu Deployer")
-        self.root.geometry("700x550")
+        self.root.geometry("750x600")
         self.root.resizable(True, True)
-        self.root.minsize(600, 450)
+        self.root.minsize(650, 500)
+        self.root.configure(bg=COLORS['bg'])
 
-        # Create main container
-        self.main_frame = ttk.Frame(root, padding="10")
+        # Configure ttk styles
+        self._configure_styles()
+
+        # Create main container with background
+        self.main_frame = tk.Frame(root, bg=COLORS['bg'], padx=15, pady=15)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Header with step indicator
-        self.header_frame = ttk.Frame(self.main_frame)
-        self.header_frame.pack(fill=tk.X, pady=(0, 10))
+        self.header_frame = tk.Frame(self.main_frame, bg=COLORS['bg'])
+        self.header_frame.pack(fill=tk.X, pady=(0, 15))
 
-        self.title_label = ttk.Label(
+        self.title_label = tk.Label(
             self.header_frame,
             text="Orbu Deployer",
-            font=('Segoe UI', 16, 'bold')
+            font=('Segoe UI', 18, 'bold'),
+            bg=COLORS['bg'],
+            fg=COLORS['text']
         )
         self.title_label.pack(side=tk.LEFT)
 
-        self.step_label = ttk.Label(
+        self.step_label = tk.Label(
             self.header_frame,
             text="Step 1 of 7",
-            font=('Segoe UI', 10)
+            font=('Segoe UI', 11),
+            bg=COLORS['bg'],
+            fg=COLORS['text_secondary']
         )
         self.step_label.pack(side=tk.RIGHT)
 
-        # Content area (where step frames go)
-        self.content_frame = ttk.Frame(self.main_frame)
-        self.content_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        # Content area (where step frames go) - white card background
+        self.content_container = tk.Frame(self.main_frame, bg=COLORS['card_bg'], relief='flat', bd=1)
+        self.content_container.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        # Add a subtle border
+        self.content_container.configure(highlightbackground=COLORS['border'], highlightthickness=1)
+
+        self.content_frame = tk.Frame(self.content_container, bg=COLORS['card_bg'])
+        self.content_frame.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
 
         # Navigation buttons
-        self.nav_frame = ttk.Frame(self.main_frame)
-        self.nav_frame.pack(fill=tk.X, pady=(10, 0))
+        self.nav_frame = tk.Frame(self.main_frame, bg=COLORS['bg'])
+        self.nav_frame.pack(fill=tk.X, pady=(15, 0))
 
         self.back_button = ttk.Button(
             self.nav_frame,
             text="< Back",
             command=self.go_back,
-            state=tk.DISABLED
+            state=tk.DISABLED,
+            style='Nav.TButton'
         )
         self.back_button.pack(side=tk.LEFT)
 
         self.next_button = ttk.Button(
             self.nav_frame,
             text="Next >",
-            command=self.go_next
+            command=self.go_next,
+            style='Primary.TButton'
         )
         self.next_button.pack(side=tk.RIGHT)
 
         self.cancel_button = ttk.Button(
             self.nav_frame,
             text="Cancel",
-            command=self.cancel
+            command=self.cancel,
+            style='Nav.TButton'
         )
         self.cancel_button.pack(side=tk.RIGHT, padx=(0, 10))
 
-    def add_step(self, step_class: Type[ttk.Frame], **kwargs):
+    def _configure_styles(self):
+        """Configure ttk styles for the wizard."""
+        style = ttk.Style()
+
+        # Try to use a modern theme
+        try:
+            style.theme_use('vista')
+        except:
+            try:
+                style.theme_use('clam')
+            except:
+                pass
+
+        # Primary button (blue)
+        style.configure('Primary.TButton', font=('Segoe UI', 10), padding=(15, 8))
+
+        # Navigation button
+        style.configure('Nav.TButton', font=('Segoe UI', 10), padding=(15, 8))
+
+        # Labels
+        style.configure('Title.TLabel', font=('Segoe UI', 14, 'bold'), background=COLORS['card_bg'])
+        style.configure('Subtitle.TLabel', font=('Segoe UI', 10), foreground=COLORS['text_secondary'], background=COLORS['card_bg'])
+
+    def add_step(self, step_class: Type[tk.Frame], **kwargs):
         """Add a step to the wizard."""
         step = step_class(self.content_frame, self, **kwargs)
         self.steps.append(step)
@@ -151,7 +207,7 @@ class WizardController:
 
     def cancel(self):
         """Cancel the wizard."""
-        if tk.messagebox.askyesno("Cancel", "Are you sure you want to cancel?"):
+        if messagebox.askyesno("Cancel", "Are you sure you want to cancel?"):
             self.root.quit()
 
     def start(self):
@@ -181,11 +237,72 @@ class WizardController:
         self.next_button.pack(side=tk.RIGHT)
 
 
-class WizardStep(ttk.Frame):
+class ScrollableFrame(tk.Frame):
+    """A scrollable frame that properly handles mouse wheel events."""
+
+    def __init__(self, parent, bg='white', **kwargs):
+        super().__init__(parent, bg=bg)
+
+        # Create canvas
+        self.canvas = tk.Canvas(self, bg=bg, highlightthickness=0)
+        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas, bg=bg)
+
+        # Configure canvas scrolling
+        self.scrollable_frame.bind("<Configure>", self._on_frame_configure)
+        self.canvas_window = self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Bind canvas resize to update scrollable frame width
+        self.canvas.bind("<Configure>", self._on_canvas_configure)
+
+        # Pack widgets
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Bind mouse wheel
+        self._bind_mousewheel()
+
+    def _on_frame_configure(self, event):
+        """Reset the scroll region to encompass the scrollable frame."""
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+
+    def _on_canvas_configure(self, event):
+        """Update the scrollable frame width when canvas resizes."""
+        self.canvas.itemconfig(self.canvas_window, width=event.width)
+
+    def _bind_mousewheel(self):
+        """Bind mouse wheel events for scrolling."""
+        self.canvas.bind("<Enter>", self._on_enter)
+        self.canvas.bind("<Leave>", self._on_leave)
+
+    def _on_enter(self, event):
+        """Bind mousewheel when mouse enters."""
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel)
+
+    def _on_leave(self, event):
+        """Unbind mousewheel when mouse leaves."""
+        self.canvas.unbind_all("<MouseWheel>")
+        self.canvas.unbind_all("<Button-4>")
+        self.canvas.unbind_all("<Button-5>")
+
+    def _on_mousewheel(self, event):
+        """Handle mouse wheel scrolling."""
+        if event.num == 4:  # Linux scroll up
+            self.canvas.yview_scroll(-1, "units")
+        elif event.num == 5:  # Linux scroll down
+            self.canvas.yview_scroll(1, "units")
+        else:  # Windows/Mac
+            self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+
+class WizardStep(tk.Frame):
     """Base class for wizard steps."""
 
-    def __init__(self, parent: ttk.Frame, wizard: WizardController, **kwargs):
-        super().__init__(parent)
+    def __init__(self, parent: tk.Frame, wizard: WizardController, **kwargs):
+        super().__init__(parent, bg=COLORS['card_bg'])
         self.wizard = wizard
 
     def validate(self) -> bool:

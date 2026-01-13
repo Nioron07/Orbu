@@ -20,6 +20,7 @@ from database import db
 from models import Client, ConnectionLog, ClientMetadataCache, ServiceGroup
 from encryption import get_encryption_service
 from services.connection_pool import get_connection_pool
+from api.auth import require_auth
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ def disconnect_client(client_id):
 
 
 @clients_bp.route('', methods=['GET'])
+@require_auth
 def list_clients():
     """
     List all clients with optional filtering.
@@ -113,6 +115,7 @@ def list_clients():
 
 
 @clients_bp.route('', methods=['POST'])
+@require_auth
 def create_client():
     """
     Create a new client configuration.
@@ -203,6 +206,7 @@ def create_client():
 
 
 @clients_bp.route('/<uuid:client_id>', methods=['GET'])
+@require_auth
 def get_client(client_id):
     """
     Get details of a specific client.
@@ -234,6 +238,7 @@ def get_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>', methods=['PUT'])
+@require_auth
 def update_client(client_id):
     """
     Update a client configuration.
@@ -307,6 +312,7 @@ def update_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>', methods=['DELETE'])
+@require_auth
 def delete_client(client_id):
     """
     Delete a client configuration.
@@ -343,6 +349,7 @@ def delete_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/connect', methods=['POST'])
+@require_auth
 def connect_to_client(client_id):
     """
     Connect to a client (validates credentials and adds to connection pool).
@@ -432,6 +439,7 @@ def connect_to_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/disconnect', methods=['POST'])
+@require_auth
 def disconnect_from_client(client_id):
     """
     Disconnect from a client (removes from connection pool).
@@ -470,6 +478,7 @@ def disconnect_from_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/rebuild', methods=['POST'])
+@require_auth
 def rebuild_client(client_id):
     """
     Rebuild/refresh a client connection by invalidating cache and reconnecting.
@@ -541,6 +550,7 @@ def rebuild_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/activate', methods=['POST'])
+@require_auth
 def activate_client(client_id):
     """
     Activate a client to make it available for connections.
@@ -579,6 +589,7 @@ def activate_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/deactivate', methods=['POST'])
+@require_auth
 def deactivate_client(client_id):
     """
     Deactivate a client and disconnect if currently connected.
@@ -621,6 +632,7 @@ def deactivate_client(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/api-key', methods=['GET'])
+@require_auth
 def get_api_key(client_id):
     """
     Get the full API key for a client (for copying purposes).
@@ -652,6 +664,7 @@ def get_api_key(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/regenerate-api-key', methods=['POST'])
+@require_auth
 def regenerate_api_key(client_id):
     """
     Regenerate the API key for a client.
@@ -694,6 +707,7 @@ def regenerate_api_key(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/services', methods=['GET'])
+@require_auth
 def list_client_services(client_id):
     """
     List available services for a client.
@@ -788,6 +802,7 @@ def list_client_services(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/services/<service_name>', methods=['GET'])
+@require_auth
 def get_client_service_details(client_id, service_name):
     """
     Get details of a specific service for a client.
@@ -899,6 +914,7 @@ def get_client_service_details(client_id, service_name):
 
 
 @clients_bp.route('/<uuid:client_id>/models', methods=['GET'])
+@require_auth
 def list_client_models(client_id):
     """
     List available models for a client.
@@ -992,6 +1008,7 @@ def list_client_models(client_id):
 
 
 @clients_bp.route('/<uuid:client_id>/models/<model_name>', methods=['GET'])
+@require_auth
 def get_client_model_details(client_id, model_name):
     """
     Get details of a specific model for a client.

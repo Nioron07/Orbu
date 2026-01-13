@@ -38,6 +38,14 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-orbu}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
 
+      # Admin credentials (local development only)
+      # Default: admin@localhost / Admin123
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:-$$2b$$12$$NSuvy5R3RxE94Ahhz3SF6eREYz7m7TRigshWLwXBD7QbvBEEVpzTW}
+
+      # Organization name (displayed in app header)
+      ORG_NAME: ${ORG_NAME:-Orbu}
+
       # CORS settings
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
     healthcheck:

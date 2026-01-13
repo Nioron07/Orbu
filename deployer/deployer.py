@@ -21,9 +21,11 @@ sys.path.insert(0, BASE_DIR)
 
 from ui.wizard import WizardController
 from ui.step_platform import StepPlatform
+from ui.step_organization import StepOrganization
 from ui.step_prerequisites import StepPrerequisites
 from ui.step_project import StepProject
 from ui.step_database import StepDatabase
+from ui.step_admin import StepAdmin
 from ui.step_review import StepReview
 from ui.step_deploy import StepDeploy
 from ui.step_complete import StepComplete
@@ -105,9 +107,11 @@ def main():
 
     # Add wizard steps
     wizard.add_step(StepPlatform)
+    wizard.add_step(StepOrganization)
     wizard.add_step(StepPrerequisites)
     wizard.add_step(StepProject)
     wizard.add_step(StepDatabase)
+    wizard.add_step(StepAdmin)
     wizard.add_step(StepReview)
     wizard.add_step(StepDeploy)
     wizard.add_step(StepComplete)

@@ -9,6 +9,53 @@ from sqlalchemy.dialects.postgresql import UUID
 from database import db
 
 
+class User(db.Model):
+    """
+    Represents a user who can access the Orbu management UI.
+    Users must be approved by an admin before they can log in.
+    """
+    __tablename__ = 'users'
+
+    # Primary key
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # User information
+    email = Column(String(255), nullable=False, unique=True, index=True)
+    name = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=False)  # bcrypt hash
+
+    # Permissions and status
+    is_admin = Column(Boolean, default=False, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)  # Can login (if approved)
+    is_approved = Column(Boolean, default=False, nullable=False)  # Admin approved
+
+    # User preferences (theme, auto-connect mode, etc.)
+    settings = Column(JSON, default=dict, nullable=False)
+
+    # Metadata
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login_at = Column(DateTime(timezone=True))
+
+    def to_dict(self):
+        """Convert user to dictionary for API responses (never include password)."""
+        return {
+            'id': str(self.id),
+            'email': self.email,
+            'name': self.name,
+            'is_admin': self.is_admin,
+            'is_active': self.is_active,
+            'is_approved': self.is_approved,
+            'settings': self.settings or {},
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'last_login_at': self.last_login_at.isoformat() if self.last_login_at else None,
+        }
+
+    def __repr__(self):
+        return f'<User {self.email}>'
+
+
 class Client(db.Model):
     """
     Represents an Acumatica client configuration.

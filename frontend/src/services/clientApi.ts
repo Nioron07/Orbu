@@ -182,10 +182,55 @@ class ClientApiService {
       withCredentials: true, // Important for session management
     });
 
-    // Add response interceptor for error handling
+    // Add request interceptor to add auth token
+    this.axiosInstance.interceptors.request.use(
+      config => {
+        const token = localStorage.getItem('orbu_access_token');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      error => Promise.reject(error)
+    );
+
+    // Add response interceptor for error handling and 401 redirect
     this.axiosInstance.interceptors.response.use(
       response => response,
-      error => {
+      async error => {
+        const originalRequest = error.config;
+
+        // Handle 401 errors
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+
+          // Try to refresh token
+          const refreshToken = localStorage.getItem('orbu_refresh_token');
+          if (refreshToken) {
+            try {
+              const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+                refresh_token: refreshToken
+              });
+
+              const newAccessToken = response.data.access_token;
+              localStorage.setItem('orbu_access_token', newAccessToken);
+
+              // Retry original request with new token
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              return this.axiosInstance(originalRequest);
+            } catch (refreshError) {
+              // Refresh failed, redirect to login
+              localStorage.removeItem('orbu_access_token');
+              localStorage.removeItem('orbu_refresh_token');
+              window.location.href = '/login';
+              return Promise.reject(refreshError);
+            }
+          } else {
+            // No refresh token, redirect to login
+            window.location.href = '/login';
+          }
+        }
+
         if (error.response?.data?.error) {
           throw new Error(error.response.data.error);
         }

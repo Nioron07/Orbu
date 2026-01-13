@@ -8,6 +8,7 @@ Service groups provide logical grouping of endpoints (e.g., 'Inventory App', 'Cu
 from flask import Blueprint, request, jsonify
 from models import ServiceGroup, Client
 from database import db
+from api.auth import require_auth
 import logging
 import re
 
@@ -52,6 +53,7 @@ def create_default_service_group(client_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups', methods=['GET'])
+@require_auth
 def list_service_groups(client_id):
     """List all service groups for a client."""
     try:
@@ -87,6 +89,7 @@ def list_service_groups(client_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups', methods=['POST'])
+@require_auth
 def create_service_group(client_id):
     """Create a new service group."""
     try:
@@ -143,6 +146,7 @@ def create_service_group(client_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups/<uuid:service_group_id>', methods=['GET'])
+@require_auth
 def get_service_group(client_id, service_group_id):
     """Get details of a specific service group."""
     try:
@@ -168,6 +172,7 @@ def get_service_group(client_id, service_group_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups/<uuid:service_group_id>', methods=['PUT'])
+@require_auth
 def update_service_group(client_id, service_group_id):
     """Update a service group."""
     try:
@@ -219,6 +224,7 @@ def update_service_group(client_id, service_group_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups/<uuid:service_group_id>', methods=['DELETE'])
+@require_auth
 def delete_service_group(client_id, service_group_id):
     """Delete a service group and all its endpoints."""
     try:
@@ -257,6 +263,7 @@ def delete_service_group(client_id, service_group_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups/<uuid:service_group_id>/activate', methods=['POST'])
+@require_auth
 def activate_service_group(client_id, service_group_id):
     """Activate a service group."""
     try:
@@ -285,6 +292,7 @@ def activate_service_group(client_id, service_group_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups/<uuid:service_group_id>/deactivate', methods=['POST'])
+@require_auth
 def deactivate_service_group(client_id, service_group_id):
     """Deactivate a service group."""
     try:
@@ -313,6 +321,7 @@ def deactivate_service_group(client_id, service_group_id):
 
 
 @service_groups_bp.route('/<uuid:client_id>/service-groups/<uuid:service_group_id>/deployed-methods', methods=['GET'])
+@require_auth
 def get_deployed_methods(client_id, service_group_id):
     """
     Get list of already deployed service/method combinations for a service group.
