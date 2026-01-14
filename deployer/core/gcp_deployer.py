@@ -24,6 +24,29 @@ from core.base_deployer import (
 )
 
 
+def get_orbu_version() -> str:
+    """Read the Orbu version from the VERSION file.
+
+    Raises:
+        FileNotFoundError: If VERSION file cannot be found in any expected location.
+    """
+    # Try multiple possible locations for the VERSION file
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), '..', '..', 'VERSION'),  # deployer/core -> deployer -> root
+        os.path.join(os.path.dirname(__file__), '..', 'VERSION'),  # Alternate
+        'VERSION',  # Current directory
+    ]
+    for path in possible_paths:
+        abs_path = os.path.abspath(path)
+        if os.path.exists(abs_path):
+            with open(abs_path, 'r') as f:
+                return f.read().strip()
+
+    raise FileNotFoundError(
+        f"VERSION file not found. Searched paths: {[os.path.abspath(p) for p in possible_paths]}"
+    )
+
+
 @dataclass
 class GCPConfig:
     """GCP-specific configuration."""
@@ -265,6 +288,7 @@ class GCPDeployer(BaseDeployer):
             ("roles/secretmanager.secretAccessor", "Secret Manager access"),
             ("roles/cloudsql.client", "Cloud SQL access"),
             ("roles/run.developer", "Cloud Run developer (for auto-updates)"),
+            ("roles/artifactregistry.reader", "Artifact Registry read access"),
         ]
 
         for role, description in permissions:
@@ -393,12 +417,13 @@ class GCPDeployer(BaseDeployer):
         )
 
         # Environment variables for app config and auto-updates
+        orbu_version = get_orbu_version()
         env_vars = (
             f"GCP_PROJECT_ID={project_id},"
             f"GCP_REGION={region},"
             f"GCP_SERVICE_NAME={service_name},"
             f"CLOUD_PLATFORM=gcp,"
-            f"ORBU_VERSION=0.1.12,"  # Will be updated via GitHub releases
+            f"ORBU_VERSION={orbu_version},"
             f"CORS_ORIGINS=*"
         )
 

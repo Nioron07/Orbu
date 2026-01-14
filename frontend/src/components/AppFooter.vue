@@ -80,16 +80,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useUpdateStore } from '@/stores/updates'
+// Version is injected at build time from the VERSION file via vite.config.mts
+declare const __APP_VERSION__: string
 
-const updateStore = useUpdateStore()
-
-// Display the version from the update store, or a fallback
-const displayVersion = computed(() => {
-  const version = updateStore.currentVersion
-  return version && version !== '0.0.0' ? version : '0.1.12'
-})
+const displayVersion = __APP_VERSION__
 </script>
 
 <style scoped lang="scss">

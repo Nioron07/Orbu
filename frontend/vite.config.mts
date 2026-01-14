@@ -11,6 +11,18 @@ import Vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 // Utilities
 import { defineConfig } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
+// Read version from VERSION file
+function getVersion(): string {
+  try {
+    const versionPath = resolve(__dirname, '..', 'VERSION')
+    return readFileSync(versionPath, 'utf-8').trim()
+  } catch {
+    return '0.0.0'
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -67,7 +79,10 @@ export default defineConfig({
       'unplugin-vue-router/data-loaders/basic',
     ],
   },
-  define: { 'process.env': {} },
+  define: {
+    'process.env': {},
+    '__APP_VERSION__': JSON.stringify(getVersion()),
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('src', import.meta.url)),
