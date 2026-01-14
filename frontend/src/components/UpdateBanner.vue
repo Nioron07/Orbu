@@ -139,7 +139,7 @@ const showBanner = computed(() => {
 // Truncate release notes for banner display
 const truncatedNotes = computed(() => {
   const notes = updateStore.releaseNotes || ''
-  const firstLine = notes.split('\n')[0]
+  const firstLine = notes.split('\n')[0] ?? ''
   return firstLine.length > 80 ? firstLine.substring(0, 77) + '...' : firstLine
 })
 

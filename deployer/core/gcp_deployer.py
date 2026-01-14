@@ -344,7 +344,9 @@ class GCPDeployer(BaseDeployer):
                 **self._get_subprocess_flags()
             )
             if result.returncode != 0:
-                error_msg = result.stderr[:500] if result.stderr else "Unknown error"
+                # Prefer stderr, but fall back to stdout for error info
+                error_output = result.stderr or result.stdout or "Unknown error (is Docker running?)"
+                error_msg = error_output[:500] if len(error_output) > 500 else error_output
                 self.update_progress("build", DeploymentStatus.FAILED, f"Docker build failed: {error_msg}")
                 return False
             self.update_progress("build", DeploymentStatus.SUCCESS, "Docker image built")
@@ -357,7 +359,8 @@ class GCPDeployer(BaseDeployer):
                 **self._get_subprocess_flags()
             )
             if result.returncode != 0:
-                error_msg = result.stderr[:500] if result.stderr else "Unknown error"
+                error_output = result.stderr or result.stdout or "Unknown error"
+                error_msg = error_output[:500] if len(error_output) > 500 else error_output
                 self.update_progress("push", DeploymentStatus.FAILED, f"Docker push failed: {error_msg}")
                 return False
             self.update_progress("push", DeploymentStatus.SUCCESS, "Image pushed to GCR")
