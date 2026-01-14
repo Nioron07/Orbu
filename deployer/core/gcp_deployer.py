@@ -223,9 +223,8 @@ class GCPDeployer(BaseDeployer):
             self.update_progress("secrets", DeploymentStatus.IN_PROGRESS, "Hashing admin password...")
             secrets[f'{prefix}-admin-password-hash'] = self._hash_password(config.admin_password)
 
-        # Add organization name as a secret (for the app header)
-        if config.org_name:
-            secrets[f'{prefix}-org-name'] = config.org_name
+        # Add organization name as a secret (for the app header) - always create with default
+        secrets[f'{prefix}-org-name'] = config.org_name or 'Orbu'
 
         for secret_name, secret_value in secrets.items():
             if not secret_value:

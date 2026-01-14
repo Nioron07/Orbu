@@ -106,7 +106,6 @@ class StepOrganization(WizardStep):
 
         org_hint = tk.Label(
             form_frame,
-            text="e.g., Nioron, Acme Corp, My Company",
             font=('Segoe UI', 9),
             bg=COLORS['card_bg'],
             fg=COLORS['text_secondary']

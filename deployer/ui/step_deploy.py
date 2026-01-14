@@ -239,6 +239,8 @@ class StepDeploy(WizardStep):
 
         config = DeploymentConfig(
             platform='gcp',
+            org_name=data.get('org_name', ''),
+            org_slug=data.get('org_slug', ''),
             db_connection_method=data.get('db_connection_method'),
             db_host=data.get('db_host', ''),
             db_port=data.get('db_port', '5432'),

@@ -15,8 +15,8 @@ from ui.wizard import WizardStep, WizardController, COLORS
 class PlatformCard(tk.Frame):
     """A clickable card for platform selection."""
 
-    CARD_WIDTH = 200
-    CARD_HEIGHT = 140
+    CARD_WIDTH = 260
+    CARD_HEIGHT = 160
 
     def __init__(self, parent, name: str, description: str, enabled: bool = True,
                  badge: str = None, on_click=None):
@@ -70,7 +70,7 @@ class PlatformCard(tk.Frame):
             font=('Segoe UI', 9),
             fg=COLORS['text_secondary'] if enabled else '#aaaaaa',
             bg=self._bg_color,
-            wraplength=170,
+            wraplength=220,
             justify='left',
             anchor='w'
         )

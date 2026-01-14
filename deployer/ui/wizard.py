@@ -42,9 +42,9 @@ class WizardController:
 
         # Configure root window
         self.root.title("Orbu Deployer")
-        self.root.geometry("750x600")
+        self.root.geometry("950x750")
         self.root.resizable(True, True)
-        self.root.minsize(650, 500)
+        self.root.minsize(850, 650)
         self.root.configure(bg=COLORS['bg'])
 
         # Configure ttk styles
