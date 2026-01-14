@@ -1,2 +1,5 @@
 # Build dependencies for PyInstaller
 pyinstaller>=6.0.0
+
+# Runtime dependencies (needed by deployer code)
+bcrypt>=4.0.0
