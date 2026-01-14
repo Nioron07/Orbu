@@ -31,3 +31,4 @@ APScheduler==3.10.4
 # GCP Integration
 google-cloud-secret-manager==2.17.0
 cloud-sql-python-connector[pg8000]==1.12.1
+google-cloud-run>=0.10.0

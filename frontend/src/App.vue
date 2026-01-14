@@ -59,6 +59,17 @@
               <v-list-item-title>User Management</v-list-item-title>
             </v-list-item>
             <v-list-item
+              v-if="authStore.isAdmin"
+              prepend-icon="mdi-update"
+              :disabled="updateStore.isChecking"
+              @click="handleCheckForUpdates"
+            >
+              <v-list-item-title>
+                {{ updateStore.isChecking ? 'Checking...' : 'Check for Updates' }}
+              </v-list-item-title>
+            </v-list-item>
+            <v-divider v-if="authStore.isAdmin" />
+            <v-list-item
               prepend-icon="mdi-logout"
               @click="handleLogout"
             >
@@ -80,6 +91,9 @@
 
     <!-- Footer (only when authenticated) -->
     <AppFooter v-if="authStore.isAuthenticated" />
+
+    <!-- Update Banner (only for admins) -->
+    <UpdateBanner v-if="authStore.isAuthenticated" />
   </v-app>
 </template>
 
@@ -94,6 +108,8 @@ import { useSettingsStore } from '@/stores/settings';
 import NavigationRail from '@/components/NavigationRail.vue';
 import ClientSwitcher from '@/components/ClientSwitcher.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import UpdateBanner from '@/components/UpdateBanner.vue';
+import { useUpdateStore } from '@/stores/updates';
 
 const router = useRouter();
 const theme = useTheme();
@@ -101,6 +117,7 @@ const appStore = useAppStore();
 const authStore = useAuthStore();
 const clientsStore = useClientsStore();
 const settingsStore = useSettingsStore();
+const updateStore = useUpdateStore();
 
 // Computed
 const userInitials = computed(() => {
@@ -134,6 +151,14 @@ async function handleLogout() {
   await authStore.logout();
   // Navigate to login
   router.push('/login');
+}
+
+async function handleCheckForUpdates() {
+  const result = await updateStore.checkForUpdates();
+  if (result?.success && !result.update_available) {
+    // Could show a snackbar here, but for now the banner just won't appear
+    console.log('No updates available. Current version:', result.current_version);
+  }
 }
 
 async function handleAutoConnect() {
@@ -208,6 +233,11 @@ onMounted(async () => {
 
     // Attempt auto-connect if configured
     await handleAutoConnect();
+
+    // Initialize update store (checks for updates if admin)
+    if (authStore.isAdmin) {
+      updateStore.initialize();
+    }
   } else {
     // Not authenticated - apply default dark theme
     appStore.setTheme('dark');

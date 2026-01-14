@@ -16,6 +16,7 @@ from api.clients import clients_bp
 from api.endpoints import endpoints_bp
 from api.service_groups import service_groups_bp
 from api.auth import auth_bp, init_admin_user
+from api.updates import updates_bp
 from services.connection_pool import init_connection_pool
 from services.log_cleanup import log_cleanup_service
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -50,6 +51,7 @@ app.register_blueprint(clients_bp)
 app.register_blueprint(endpoints_bp)
 app.register_blueprint(service_groups_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(updates_bp)
 
 
 @app.errorhandler(Exception)

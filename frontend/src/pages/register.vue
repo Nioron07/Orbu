@@ -1,6 +1,6 @@
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row justify="center" align="center">
+  <v-container class="register-container" fluid>
+    <v-row justify="center" align="center" class="fill-height">
       <v-col cols="12" sm="8" md="4">
         <v-card class="elevation-12">
           <v-toolbar color="primary" dark flat>
@@ -157,3 +157,12 @@ async function handleRegister() {
   }
 }
 </script>
+
+<style scoped>
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

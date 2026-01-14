@@ -264,6 +264,7 @@ class GCPDeployer(BaseDeployer):
         permissions = [
             ("roles/secretmanager.secretAccessor", "Secret Manager access"),
             ("roles/cloudsql.client", "Cloud SQL access"),
+            ("roles/run.developer", "Cloud Run developer (for auto-updates)"),
         ]
 
         for role, description in permissions:
@@ -388,6 +389,16 @@ class GCPDeployer(BaseDeployer):
             f"ORG_NAME={prefix}-org-name:latest"
         )
 
+        # Environment variables for app config and auto-updates
+        env_vars = (
+            f"GCP_PROJECT_ID={project_id},"
+            f"GCP_REGION={region},"
+            f"GCP_SERVICE_NAME={service_name},"
+            f"CLOUD_PLATFORM=gcp,"
+            f"ORBU_VERSION=0.1.12,"  # Will be updated via GitHub releases
+            f"CORS_ORIGINS=*"
+        )
+
         deploy_cmd = (
             f"gcloud run deploy {service_name} "
             f"--image={image} "
@@ -404,7 +415,7 @@ class GCPDeployer(BaseDeployer):
             f"--timeout=300 "
             f"--execution-environment=gen2 "
             f"--cpu-boost "
-            f"--set-env-vars=GCP_PROJECT_ID={project_id},CORS_ORIGINS=* "
+            f"--set-env-vars={env_vars} "
             f"--set-secrets={secrets_list}"
         )
 

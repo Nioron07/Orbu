@@ -10,7 +10,7 @@
         <v-col cols="auto">
           <div class="d-flex align-center gap-2">
             <span class="text-subtitle-2 font-weight-bold mr-1">Orbu</span>
-            <v-chip size="x-small" variant="tonal" color="primary">v0.1.12</v-chip>
+            <v-chip size="x-small" variant="tonal" color="primary">v{{ displayVersion }}</v-chip>
           </div>
         </v-col>
 
@@ -80,6 +80,16 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useUpdateStore } from '@/stores/updates'
+
+const updateStore = useUpdateStore()
+
+// Display the version from the update store, or a fallback
+const displayVersion = computed(() => {
+  const version = updateStore.currentVersion
+  return version && version !== '0.0.0' ? version : '0.1.12'
+})
 </script>
 
 <style scoped lang="scss">
