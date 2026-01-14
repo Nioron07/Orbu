@@ -260,7 +260,7 @@ class GCPDeployer(BaseDeployer):
             if result.returncode != 0 and "already exists" not in result.stderr.lower():
                 return False
 
-        # Grant permissions
+        # Grant project-level permissions
         permissions = [
             ("roles/secretmanager.secretAccessor", "Secret Manager access"),
             ("roles/cloudsql.client", "Cloud SQL access"),
@@ -277,9 +277,32 @@ class GCPDeployer(BaseDeployer):
                 shell=True, capture_output=True, text=True
             )
 
+        # Also grant secret-level access for each secret (more reliable)
+        prefix = self._get_secret_prefix(config)
+        secret_names = [
+            f"{prefix}-postgres-host",
+            f"{prefix}-postgres-db",
+            f"{prefix}-postgres-user",
+            f"{prefix}-postgres-password",
+            f"{prefix}-admin-email",
+            f"{prefix}-admin-password-hash",
+            f"{prefix}-org-name",
+        ]
+
+        self.update_progress("permissions", DeploymentStatus.IN_PROGRESS, "Granting access to secrets...")
+        for secret_name in secret_names:
+            subprocess.run(
+                f"gcloud secrets add-iam-policy-binding {secret_name} "
+                f"--member=serviceAccount:{sa_email} "
+                f"--role=roles/secretmanager.secretAccessor "
+                f"--project={project_id} "
+                f"--quiet",
+                shell=True, capture_output=True, text=True
+            )
+
         # Wait for IAM propagation
-        self.update_progress("permissions", DeploymentStatus.IN_PROGRESS, "Waiting for IAM propagation (30s)...")
-        time.sleep(30)
+        self.update_progress("permissions", DeploymentStatus.IN_PROGRESS, "Waiting for IAM propagation (45s)...")
+        time.sleep(45)
 
         return True
 
