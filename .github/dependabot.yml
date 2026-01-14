@@ -1,0 +1,40 @@
+# Dependabot configuration for Orbu
+# Updates frontend (npm) and backend (pip) dependencies weekly
+# Groups updates into single PRs per ecosystem
+
+version: 2
+updates:
+  # Frontend (npm) dependencies
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      frontend-dependencies:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "deps(frontend):"
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  # Backend (pip) dependencies
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      backend-dependencies:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "deps(backend):"
+    labels:
+      - "dependencies"
+      - "backend"
+
