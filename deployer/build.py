@@ -29,6 +29,7 @@ ORBU_SOURCE_ITEMS = [
     'nginx',
     'docker',
     'Dockerfile',
+    'VERSION',
 ]
 
 

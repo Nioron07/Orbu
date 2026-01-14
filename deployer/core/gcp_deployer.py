@@ -36,14 +36,16 @@ def get_orbu_version() -> str:
     """
     possible_paths = []
 
-    # For PyInstaller bundles: check next to the executable
+    # For PyInstaller bundles: check in _MEIPASS/orbu_source (where build.py bundles it)
     if getattr(sys, 'frozen', False):
-        # Running as compiled executable
+        if hasattr(sys, '_MEIPASS'):
+            # Primary location: bundled in orbu_source directory
+            possible_paths.append(os.path.join(sys._MEIPASS, 'orbu_source', 'VERSION'))
+            # Fallback: directly in _MEIPASS
+            possible_paths.append(os.path.join(sys._MEIPASS, 'VERSION'))
+        # Also check next to the executable
         exe_dir = os.path.dirname(sys.executable)
         possible_paths.append(os.path.join(exe_dir, 'VERSION'))
-        # Also check in _MEIPASS (PyInstaller's temp extraction dir)
-        if hasattr(sys, '_MEIPASS'):
-            possible_paths.append(os.path.join(sys._MEIPASS, 'VERSION'))
 
     # For development: check relative to this file
     possible_paths.extend([
