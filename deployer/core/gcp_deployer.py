@@ -10,6 +10,7 @@ Handles:
 
 import subprocess
 import os
+import sys
 import time
 import urllib.request
 import bcrypt
@@ -27,15 +28,30 @@ from core.base_deployer import (
 def get_orbu_version() -> str:
     """Read the Orbu version from the VERSION file.
 
+    Handles both development (running from source) and production
+    (PyInstaller bundle) scenarios.
+
     Raises:
         FileNotFoundError: If VERSION file cannot be found in any expected location.
     """
-    # Try multiple possible locations for the VERSION file
-    possible_paths = [
+    possible_paths = []
+
+    # For PyInstaller bundles: check next to the executable
+    if getattr(sys, 'frozen', False):
+        # Running as compiled executable
+        exe_dir = os.path.dirname(sys.executable)
+        possible_paths.append(os.path.join(exe_dir, 'VERSION'))
+        # Also check in _MEIPASS (PyInstaller's temp extraction dir)
+        if hasattr(sys, '_MEIPASS'):
+            possible_paths.append(os.path.join(sys._MEIPASS, 'VERSION'))
+
+    # For development: check relative to this file
+    possible_paths.extend([
         os.path.join(os.path.dirname(__file__), '..', '..', 'VERSION'),  # deployer/core -> deployer -> root
         os.path.join(os.path.dirname(__file__), '..', 'VERSION'),  # Alternate
         'VERSION',  # Current directory
-    ]
+    ])
+
     for path in possible_paths:
         abs_path = os.path.abspath(path)
         if os.path.exists(abs_path):
