@@ -152,6 +152,7 @@ def build():
         'enum',
         'abc',
         'typing',
+        'bcrypt',
     ]
     for imp in hidden_imports:
         cmd.append(f'--hidden-import={imp}')
