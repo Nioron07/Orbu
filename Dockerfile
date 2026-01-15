@@ -7,6 +7,11 @@
 # ============================================
 FROM node:20-alpine AS frontend-builder
 
+WORKDIR /app
+
+# Copy VERSION file for build-time version injection
+COPY VERSION ./
+
 WORKDIR /app/frontend
 
 # Copy package files
@@ -18,7 +23,7 @@ RUN npm ci --silent
 # Copy frontend source
 COPY frontend/ ./
 
-# Build production assets
+# Build production assets (reads VERSION from parent directory)
 RUN npm run build
 
 # ============================================
