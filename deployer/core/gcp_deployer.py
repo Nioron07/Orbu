@@ -307,6 +307,7 @@ class GCPDeployer(BaseDeployer):
             ("roles/cloudsql.client", "Cloud SQL access"),
             ("roles/run.developer", "Cloud Run developer (for auto-updates)"),
             ("roles/artifactregistry.reader", "Artifact Registry read access"),
+            ("roles/iam.serviceAccountUser", "Service Account User (for self-redeployment)"),
         ]
 
         for role, description in permissions:
