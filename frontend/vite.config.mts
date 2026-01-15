@@ -20,13 +20,21 @@ const __dirname = dirname(__filename)
 
 // Read version from VERSION file
 function getVersion(): string {
+  const versionPath = resolve(__dirname, '..', 'VERSION')
+  console.log('[vite.config] Looking for VERSION file at:', versionPath)
   try {
-    const versionPath = resolve(__dirname, '..', 'VERSION')
-    return readFileSync(versionPath, 'utf-8').trim()
-  } catch {
+    const version = readFileSync(versionPath, 'utf-8').trim()
+    console.log('[vite.config] Found VERSION:', version)
+    return version
+  } catch (error) {
+    console.error('[vite.config] Failed to read VERSION file:', error)
     return '0.0.0'
   }
 }
+
+// Log the version at config load time
+const appVersion = getVersion()
+console.log('[vite.config] __APP_VERSION__ will be:', appVersion)
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -85,7 +93,7 @@ export default defineConfig({
   },
   define: {
     'process.env': {},
-    '__APP_VERSION__': JSON.stringify(getVersion()),
+    '__APP_VERSION__': JSON.stringify(appVersion),
   },
   resolve: {
     alias: {
