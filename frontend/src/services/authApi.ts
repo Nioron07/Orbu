@@ -73,12 +73,38 @@ class AuthApiService {
     this.axiosInstance.interceptors.response.use(
       response => response,
       error => {
-        if (error.response?.data?.error) {
-          throw new Error(error.response.data.error);
+        const errorMessage = error.response?.data?.error || '';
+
+        // If signature verification failed, the JWT secret changed (app was updated)
+        // Force logout and reload to get new tokens
+        if (errorMessage.includes('Signature verification failed') ||
+            errorMessage.includes('Invalid token')) {
+          console.warn('[AuthApi] Token invalid after update, forcing logout');
+          this.forceLogoutOnTokenInvalid();
+        }
+
+        if (errorMessage) {
+          throw new Error(errorMessage);
         }
         throw error;
       }
     );
+  }
+
+  /**
+   * Force logout when token becomes invalid (e.g., after app update)
+   * Clears tokens and reloads the page to redirect to login
+   */
+  private forceLogoutOnTokenInvalid() {
+    // Clear tokens from storage
+    localStorage.removeItem('orbu_access_token');
+    localStorage.removeItem('orbu_refresh_token');
+
+    // Clear auth header
+    delete this.axiosInstance.defaults.headers.common['Authorization'];
+
+    // Reload page to redirect to login
+    window.location.href = '/login?reason=session_expired';
   }
 
   /**
