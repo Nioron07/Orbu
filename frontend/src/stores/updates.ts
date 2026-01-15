@@ -4,7 +4,7 @@
  */
 
 import { defineStore } from 'pinia'
-import { updateApi, type UpdateCheckResponse } from '@/services/updateApi'
+import { updateApi, type UpdateCheckResponse, type BuildStatusResponse } from '@/services/updateApi'
 
 // Local storage keys
 const DISMISSED_VERSION_KEY = 'orbu_dismissed_update_version'
@@ -12,6 +12,9 @@ const LAST_CHECK_KEY = 'orbu_last_update_check'
 
 // Check interval (1 hour in milliseconds)
 const CHECK_INTERVAL = 60 * 60 * 1000
+
+// Build polling interval (5 seconds)
+const BUILD_POLL_INTERVAL = 5000
 
 export const useUpdateStore = defineStore('updates', {
   state: () => ({
@@ -27,6 +30,12 @@ export const useUpdateStore = defineStore('updates', {
     isDeploying: false,
     lastCheckTime: null as number | null,
     error: null as string | null,
+    // Cloud Build state
+    buildId: null as string | null,
+    buildStatus: null as BuildStatusResponse['status'] | null,
+    buildStep: null as string | null,
+    buildLogsUrl: null as string | null,
+    pollIntervalId: null as number | null,
   }),
 
   getters: {
@@ -136,6 +145,7 @@ export const useUpdateStore = defineStore('updates', {
 
     /**
      * Trigger deployment update (GCP only)
+     * Starts Cloud Build and begins polling for status
      */
     async deploy(): Promise<boolean> {
       if (!this.canAutoUpdate) {
@@ -147,24 +157,93 @@ export const useUpdateStore = defineStore('updates', {
 
       this.isDeploying = true
       this.error = null
+      this.buildId = null
+      this.buildStatus = null
+      this.buildStep = 'Starting build...'
+      this.buildLogsUrl = null
 
       try {
         const response = await updateApi.triggerDeploy()
 
-        if (response.success) {
-          // Show success message and wait for restart
-          // The page will automatically reload when the service restarts
+        if (response.success && response.build_id) {
+          this.buildId = response.build_id
+          this.buildLogsUrl = response.logs_url || null
+          this.buildStep = response.message || 'Build started...'
+          // Start polling for build status
+          this.startPolling()
           return true
         } else {
-          this.error = response.error || 'Deployment failed'
+          this.error = response.error || 'Failed to start build'
+          this.isDeploying = false
           return false
         }
       } catch (error: any) {
         this.error = error.response?.data?.error || error.message || 'Deployment failed'
         console.error('Deploy failed:', error)
-        return false
-      } finally {
         this.isDeploying = false
+        return false
+      }
+    },
+
+    /**
+     * Start polling for build status
+     */
+    startPolling() {
+      // Clear any existing interval
+      this.stopPolling()
+
+      this.pollIntervalId = window.setInterval(async () => {
+        await this.checkBuildStatus()
+      }, BUILD_POLL_INTERVAL)
+    },
+
+    /**
+     * Stop polling for build status
+     */
+    stopPolling() {
+      if (this.pollIntervalId) {
+        clearInterval(this.pollIntervalId)
+        this.pollIntervalId = null
+      }
+    },
+
+    /**
+     * Check the current build status
+     */
+    async checkBuildStatus(): Promise<void> {
+      if (!this.buildId) return
+
+      try {
+        const status = await updateApi.getBuildStatus(this.buildId)
+
+        if (status.success) {
+          this.buildStatus = status.status
+          this.buildStep = status.step
+          this.buildLogsUrl = status.logs_url
+
+          // Check if build is complete (success or failure)
+          const terminalStates = ['SUCCESS', 'FAILURE', 'CANCELLED', 'TIMEOUT', 'DEPLOY_FAILED']
+          if (terminalStates.includes(status.status)) {
+            this.stopPolling()
+            this.isDeploying = false
+
+            if (status.status === 'SUCCESS') {
+              // Reload page after short delay to get new version
+              this.buildStep = 'Update complete! Reloading...'
+              setTimeout(() => {
+                window.location.reload()
+              }, 3000)
+            } else {
+              // Build failed
+              this.error = `Build ${status.status.toLowerCase()}: ${status.step}`
+            }
+          }
+        } else {
+          this.error = status.error || 'Failed to check build status'
+        }
+      } catch (error: any) {
+        console.error('Failed to check build status:', error)
+        // Don't stop polling on transient errors
       }
     },
 
@@ -172,6 +251,7 @@ export const useUpdateStore = defineStore('updates', {
      * Clear all state
      */
     reset() {
+      this.stopPolling()
       this.currentVersion = '0.0.0'
       this.latestVersion = null
       this.updateAvailable = false
@@ -184,6 +264,10 @@ export const useUpdateStore = defineStore('updates', {
       this.isDeploying = false
       this.lastCheckTime = null
       this.error = null
+      this.buildId = null
+      this.buildStatus = null
+      this.buildStep = null
+      this.buildLogsUrl = null
       localStorage.removeItem(DISMISSED_VERSION_KEY)
       localStorage.removeItem(LAST_CHECK_KEY)
     },

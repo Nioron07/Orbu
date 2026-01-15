@@ -144,3 +144,59 @@ def trigger_deploy():
             'success': False,
             'error': f'Auto-update not supported for platform: {CLOUD_PLATFORM}'
         }), 400
+
+
+@updates_bp.route('/build/<build_id>/status', methods=['GET'])
+@require_auth
+@require_admin
+def get_build_status_route(build_id: str):
+    """
+    Get Cloud Build job status.
+
+    This endpoint is polled by the frontend to track build progress.
+    When the build succeeds, it also triggers the Cloud Run deployment.
+    """
+    if CLOUD_PLATFORM != 'gcp':
+        return jsonify({
+            'success': False,
+            'error': 'Build status is only available for GCP deployments'
+        }), 400
+
+    from api.updates.gcp import get_build_status, deploy_new_image
+
+    try:
+        status = get_build_status(build_id)
+
+        # If build succeeded, trigger Cloud Run deployment
+        if status['status'] == 'SUCCESS':
+            # Get version from the request or fetch from GitHub
+            # The version was stored when the build was triggered
+            import requests
+            response = requests.get(
+                f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+                headers={"Accept": "application/vnd.github.v3+json"},
+                timeout=10
+            )
+            if response.status_code == 200:
+                version = response.json()['tag_name'].lstrip('v')
+                try:
+                    deploy_new_image(version)
+                    status['step'] = 'Deployed! Restarting service...'
+                    logger.info(f"Successfully deployed version {version} after build {build_id}")
+                except Exception as deploy_error:
+                    logger.error(f"Failed to deploy after successful build: {deploy_error}")
+                    status['step'] = f'Build succeeded but deployment failed: {deploy_error}'
+                    status['status'] = 'DEPLOY_FAILED'
+
+        return jsonify({
+            'success': True,
+            'build_id': build_id,
+            **status
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting build status for {build_id}: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

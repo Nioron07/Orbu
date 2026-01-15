@@ -172,6 +172,7 @@ class GCPDeployer(BaseDeployer):
             ("artifactregistry.googleapis.com", "Artifact Registry API"),
             ("run.googleapis.com", "Cloud Run API"),
             ("sqladmin.googleapis.com", "Cloud SQL Admin API"),
+            ("cloudbuild.googleapis.com", "Cloud Build API"),
         ]
 
         for api, name in apis:
@@ -307,7 +308,10 @@ class GCPDeployer(BaseDeployer):
             ("roles/cloudsql.client", "Cloud SQL access"),
             ("roles/run.developer", "Cloud Run developer (for auto-updates)"),
             ("roles/artifactregistry.reader", "Artifact Registry read access"),
+            ("roles/artifactregistry.writer", "Artifact Registry write access (for Cloud Build)"),
             ("roles/iam.serviceAccountUser", "Service Account User (for self-redeployment)"),
+            ("roles/cloudbuild.builds.editor", "Cloud Build editor (for auto-update builds)"),
+            ("roles/storage.admin", "Cloud Storage admin (for Cloud Build logs)"),
         ]
 
         for role, description in permissions:

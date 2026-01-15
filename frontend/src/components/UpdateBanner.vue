@@ -87,19 +87,45 @@
   </v-dialog>
 
   <!-- Deployment in progress dialog -->
-  <v-dialog v-model="showDeployingDialog" persistent max-width="400">
+  <v-dialog v-model="showDeployingDialog" persistent max-width="500">
     <v-card>
       <v-card-title class="text-h6">
         Updating Orbu...
       </v-card-title>
       <v-card-text>
         <div class="d-flex align-center mb-4">
-          <v-progress-circular indeterminate color="primary" class="mr-3" />
-          <span>Deploying new version. This may take a few minutes.</span>
+          <v-progress-circular indeterminate color="primary" class="mr-3" size="24" />
+          <span class="text-body-1">{{ updateStore.buildStep || 'Starting build...' }}</span>
         </div>
-        <v-alert type="info" variant="tonal">
-          The page will automatically reload when the update is complete.
+
+        <!-- Build status indicator -->
+        <div v-if="updateStore.buildStatus" class="mb-3">
+          <v-chip
+            :color="buildStatusColor"
+            size="small"
+            class="mr-2"
+          >
+            {{ updateStore.buildStatus }}
+          </v-chip>
+        </div>
+
+        <v-alert type="info" variant="tonal" class="mb-3">
+          Building a new Docker image from the latest release. This typically takes 5-10 minutes.
         </v-alert>
+
+        <!-- View logs link -->
+        <div v-if="updateStore.buildLogsUrl" class="text-center">
+          <v-btn
+            variant="text"
+            size="small"
+            color="primary"
+            :href="updateStore.buildLogsUrl"
+            target="_blank"
+            prepend-icon="mdi-open-in-new"
+          >
+            View Build Logs
+          </v-btn>
+        </div>
       </v-card-text>
     </v-card>
   </v-dialog>
@@ -143,6 +169,24 @@ const truncatedNotes = computed(() => {
   return firstLine.length > 80 ? firstLine.substring(0, 77) + '...' : firstLine
 })
 
+// Get color for build status chip
+const buildStatusColor = computed(() => {
+  switch (updateStore.buildStatus) {
+    case 'QUEUED':
+    case 'WORKING':
+      return 'info'
+    case 'SUCCESS':
+      return 'success'
+    case 'FAILURE':
+    case 'CANCELLED':
+    case 'TIMEOUT':
+    case 'DEPLOY_FAILED':
+      return 'error'
+    default:
+      return 'grey'
+  }
+})
+
 // Watch for errors
 watch(() => updateStore.error, (error) => {
   if (error) {
@@ -161,37 +205,23 @@ async function confirmDeploy() {
 
   const success = await updateStore.deploy()
 
-  if (success) {
-    // Start polling for service restart
-    startRestartPolling()
-  } else {
+  if (!success) {
+    // Build failed to start, close the dialog (error will show in snackbar)
     showDeployingDialog.value = false
   }
+  // If success, keep dialog open - store will handle polling and page reload
 }
 
-function startRestartPolling() {
-  // Poll every 5 seconds to check if the service has restarted
-  const pollInterval = setInterval(async () => {
-    try {
-      const response = await fetch('/api/health')
-      if (response.ok) {
-        // Service is back up, reload the page
-        clearInterval(pollInterval)
-        window.location.reload()
-      }
-    } catch {
-      // Service is still restarting, continue polling
+// Watch for deployment completion to close the dialog
+watch(() => updateStore.isDeploying, (isDeploying) => {
+  if (!isDeploying && showDeployingDialog.value) {
+    // Deployment finished (either success with page reload, or failure)
+    // Only close if there was an error (success triggers page reload)
+    if (updateStore.error) {
+      showDeployingDialog.value = false
     }
-  }, 5000)
-
-  // Stop polling after 5 minutes
-  setTimeout(() => {
-    clearInterval(pollInterval)
-    showDeployingDialog.value = false
-    updateStore.error = 'Update is taking longer than expected. Please refresh the page manually.'
-    showError.value = true
-  }, 5 * 60 * 1000)
-}
+  }
+})
 </script>
 
 <style scoped>

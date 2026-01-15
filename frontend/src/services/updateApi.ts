@@ -30,13 +30,24 @@ export interface UpdateCheckResponse {
   error?: string;
 }
 
-// Deploy response
+// Deploy response (now includes Cloud Build info)
 export interface DeployResponse {
   success: boolean;
   message?: string;
   error?: string;
-  service?: string;
-  region?: string;
+  build_id?: string;
+  version?: string;
+  logs_url?: string;
+}
+
+// Build status response
+export interface BuildStatusResponse {
+  success: boolean;
+  build_id: string;
+  status: 'QUEUED' | 'WORKING' | 'SUCCESS' | 'FAILURE' | 'CANCELLED' | 'TIMEOUT' | 'DEPLOY_FAILED' | 'UNKNOWN';
+  step: string;
+  logs_url: string;
+  error?: string;
 }
 
 class UpdateApi {
@@ -75,9 +86,19 @@ class UpdateApi {
 
   /**
    * Trigger deployment update (admin only, GCP only)
+   * Returns a build_id that can be polled for status
    */
   async triggerDeploy(): Promise<DeployResponse> {
     const response = await this.api.post<DeployResponse>('/updates/deploy');
+    return response.data;
+  }
+
+  /**
+   * Get Cloud Build job status (admin only, GCP only)
+   * @param buildId The Cloud Build job ID from triggerDeploy
+   */
+  async getBuildStatus(buildId: string): Promise<BuildStatusResponse> {
+    const response = await this.api.get<BuildStatusResponse>(`/updates/build/${buildId}/status`);
     return response.data;
   }
 }
