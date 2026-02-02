@@ -65,6 +65,17 @@
           <div class="text-subtitle-2 mb-1">Release Notes:</div>
           <div class="text-body-2" style="white-space: pre-wrap;">{{ updateStore.releaseNotes }}</div>
         </v-alert>
+        <v-select
+          v-model="selectedMachineType"
+          :items="machineTypes"
+          item-title="label"
+          item-value="value"
+          label="Build Machine Type"
+          variant="outlined"
+          density="compact"
+          class="mt-4"
+          hide-details
+        />
       </v-card-text>
       <v-card-actions>
         <v-spacer />
@@ -154,6 +165,15 @@ const authStore = useAuthStore()
 const showConfirmDialog = ref(false)
 const showDeployingDialog = ref(false)
 const showError = ref(false)
+const selectedMachineType = ref('E2_HIGHCPU_8')
+
+const machineTypes = [
+  { label: 'E2 Medium (1 vCPU) - Cheapest', value: 'E2_MEDIUM' },
+  { label: 'E2 High CPU (8 vCPU)', value: 'E2_HIGHCPU_8' },
+  { label: 'E2 High CPU (32 vCPU) - Fastest', value: 'E2_HIGHCPU_32' },
+  { label: 'N1 High CPU (8 vCPU)', value: 'N1_HIGHCPU_8' },
+  { label: 'N1 High CPU (32 vCPU)', value: 'N1_HIGHCPU_32' },
+]
 
 // Only show banner to admins when update is available and not dismissed
 const showBanner = computed(() => {
@@ -203,7 +223,7 @@ async function confirmDeploy() {
   showConfirmDialog.value = false
   showDeployingDialog.value = true
 
-  const success = await updateStore.deploy()
+  const success = await updateStore.deploy(selectedMachineType.value)
 
   if (!success) {
     // Build failed to start, close the dialog (error will show in snackbar)

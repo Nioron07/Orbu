@@ -87,9 +87,12 @@ class UpdateApi {
   /**
    * Trigger deployment update (admin only, GCP only)
    * Returns a build_id that can be polled for status
+   * @param machineType Cloud Build machine type
    */
-  async triggerDeploy(): Promise<DeployResponse> {
-    const response = await this.api.post<DeployResponse>('/updates/deploy');
+  async triggerDeploy(machineType: string = 'E2_HIGHCPU_8'): Promise<DeployResponse> {
+    const response = await this.api.post<DeployResponse>('/updates/deploy', {
+      machine_type: machineType,
+    });
     return response.data;
   }
 

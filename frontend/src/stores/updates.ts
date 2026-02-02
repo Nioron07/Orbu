@@ -146,8 +146,9 @@ export const useUpdateStore = defineStore('updates', {
     /**
      * Trigger deployment update (GCP only)
      * Starts Cloud Build and begins polling for status
+     * @param machineType Cloud Build machine type
      */
-    async deploy(): Promise<boolean> {
+    async deploy(machineType: string = 'E2_HIGHCPU_8'): Promise<boolean> {
       if (!this.canAutoUpdate) {
         this.error = 'Auto-update is not available on this platform'
         return false
@@ -163,7 +164,7 @@ export const useUpdateStore = defineStore('updates', {
       this.buildLogsUrl = null
 
       try {
-        const response = await updateApi.triggerDeploy()
+        const response = await updateApi.triggerDeploy(machineType)
 
         if (response.success && response.build_id) {
           this.buildId = response.build_id

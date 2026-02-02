@@ -10,15 +10,28 @@ Triggers a full build pipeline:
 
 import os
 import logging
-from flask import jsonify
+from flask import jsonify, request
 
 logger = logging.getLogger(__name__)
 
 GITHUB_REPO = "Nioron07/Orbu"
 
+# Valid Cloud Build machine types
+VALID_MACHINE_TYPES = [
+    'UNSPECIFIED',
+    'N1_HIGHCPU_8',
+    'N1_HIGHCPU_32',
+    'E2_HIGHCPU_8',
+    'E2_HIGHCPU_32',
+    'E2_MEDIUM',
+]
 
-def get_cloudbuild_config(version: str, project_id: str, service_name: str) -> dict:
+
+def get_cloudbuild_config(version: str, project_id: str, service_name: str, machine_type: str = 'E2_HIGHCPU_8') -> dict:
     """Generate Cloud Build configuration for building from GitHub release."""
+    if machine_type not in VALID_MACHINE_TYPES:
+        machine_type = 'E2_HIGHCPU_8'
+
     return {
         'steps': [
             # Clone the specific release tag from GitHub
@@ -45,18 +58,19 @@ def get_cloudbuild_config(version: str, project_id: str, service_name: str) -> d
         ],
         'timeout': '1800s',  # 30 minute timeout
         'options': {
-            'machineType': 'E2_HIGHCPU_8',  # Faster builds
-            'logging': 'CLOUD_LOGGING_ONLY'
+            'machine_type': machine_type,
+            'logging_mode': 'CLOUD_LOGGING_ONLY'
         }
     }
 
 
-def trigger_build(version: str) -> tuple:
+def trigger_build(version: str, machine_type: str = 'E2_HIGHCPU_8') -> tuple:
     """
     Trigger Cloud Build to build new image from GitHub release.
 
     Args:
         version: The version tag to build (without 'v' prefix)
+        machine_type: Cloud Build machine type
 
     Returns:
         Tuple of (build_id, logs_url)
@@ -71,7 +85,7 @@ def trigger_build(version: str) -> tuple:
 
     client = cloudbuild_v1.CloudBuildClient()
 
-    build_config = get_cloudbuild_config(version, project, service_name)
+    build_config = get_cloudbuild_config(version, project, service_name, machine_type)
     build = cloudbuild_v1.Build(build_config)
 
     operation = client.create_build(project_id=project, build=build)
@@ -226,10 +240,14 @@ def deploy_gcp():
         release_data = response.json()
         latest_version = release_data['tag_name'].lstrip('v')
 
-        logger.info(f"Starting Cloud Build for version {latest_version}")
+        # Get machine type from request body (default: E2_HIGHCPU_8)
+        data = request.get_json(silent=True) or {}
+        machine_type = data.get('machine_type', 'E2_HIGHCPU_8')
+
+        logger.info(f"Starting Cloud Build for version {latest_version} with machine {machine_type}")
 
         # Trigger Cloud Build
-        build_id, logs_url = trigger_build(latest_version)
+        build_id, logs_url = trigger_build(latest_version, machine_type)
 
         return jsonify({
             'success': True,
