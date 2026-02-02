@@ -59,7 +59,7 @@ def get_cloudbuild_config(version: str, project_id: str, service_name: str, mach
         'timeout': '1800s',  # 30 minute timeout
         'options': {
             'machine_type': machine_type,
-            'logging_mode': 'CLOUD_LOGGING_ONLY'
+            'logging': 'CLOUD_LOGGING_ONLY'
         }
     }
 
