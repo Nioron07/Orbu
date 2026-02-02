@@ -129,13 +129,27 @@ def get_build_status(build_id: str) -> dict:
         cloudbuild_v1.Build.Status.TIMEOUT: 'TIMEOUT',
     }
 
-    # Determine current step based on completed steps
+    # Determine current step based on timing data
+    # (step.status may not update reliably during a running build)
     step = "Initializing..."
-    if build.status == cloudbuild_v1.Build.Status.WORKING:
-        completed_steps = len([s for s in build.steps if s.status == cloudbuild_v1.Build.Status.SUCCESS])
+    if build.status in (cloudbuild_v1.Build.Status.PENDING, cloudbuild_v1.Build.Status.QUEUED):
+        step = "Queued, waiting for build worker..."
+    elif build.status == cloudbuild_v1.Build.Status.WORKING:
         step_names = ["Cloning repository...", "Building Docker image...", "Pushing image..."]
-        if completed_steps < len(step_names):
-            step = step_names[completed_steps]
+        # Find the currently active step by checking which steps have started
+        current_step_index = 0
+        has_started_step = False
+        for i, s in enumerate(build.steps):
+            if s.timing and s.timing.start_time:
+                current_step_index = i
+                has_started_step = True
+
+        if has_started_step and current_step_index < len(step_names):
+            step = step_names[current_step_index]
+        elif not has_started_step:
+            step = "Preparing build environment..."
+        else:
+            step = "Finalizing build..."
     elif build.status == cloudbuild_v1.Build.Status.SUCCESS:
         step = "Build complete, deploying..."
     elif build.status == cloudbuild_v1.Build.Status.FAILURE:

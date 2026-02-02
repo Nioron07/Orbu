@@ -19,6 +19,9 @@ GITHUB_REPO = "Nioron07/Orbu"
 CURRENT_VERSION = os.getenv('ORBU_VERSION', '0.0.0')
 CLOUD_PLATFORM = os.getenv('CLOUD_PLATFORM', 'unknown')
 
+# Track build IDs that have already triggered a Cloud Run deployment
+_deployed_builds = set()
+
 
 def compare_versions(v1: str, v2: str) -> int:
     """
@@ -167,8 +170,9 @@ def get_build_status_route(build_id: str):
     try:
         status = get_build_status(build_id)
 
-        # If build succeeded, trigger Cloud Run deployment
-        if status['status'] == 'SUCCESS':
+        # If build succeeded, trigger Cloud Run deployment (only once per build)
+        if status['status'] == 'SUCCESS' and build_id not in _deployed_builds:
+            _deployed_builds.add(build_id)
             # Get version from the request or fetch from GitHub
             # The version was stored when the build was triggered
             import requests
@@ -181,12 +185,15 @@ def get_build_status_route(build_id: str):
                 version = response.json()['tag_name'].lstrip('v')
                 try:
                     deploy_new_image(version)
-                    status['step'] = 'Deployed! Restarting service...'
+                    status['step'] = 'Deployed! Waiting for new version to go live...'
                     logger.info(f"Successfully deployed version {version} after build {build_id}")
                 except Exception as deploy_error:
                     logger.error(f"Failed to deploy after successful build: {deploy_error}")
                     status['step'] = f'Build succeeded but deployment failed: {deploy_error}'
                     status['status'] = 'DEPLOY_FAILED'
+                    _deployed_builds.discard(build_id)
+        elif status['status'] == 'SUCCESS':
+            status['step'] = 'Deployed! Waiting for new version to go live...'
 
         return jsonify({
             'success': True,

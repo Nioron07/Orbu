@@ -229,11 +229,9 @@ export const useUpdateStore = defineStore('updates', {
             this.isDeploying = false
 
             if (status.status === 'SUCCESS') {
-              // Reload page after short delay to get new version
-              this.buildStep = 'Update complete! Reloading...'
-              setTimeout(() => {
-                window.location.reload()
-              }, 3000)
+              // Poll version endpoint until the new revision is serving
+              this.buildStep = 'Deployed! Waiting for new version to go live...'
+              this.waitForNewVersion()
             } else {
               // Build failed
               this.error = `Build ${status.status.toLowerCase()}: ${status.step}`
@@ -246,6 +244,40 @@ export const useUpdateStore = defineStore('updates', {
         console.error('Failed to check build status:', error)
         // Don't stop polling on transient errors
       }
+    },
+
+    /**
+     * Poll the version endpoint until the new version is live, then reload.
+     * Cloud Run needs time to spin up the new revision after deploy_new_image.
+     */
+    async waitForNewVersion() {
+      const targetVersion = this.latestVersion
+      const maxAttempts = 60 // 60 * 5s = 5 minutes max wait
+      let attempts = 0
+
+      const checkVersion = async () => {
+        attempts++
+        try {
+          const versionInfo = await updateApi.getCurrentVersion()
+          if (versionInfo.version === targetVersion) {
+            this.buildStep = 'Update complete! Reloading...'
+            setTimeout(() => window.location.reload(), 1000)
+            return
+          }
+        } catch {
+          // Service may be restarting, ignore errors
+        }
+
+        if (attempts >= maxAttempts) {
+          this.buildStep = 'Update deployed but service is still starting. Please refresh manually.'
+          return
+        }
+
+        setTimeout(checkVersion, 5000)
+      }
+
+      // Start checking after initial delay
+      setTimeout(checkVersion, 5000)
     },
 
     /**

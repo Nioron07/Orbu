@@ -1,0 +1,1230 @@
+starting build "16a42a7c-2d0c-483b-bbd6-2ff9361c608c"
+FETCHSOURCE
+BUILD
+Starting Step #0
+Already have image (with digest): gcr.io/cloud-builders/git
+Cloning into '.'...
+Note: switching to 'cb943e48e5d486e24a25cd770862847d80c10407'.
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+  git switch -c <new-branch-name>
+Or undo this operation with:
+  git switch -
+Turn off this advice by setting config variable advice.detachedHead to false
+Finished Step #0
+Starting Step #1
+Already have image (with digest): gcr.io/cloud-builders/docker
+Sending build context to Docker daemon  13.24MB
+Step 1/33 : FROM node:20-alpine AS frontend-builder
+20-alpine: Pulling from library/node
+589002ba0eae: Pulling fs layer
+ad6d96c196e3: Pulling fs layer
+eb87f4721c91: Pulling fs layer
+e31b20165522: Pulling fs layer
+e31b20165522: Verifying Checksum
+e31b20165522: Download complete
+eb87f4721c91: Verifying Checksum
+eb87f4721c91: Download complete
+589002ba0eae: Verifying Checksum
+589002ba0eae: Download complete
+589002ba0eae: Pull complete
+ad6d96c196e3: Verifying Checksum
+ad6d96c196e3: Download complete
+ad6d96c196e3: Pull complete
+eb87f4721c91: Pull complete
+e31b20165522: Pull complete
+Digest: sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8
+Status: Downloaded newer image for node:20-alpine
+ ---> 458b0b7c1c60
+Step 2/33 : WORKDIR /app
+ ---> Running in 83b6b645b642
+Removing intermediate container 83b6b645b642
+ ---> 983d382b3555
+Step 3/33 : COPY VERSION ./
+ ---> 7391845425ae
+Step 4/33 : WORKDIR /app/frontend
+ ---> Running in 20f76f46bff2
+Removing intermediate container 20f76f46bff2
+ ---> 019a413cd2fe
+Step 5/33 : COPY frontend/package*.json ./
+ ---> 836dc9320477
+Step 6/33 : RUN npm ci --silent
+ ---> Running in 339deb6bd876
+Removing intermediate container 339deb6bd876
+ ---> 9a4045138efb
+Step 7/33 : COPY frontend/ ./
+ ---> 148ca7c06184
+Step 8/33 : RUN npm run build
+ ---> Running in ce71973f038b
+> frontend@0.0.0 build
+> run-p type-check "build-only {@}" --
+> frontend@0.0.0 type-check
+> vue-tsc --build --force
+> frontend@0.0.0 build-only
+> vite build
+[vite.config] Looking for VERSION file at: /app/VERSION
+[vite.config] Found VERSION: 0.1.36
+[vite.config] __APP_VERSION__ will be: 0.1.36
+vite v7.3.1 building client environment for production...
+transforming...
+✓ 506 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) /app/frontend/src/stores/auth.ts is dynamically imported by /app/frontend/src/router/index.ts but also statically imported by /app/frontend/src/App.vue?vue&type=script&setup=true&lang.ts, /app/frontend/src/components/ClientSwitcher.vue?vue&type=script&setup=true&lang.ts, /app/frontend/src/components/UpdateBanner.vue?vue&type=script&setup=true&lang.ts, /app/frontend/src/pages/admin/users.vue?vue&type=script&setup=true&lang.ts, /app/frontend/src/pages/login.vue?vue&type=script&setup=true&lang.ts, /app/frontend/src/pages/register.vue?vue&type=script&setup=true&lang.ts, /app/frontend/src/stores/settings.ts, dynamic import will not move module into another chunk.
+computing gzip size...
+dist/assets/inter-vietnamese-400-normal-DMkecbls.woff2                              4.97 kB
+dist/assets/inter-vietnamese-600-normal-Cc8MFFhd.woff2                              5.10 kB
+dist/assets/inter-vietnamese-700-normal-DlLaEgI2.woff2                              5.10 kB
+dist/assets/inter-vietnamese-500-normal-DOriooB6.woff2                              5.11 kB
+dist/assets/inter-greek-ext-400-normal-DGGRlc-M.woff2                               5.26 kB
+dist/assets/inter-greek-ext-500-normal-C4iEst2y.woff2                               5.43 kB
+dist/assets/inter-greek-ext-600-normal-DRtmH8MT.woff2                               5.43 kB
+dist/assets/inter-greek-ext-700-normal-qfdV9bQt.woff2                               5.44 kB
+dist/assets/roboto-vietnamese-100-normal-CB-fthhe.woff                              5.60 kB
+dist/assets/roboto-vietnamese-900-normal-BPWZ525Q.woff                              5.64 kB
+dist/assets/roboto-vietnamese-400-normal-DmXaN3yE.woff                              5.68 kB
+dist/assets/roboto-vietnamese-700-normal-Dz0HwF-w.woff                              5.70 kB
+dist/assets/roboto-vietnamese-300-normal-DXBG9gdz.woff                              5.73 kB
+dist/assets/roboto-vietnamese-500-normal-DW96CsrR.woff                              5.74 kB
+dist/assets/roboto-vietnamese-100-italic-DqT4NT8u.woff                              5.96 kB
+dist/assets/roboto-vietnamese-900-italic-DMlk7uai.woff                              6.02 kB
+dist/assets/roboto-vietnamese-500-italic-DIW2mRrc.woff                              6.10 kB
+dist/assets/roboto-vietnamese-400-italic-DVuEM9xW.woff                              6.10 kB
+dist/assets/roboto-vietnamese-300-italic-BurbBrzl.woff                              6.10 kB
+dist/assets/roboto-vietnamese-700-italic-DAtb51XF.woff                              6.13 kB
+dist/assets/inter-vietnamese-400-normal-Bbgyi5SW.woff                               6.50 kB
+dist/assets/inter-vietnamese-500-normal-mJboJaSs.woff                               6.60 kB
+dist/assets/inter-vietnamese-700-normal-BZaoP0fm.woff                               6.63 kB
+dist/assets/inter-vietnamese-600-normal-BuLX-rYi.woff                               6.64 kB
+dist/assets/inter-greek-ext-400-normal-KugGGMne.woff                                7.06 kB
+dist/assets/inter-greek-ext-500-normal-2j5mBUwD.woff                                7.19 kB
+dist/assets/inter-greek-ext-600-normal-B8X0CLgF.woff                                7.21 kB
+dist/assets/inter-greek-ext-700-normal-BoQ6DsYi.woff                                7.22 kB
+dist/assets/roboto-greek-100-normal-Cj05wnyc.woff                                   7.64 kB
+dist/assets/roboto-greek-900-normal-BgnqCuci.woff                                   7.66 kB
+dist/assets/roboto-vietnamese-100-normal-DCm82-f1.woff2                             7.69 kB
+dist/assets/inter-cyrillic-400-normal-obahsSVq.woff2                                7.71 kB
+dist/assets/roboto-greek-300-normal-CTj2MfNN.woff                                   7.71 kB
+dist/assets/roboto-greek-400-normal-CcizSnRP.woff                                   7.71 kB
+dist/assets/roboto-greek-700-normal-D3kmAf0K.woff                                   7.72 kB
+dist/assets/roboto-greek-500-normal-BLLWU9W-.woff                                   7.75 kB
+dist/assets/roboto-vietnamese-900-normal-D60pXI5H.woff2                             7.76 kB
+dist/assets/inter-greek-400-normal-B4URO6DV.woff2                                   7.78 kB
+dist/assets/roboto-vietnamese-300-normal-CNeuLW5X.woff2                             7.84 kB
+dist/assets/roboto-vietnamese-500-normal-HYpufUYk.woff2                             7.84 kB
+dist/assets/roboto-vietnamese-400-normal-CDDxGrUb.woff2                             7.86 kB
+dist/assets/roboto-vietnamese-700-normal-iKxYNAzq.woff2                             7.88 kB
+dist/assets/inter-cyrillic-500-normal-BasfLYem.woff2                                7.90 kB
+dist/assets/inter-cyrillic-700-normal-CjBOestx.woff2                                7.90 kB
+dist/assets/inter-greek-500-normal-BIZE56-Y.woff2                                   7.92 kB
+dist/assets/inter-greek-700-normal-C3JjAnD8.woff2                                   7.92 kB
+dist/assets/inter-greek-600-normal-plRanbMR.woff2                                   7.94 kB
+dist/assets/inter-cyrillic-600-normal-CWCymEST.woff2                                7.97 kB
+dist/assets/roboto-vietnamese-100-italic-BtiJ2JPA.woff2                             8.02 kB
+dist/assets/roboto-vietnamese-900-italic-Bgqc_BA8.woff2                             8.14 kB
+dist/assets/roboto-vietnamese-300-italic-Cjr2DTl9.woff2                             8.15 kB
+dist/assets/roboto-vietnamese-400-italic-CwcIpTAp.woff2                             8.20 kB
+dist/assets/roboto-greek-100-italic-_T6kAqfU.woff                                   8.23 kB
+dist/assets/roboto-vietnamese-500-italic-D10Z6vdt.woff2                             8.23 kB
+dist/assets/roboto-greek-900-italic-BKeAK8Cm.woff                                   8.23 kB
+dist/assets/roboto-vietnamese-700-italic-CZZY_W96.woff2                             8.28 kB
+dist/assets/roboto-greek-700-italic-CUZbS8nP.woff                                   8.30 kB
+dist/assets/roboto-greek-400-italic-DyaAzNah.woff                                   8.30 kB
+dist/assets/roboto-greek-500-italic-3Af-FjMb.woff                                   8.32 kB
+dist/assets/roboto-greek-300-italic-CYtd9fxa.woff                                   8.33 kB
+dist/assets/roboto-symbols-100-normal-DxTU_ofi.woff                                 8.76 kB
+dist/assets/roboto-symbols-900-normal-eLBWAlN7.woff                                 8.80 kB
+dist/assets/roboto-symbols-500-normal-CAhAe-ik.woff                                 8.86 kB
+dist/assets/roboto-symbols-400-normal-Tzuungub.woff                                 8.88 kB
+dist/assets/roboto-symbols-700-normal-CuuvBBxy.woff                                 8.88 kB
+dist/assets/roboto-symbols-300-normal-kyoSXp-d.woff                                 8.96 kB
+dist/assets/roboto-greek-100-normal-BQXKmI1c.woff2                                  9.47 kB
+dist/assets/roboto-greek-300-normal-Cnub06j7.woff2                                  9.56 kB
+dist/assets/roboto-greek-900-normal-BCuSXpbA.woff2                                  9.61 kB
+dist/assets/roboto-symbols-100-italic-BPtYTz_u.woff                                 9.62 kB
+dist/assets/roboto-greek-500-normal-BJMS0heP.woff2                                  9.64 kB
+dist/assets/roboto-greek-400-normal-jFM2czAU.woff2                                  9.64 kB
+dist/assets/roboto-greek-700-normal-BcGn9doz.woff2                                  9.67 kB
+dist/assets/roboto-cyrillic-100-normal-DjiTchmu.woff                                9.72 kB
+dist/assets/roboto-symbols-900-italic-C-ZKEHyg.woff                                 9.74 kB
+dist/assets/roboto-symbols-400-italic-28v-oHAk.woff                                 9.76 kB
+dist/assets/roboto-symbols-500-italic-CMoVw6pb.woff                                 9.76 kB
+dist/assets/roboto-symbols-700-italic-BAYImcFL.woff                                 9.77 kB
+dist/assets/inter-cyrillic-400-normal-HOLc17fK.woff                                 9.78 kB
+dist/assets/roboto-greek-100-italic-BA5X659X.woff2                                  9.88 kB
+dist/assets/roboto-symbols-300-italic-CzyfHwgf.woff                                 9.89 kB
+dist/assets/inter-cyrillic-700-normal-DrXBdSj3.woff                                 9.91 kB
+dist/assets/inter-greek-400-normal-q2sYcFCs.woff                                    9.92 kB
+dist/assets/inter-cyrillic-600-normal-4D_pXhcN.woff                                 9.94 kB
+dist/assets/inter-cyrillic-500-normal-CxZf_p3X.woff                                 9.94 kB
+dist/assets/inter-greek-500-normal-Xzm54t5V.woff                                    9.98 kB
+dist/assets/inter-greek-700-normal-BUv2fZ6O.woff                                    9.98 kB
+dist/assets/roboto-cyrillic-400-normal-DZJji7Rx.woff                               10.00 kB
+dist/assets/roboto-greek-300-italic-BrLe5cRO.woff2                                 10.02 kB
+dist/assets/inter-greek-600-normal-BZpKdvQh.woff                                   10.03 kB
+dist/assets/roboto-greek-900-italic-BEtBOMSg.woff2                                 10.05 kB
+dist/assets/roboto-cyrillic-300-normal-D568C3aM.woff                               10.06 kB
+dist/assets/roboto-greek-400-italic-B34zyaoR.woff2                                 10.11 kB
+dist/assets/roboto-greek-700-italic-BAtvbWwG.woff2                                 10.11 kB
+dist/assets/roboto-cyrillic-900-normal-D-__gutZ.woff                               10.12 kB
+dist/assets/roboto-greek-500-italic-CqwlXMhV.woff2                                 10.18 kB
+dist/assets/roboto-cyrillic-500-normal-BI4HuXre.woff                               10.20 kB
+dist/assets/roboto-cyrillic-700-normal-KqaQ5bNp.woff                               10.22 kB
+dist/assets/inter-cyrillic-ext-400-normal-BQZuk6qB.woff2                           10.23 kB
+dist/assets/inter-cyrillic-ext-500-normal-B0yAr1jD.woff2                           10.43 kB
+dist/assets/roboto-symbols-100-normal-B-PMwc8r.woff2                               10.43 kB
+dist/assets/inter-cyrillic-ext-600-normal-Dfes3d0z.woff2                           10.48 kB
+dist/assets/inter-cyrillic-ext-700-normal-BjwYoWNd.woff2                           10.50 kB
+dist/assets/roboto-symbols-400-normal-fF1SLJBj.woff2                               10.58 kB
+dist/assets/roboto-symbols-300-normal-BtHl5mYl.woff2                               10.62 kB
+dist/assets/roboto-symbols-500-normal-BXFTxrNR.woff2                               10.73 kB
+dist/assets/roboto-cyrillic-100-italic-DnULt90P.woff                               10.76 kB
+dist/assets/roboto-symbols-900-normal-CRdpsJ80.woff2                               10.78 kB
+dist/assets/roboto-symbols-700-normal-rJi6RjIy.woff2                               10.86 kB
+dist/assets/roboto-cyrillic-400-italic-Zu_q-fPu.woff                               10.95 kB
+dist/assets/roboto-symbols-100-italic-DTJxdrCC.woff2                               11.00 kB
+dist/assets/roboto-cyrillic-300-italic-CVpr5e7f.woff                               11.00 kB
+dist/assets/roboto-cyrillic-900-italic-CQX0C2wu.woff                               11.12 kB
+dist/assets/roboto-cyrillic-500-italic-Bh7qCtRT.woff                               11.16 kB
+dist/assets/roboto-cyrillic-700-italic-BCWecMHw.woff                               11.22 kB
+dist/assets/roboto-symbols-300-italic-Decoa7JJ.woff2                               11.46 kB
+dist/assets/roboto-cyrillic-100-normal-DDeB9qQX.woff2                              11.46 kB
+dist/assets/roboto-symbols-400-italic-D5oo1_lk.woff2                               11.51 kB
+dist/assets/roboto-symbols-900-italic-Mo1b0y_W.woff2                               11.52 kB
+dist/assets/roboto-symbols-500-italic-PPSXoPA-.woff2                               11.58 kB
+dist/assets/roboto-symbols-700-italic-B6Sa2Pt8.woff2                               11.68 kB
+dist/assets/roboto-cyrillic-300-normal-BoeCr7ev.woff2                              11.83 kB
+dist/assets/roboto-cyrillic-900-normal-D4rFC7QP.woff2                              11.83 kB
+dist/assets/roboto-cyrillic-400-normal-DAIM1_dR.woff2                              11.84 kB
+dist/assets/roboto-cyrillic-700-normal-BiSG5NnW.woff2                              11.94 kB
+dist/assets/roboto-cyrillic-500-normal-hCeO1jFL.woff2                              11.98 kB
+dist/assets/roboto-cyrillic-100-italic-DlbPbIMY.woff2                              12.22 kB
+dist/assets/roboto-cyrillic-300-italic-BhjtUEy1.woff2                              12.59 kB
+dist/assets/roboto-cyrillic-400-italic-DybfvQDZ.woff2                              12.64 kB
+dist/assets/roboto-cyrillic-900-italic-Bk0kO4dp.woff2                              12.68 kB
+dist/assets/roboto-cyrillic-700-italic-D7I_QqQO.woff2                              12.75 kB
+dist/assets/roboto-latin-ext-900-normal-Bz1ftnVH.woff                              12.79 kB
+dist/assets/roboto-latin-ext-100-normal-C9SEjVkl.woff                              12.83 kB
+dist/assets/roboto-cyrillic-500-italic-50KKclkj.woff2                              12.84 kB
+dist/assets/roboto-latin-ext-400-normal-eTRLN0Nt.woff                              12.90 kB
+dist/assets/roboto-latin-ext-700-normal-BS1OuQqR.woff                              12.90 kB
+dist/assets/roboto-latin-ext-500-normal-FFcS8vBN.woff                              12.94 kB
+dist/assets/roboto-latin-ext-300-normal-Tcf9y2tg.woff                              13.02 kB
+dist/assets/inter-cyrillic-ext-400-normal-DQukG94-.woff                            13.34 kB
+dist/assets/roboto-latin-ext-100-normal-1LaByAVy.woff2                             13.39 kB
+dist/assets/inter-cyrillic-ext-700-normal-LO58E6JB.woff                            13.41 kB
+dist/assets/inter-cyrillic-ext-500-normal-BmqWE9Dz.woff                            13.45 kB
+dist/assets/inter-cyrillic-ext-600-normal-Bcila6Z-.woff                            13.46 kB
+dist/assets/roboto-latin-ext-300-normal-BOz0oSmX.woff2                             13.74 kB
+dist/assets/roboto-latin-ext-400-normal-ZYmyxeOy.woff2                             13.74 kB
+dist/assets/roboto-latin-ext-100-italic-BXvtXipu.woff                              13.74 kB
+dist/assets/roboto-latin-ext-900-normal-BxNYdyfz.woff2                             13.90 kB
+dist/assets/roboto-latin-ext-900-italic-CaL6Ih53.woff                              13.97 kB
+dist/assets/roboto-latin-ext-500-normal-C_ARlJGk.woff2                             13.98 kB
+dist/assets/roboto-latin-ext-400-italic-CSR_FBJM.woff                              14.02 kB
+dist/assets/roboto-latin-ext-700-normal-70GS1MYH.woff2                             14.02 kB
+dist/assets/roboto-latin-ext-500-italic-CptMEnRE.woff                              14.04 kB
+dist/assets/roboto-latin-ext-300-italic-DUGwII3u.woff                              14.07 kB
+dist/assets/roboto-latin-ext-700-italic-BfC1Ft6m.woff                              14.11 kB
+dist/assets/roboto-latin-ext-100-italic-DVDJQTC2.woff2                             14.17 kB
+dist/assets/roboto-latin-ext-400-italic-CsSFmaQ2.woff2                             14.70 kB
+dist/assets/roboto-latin-ext-300-italic-PQBE51_Y.woff2                             14.72 kB
+dist/assets/roboto-latin-ext-500-italic-COCmbgXF.woff2                             14.92 kB
+dist/assets/roboto-latin-ext-900-italic-CSWCVjBl.woff2                             14.94 kB
+dist/assets/roboto-latin-ext-700-italic-D_vjvHba.woff2                             15.00 kB
+dist/assets/roboto-cyrillic-ext-100-normal-MvowFrs7.woff                           15.26 kB
+dist/assets/roboto-cyrillic-ext-900-normal-rPl6pXVq.woff                           15.73 kB
+dist/assets/roboto-cyrillic-ext-300-normal-DQdcc27I.woff                           15.74 kB
+dist/assets/roboto-cyrillic-ext-400-normal-DtZHuW6i.woff                           15.76 kB
+dist/assets/roboto-cyrillic-ext-500-normal-C927yMrb.woff                           15.87 kB
+dist/assets/roboto-cyrillic-ext-700-normal-BuQgZIrO.woff                           15.88 kB
+dist/assets/roboto-cyrillic-ext-100-normal-eVx91DwW.woff2                          16.16 kB
+dist/assets/roboto-cyrillic-ext-400-normal-DzMWdK87.woff2                          16.85 kB
+dist/assets/roboto-cyrillic-ext-300-normal-CUPJdUZp.woff2                          16.91 kB
+dist/assets/roboto-cyrillic-ext-100-italic-DKsADxQz.woff                           16.92 kB
+dist/assets/roboto-cyrillic-ext-900-normal-Bfn4Lcxa.woff2                          16.98 kB
+dist/assets/roboto-cyrillic-ext-500-normal-B7rQpwPu.woff2                          17.16 kB
+dist/assets/roboto-cyrillic-ext-700-normal-UFn0vR9r.woff2                          17.21 kB
+dist/assets/roboto-cyrillic-ext-400-italic-ETIoFZ5V.woff                           17.48 kB
+dist/assets/roboto-cyrillic-ext-300-italic-Bg2-8kjL.woff                           17.52 kB
+dist/assets/roboto-cyrillic-ext-900-italic-YqKWFC7B.woff                           17.52 kB
+dist/assets/roboto-cyrillic-ext-500-italic-BijSFi_5.woff                           17.58 kB
+dist/assets/roboto-cyrillic-ext-100-italic-BwNgNp6i.woff2                          17.59 kB
+dist/assets/roboto-cyrillic-ext-700-italic-DuIXfAR5.woff                           17.60 kB
+dist/assets/roboto-cyrillic-ext-300-italic-BDayftIC.woff2                          18.49 kB
+dist/assets/roboto-math-100-normal-C9POPBfd.woff                                   18.49 kB
+dist/assets/roboto-math-900-normal-Cwczpm6u.woff                                   18.60 kB
+dist/assets/roboto-cyrillic-ext-400-italic-Cx5WlvFD.woff2                          18.67 kB
+dist/assets/roboto-math-400-normal-rzxYvyVt.woff                                   18.73 kB
+dist/assets/roboto-cyrillic-ext-900-italic-jbY8C0RQ.woff2                          18.75 kB
+dist/assets/roboto-math-500-normal-DaFX-ZC8.woff                                   18.80 kB
+dist/assets/roboto-cyrillic-ext-500-italic-C5PK0hBL.woff2                          18.81 kB
+dist/assets/roboto-cyrillic-ext-700-italic-7D61aufB.woff2                          18.84 kB
+dist/assets/roboto-math-700-normal-pYD1nhov.woff                                   18.87 kB
+dist/assets/roboto-math-300-normal-BU9CUCyj.woff                                   18.91 kB
+dist/assets/roboto-math-100-normal-DesmuRQJ.woff2                                  19.18 kB
+dist/assets/roboto-math-400-normal-B3wgz80t.woff2                                  19.66 kB
+dist/assets/roboto-math-300-normal-BMxwzQmU.woff2                                  19.68 kB
+dist/assets/roboto-math-900-normal-DVW2yWT0.woff2                                  19.74 kB
+dist/assets/roboto-math-700-normal-VUAI6Bz2.woff2                                  19.95 kB
+dist/assets/roboto-math-500-normal-CFNaIMFC.woff2                                  19.98 kB
+dist/assets/roboto-latin-100-normal-DsByyiuu.woff                                  20.10 kB
+dist/assets/roboto-latin-900-normal-BcoNiyza.woff                                  20.11 kB
+dist/assets/roboto-latin-400-normal-068yxgMN.woff                                  20.22 kB
+dist/assets/roboto-latin-100-normal-DlpfXJCk.woff2                                 20.24 kB
+dist/assets/roboto-math-100-italic-DQQu2aBw.woff                                   20.34 kB
+dist/assets/roboto-latin-500-normal-CC5nhZkh.woff                                  20.34 kB
+dist/assets/roboto-latin-700-normal-DUekQERp.woff                                  20.37 kB
+dist/assets/roboto-math-100-italic-_EjYahLi.woff2                                  20.45 kB
+dist/assets/roboto-latin-300-normal-KByCBsad.woff                                  20.46 kB
+dist/assets/roboto-math-900-italic-D1k5E79h.woff                                   20.60 kB
+dist/assets/roboto-latin-400-normal-CNwBRw8h.woff2                                 20.61 kB
+dist/assets/roboto-math-400-italic-F353DnNC.woff                                   20.66 kB
+dist/assets/roboto-math-500-italic-BJ2Y2NuH.woff                                   20.68 kB
+dist/assets/roboto-latin-900-normal-93zEKV3C.woff2                                 20.68 kB
+dist/assets/roboto-math-700-italic-JhoKKH1c.woff                                   20.70 kB
+dist/assets/roboto-latin-300-normal-CztWkFGs.woff2                                 20.71 kB
+dist/assets/roboto-math-300-italic-CIu282AG.woff                                   20.90 kB
+dist/assets/roboto-latin-500-normal-CkrA1NAy.woff2                                 20.93 kB
+dist/assets/roboto-latin-700-normal-CXeAXeti.woff2                                 21.00 kB
+dist/assets/roboto-math-300-italic-hkG7WCB1.woff2                                  21.26 kB
+dist/assets/roboto-math-900-italic-DAJdubQV.woff2                                  21.30 kB
+dist/assets/roboto-math-400-italic-DYUv4wPJ.woff2                                  21.33 kB
+dist/assets/roboto-math-700-italic-BgjUvcKJ.woff2                                  21.48 kB
+dist/assets/roboto-math-500-italic-BvGZdN4I.woff2                                  21.52 kB
+dist/assets/roboto-latin-100-italic-UmkpCK7L.woff2                                 21.58 kB
+dist/assets/roboto-latin-100-italic-odBdwDxj.woff                                  21.71 kB
+dist/assets/roboto-latin-900-italic-CRbcZEJw.woff                                  21.95 kB
+dist/assets/roboto-latin-400-italic-C8qargjA.woff                                  21.98 kB
+dist/assets/roboto-latin-500-italic-BZvZ98AJ.woff                                  22.08 kB
+dist/assets/roboto-latin-700-italic-DXSk-Y68.woff                                  22.09 kB
+dist/assets/roboto-latin-300-italic-BO-dftSX.woff                                  22.20 kB
+dist/assets/roboto-latin-900-italic-45TalvtQ.woff2                                 22.36 kB
+dist/assets/roboto-latin-400-italic-CdnZD53w.woff2                                 22.38 kB
+dist/assets/roboto-latin-300-italic-BBeuuFIU.woff2                                 22.44 kB
+dist/assets/roboto-latin-500-italic-CXbgGduZ.woff2                                 22.54 kB
+dist/assets/roboto-latin-700-italic-C2tFXWtQ.woff2                                 22.62 kB
+dist/assets/inter-latin-400-normal-C38fXH4l.woff2                                  23.66 kB
+dist/assets/inter-latin-500-normal-Cerq10X2.woff2                                  24.27 kB
+dist/assets/inter-latin-700-normal-Yt3aPRUw.woff2                                  24.36 kB
+dist/assets/inter-latin-600-normal-LgqL8muc.woff2                                  24.45 kB
+dist/assets/inter-latin-400-normal-CyCys3Eg.woff                                   30.70 kB
+dist/assets/inter-latin-600-normal-CiBQ2DWP.woff                                   31.26 kB
+dist/assets/inter-latin-500-normal-BL9OpVg8.woff                                   31.28 kB
+dist/assets/inter-latin-700-normal-BLAVimhd.woff                                   31.32 kB
+dist/index.html                                                                    33.59 kB │ gzip:   3.36 kB
+dist/assets/inter-latin-ext-400-normal-C1nco2VV.woff2                              35.00 kB
+dist/assets/inter-latin-ext-500-normal-CV4jyFjo.woff2                              36.02 kB
+dist/assets/inter-latin-ext-700-normal-Ca8adRJv.woff2                              36.24 kB
+dist/assets/inter-latin-ext-600-normal-D2bJ5OIk.woff2                              36.26 kB
+dist/assets/inter-latin-ext-400-normal-77YHD8bZ.woff                               47.56 kB
+dist/assets/inter-latin-ext-500-normal-BxGbmqWO.woff                               48.49 kB
+dist/assets/inter-latin-ext-700-normal-TidjK2hL.woff                               48.63 kB
+dist/assets/inter-latin-ext-600-normal-CIVaiw4L.woff                               48.67 kB
+dist/assets/materialdesignicons-webfont-Dp5v-WZN.woff2                            403.22 kB
+dist/assets/materialdesignicons-webfont-PXm3-2wK.woff                             587.98 kB
+dist/assets/Orbu_Small_Transparent_Logo-BIy-fzT0.png                              905.23 kB
+dist/assets/materialdesignicons-webfont-B7mPwVP_.ttf                            1,307.66 kB
+dist/assets/materialdesignicons-webfont-CSr8KVlo.eot                            1,307.88 kB
+dist/assets/login-UN-8YntL.css                                                      0.11 kB │ gzip:   0.11 kB
+dist/assets/register-DYkd2U-M.css                                                   0.11 kB │ gzip:   0.12 kB
+dist/assets/index-BktksIqj.css                                                      0.14 kB │ gzip:   0.12 kB
+dist/assets/settings-DYdkrlS_.css                                                   0.50 kB │ gzip:   0.24 kB
+dist/assets/ServiceBrowser-DJSa4DKY.css                                             0.88 kB │ gzip:   0.40 kB
+dist/assets/index-DAsudShp.css                                                      1.25 kB │ gzip:   0.52 kB
+dist/assets/users-BP1AkYXA.css                                                      1.46 kB │ gzip:   0.62 kB
+dist/assets/ModelBrowser-CMpHbQ_N.css                                               2.05 kB │ gzip:   0.69 kB
+dist/assets/index-CSRAVBF1.css                                                      4.73 kB │ gzip:   1.23 kB
+dist/assets/index-BZX61g3i.css                                                      6.91 kB │ gzip:   1.39 kB
+dist/assets/VTooltip-5k1xX--S.css                                                   7.27 kB │ gzip:   1.59 kB
+dist/assets/VDataTable-CjhqGVFp.css                                                11.96 kB │ gzip:   1.92 kB
+dist/assets/index-DcnmO3GZ.css                                                    872.89 kB │ gzip: 162.65 kB
+dist/assets/default-MeHlexGr.js                                                     0.23 kB │ gzip:   0.19 kB
+dist/assets/VForm-D0pPe629.js                                                       0.69 kB │ gzip:   0.44 kB
+dist/assets/login-CgoeM9X6.js                                                       2.50 kB │ gzip:   1.20 kB
+dist/assets/index-DKMmKGYa.js                                                       3.48 kB │ gzip:   1.23 kB
+dist/assets/register-DAGvupk5.js                                                    3.56 kB │ gzip:   1.41 kB
+dist/assets/settings-DMSSMnVh.js                                                    6.38 kB │ gzip:   2.40 kB
+dist/assets/ServiceBrowser-DF6BWnme.js                                              6.51 kB │ gzip:   2.39 kB
+dist/assets/ServiceGroupDialog.vue_vue_type_script_setup_true_lang-rFBQjGDw.js      7.56 kB │ gzip:   2.32 kB
+dist/assets/users-CXSotXFh.js                                                       8.41 kB │ gzip:   2.91 kB
+dist/assets/VTooltip-DGPwZImG.js                                                    9.15 kB │ gzip:   3.67 kB
+dist/assets/index-Cor-67rh.js                                                       9.43 kB │ gzip:   3.17 kB
+dist/assets/ModelBrowser-LewIbxGF.js                                               12.65 kB │ gzip:   4.20 kB
+dist/assets/index-0uBrS8O0.js                                                      28.17 kB │ gzip:   7.97 kB
+dist/assets/VDataTable-B_-3mKV9.js                                                 39.17 kB │ gzip:  12.67 kB
+dist/assets/index-Dk_XsTg_.js                                                      59.49 kB │ gzip:  15.70 kB
+dist/assets/index-CeBubb-u.js                                                     425.22 kB │ gzip: 144.83 kB
+✓ built in 28.95s
+Removing intermediate container ce71973f038b
+ ---> 74dcb9db8e29
+Step 9/33 : FROM python:3.11-slim AS python-deps
+3.11-slim: Pulling from library/python
+119d43eec815: Already exists
+5b09819094bb: Pulling fs layer
+3e731abb5c1d: Pulling fs layer
+0b2bf04f68e9: Pulling fs layer
+0b2bf04f68e9: Verifying Checksum
+0b2bf04f68e9: Download complete
+5b09819094bb: Verifying Checksum
+5b09819094bb: Download complete
+3e731abb5c1d: Verifying Checksum
+3e731abb5c1d: Download complete
+5b09819094bb: Pull complete
+3e731abb5c1d: Pull complete
+0b2bf04f68e9: Pull complete
+Digest: sha256:5be45dbade29bebd6886af6b438fd7e0b4eb7b611f39ba62b430263f82de36d2
+Status: Downloaded newer image for python:3.11-slim
+ ---> fa659464a114
+Step 10/33 : WORKDIR /app
+ ---> Running in 860450b62546
+Removing intermediate container 860450b62546
+ ---> d8c70764bf8f
+Step 11/33 : COPY backend/requirements.txt ./
+ ---> 1234f0599996
+Step 12/33 : RUN pip install --no-cache-dir -r requirements.txt
+ ---> Running in a9bc459237da
+Collecting Flask==3.1.2 (from -r requirements.txt (line 2))
+  Downloading flask-3.1.2-py3-none-any.whl.metadata (3.2 kB)
+Collecting Flask-CORS==6.0.2 (from -r requirements.txt (line 3))
+  Downloading flask_cors-6.0.2-py3-none-any.whl.metadata (5.3 kB)
+Collecting SQLAlchemy==2.0.46 (from -r requirements.txt (line 6))
+  Downloading sqlalchemy-2.0.46-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+Collecting Flask-SQLAlchemy==3.1.1 (from -r requirements.txt (line 7))
+  Downloading flask_sqlalchemy-3.1.1-py3-none-any.whl.metadata (3.4 kB)
+Collecting Flask-Migrate==4.1.0 (from -r requirements.txt (line 8))
+  Downloading Flask_Migrate-4.1.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting psycopg2-binary==2.9.11 (from -r requirements.txt (line 9))
+  Downloading psycopg2_binary-2.9.11-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.9 kB)
+Collecting cryptography>=42.0.0 (from -r requirements.txt (line 12))
+  Downloading cryptography-46.0.4-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+Collecting bcrypt>=4.0.0 (from -r requirements.txt (line 13))
+  Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+Collecting PyJWT>=2.8.0 (from -r requirements.txt (line 14))
+  Downloading pyjwt-2.11.0-py3-none-any.whl.metadata (4.0 kB)
+Collecting easy-acumatica>=0.5.11 (from -r requirements.txt (line 17))
+  Downloading easy_acumatica-0.5.11-py3-none-any.whl.metadata (10 kB)
+Collecting gunicorn==24.1.1 (from -r requirements.txt (line 20))
+  Downloading gunicorn-24.1.1-py3-none-any.whl.metadata (4.6 kB)
+Collecting waitress==3.0.2 (from -r requirements.txt (line 23))
+  Downloading waitress-3.0.2-py3-none-any.whl.metadata (5.8 kB)
+Collecting python-dateutil==2.9.0.post0 (from -r requirements.txt (line 26))
+  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+Collecting APScheduler==3.11.2 (from -r requirements.txt (line 29))
+  Downloading apscheduler-3.11.2-py3-none-any.whl.metadata (6.4 kB)
+Collecting google-cloud-secret-manager==2.26.0 (from -r requirements.txt (line 32))
+  Downloading google_cloud_secret_manager-2.26.0-py3-none-any.whl.metadata (9.8 kB)
+Collecting cloud-sql-python-connector==1.20.0 (from cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading cloud_sql_python_connector-1.20.0-py3-none-any.whl.metadata (31 kB)
+Collecting google-cloud-run>=0.10.0 (from -r requirements.txt (line 34))
+  Downloading google_cloud_run-0.15.0-py3-none-any.whl.metadata (9.7 kB)
+Collecting google-cloud-build>=3.0.0 (from -r requirements.txt (line 35))
+  Downloading google_cloud_build-3.35.0-py3-none-any.whl.metadata (9.9 kB)
+Collecting blinker>=1.9.0 (from Flask==3.1.2->-r requirements.txt (line 2))
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting click>=8.1.3 (from Flask==3.1.2->-r requirements.txt (line 2))
+  Downloading click-8.3.1-py3-none-any.whl.metadata (2.6 kB)
+Collecting itsdangerous>=2.2.0 (from Flask==3.1.2->-r requirements.txt (line 2))
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting jinja2>=3.1.2 (from Flask==3.1.2->-r requirements.txt (line 2))
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting markupsafe>=2.1.1 (from Flask==3.1.2->-r requirements.txt (line 2))
+  Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting werkzeug>=3.1.0 (from Flask==3.1.2->-r requirements.txt (line 2))
+  Downloading werkzeug-3.1.5-py3-none-any.whl.metadata (4.0 kB)
+Collecting greenlet>=1 (from SQLAlchemy==2.0.46->-r requirements.txt (line 6))
+  Downloading greenlet-3.3.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.7 kB)
+Collecting typing-extensions>=4.6.0 (from SQLAlchemy==2.0.46->-r requirements.txt (line 6))
+  Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting alembic>=1.9.0 (from Flask-Migrate==4.1.0->-r requirements.txt (line 8))
+  Downloading alembic-1.18.3-py3-none-any.whl.metadata (7.2 kB)
+Collecting packaging (from gunicorn==24.1.1->-r requirements.txt (line 20))
+  Downloading packaging-26.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting six>=1.5 (from python-dateutil==2.9.0.post0->-r requirements.txt (line 26))
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting tzlocal>=3.0 (from APScheduler==3.11.2->-r requirements.txt (line 29))
+  Downloading tzlocal-5.3.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting google-api-core!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading google_api_core-2.29.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1 (from google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading google_auth-2.48.0-py3-none-any.whl.metadata (6.2 kB)
+Collecting grpcio<2.0.0,>=1.33.2 (from google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+Collecting proto-plus<2.0.0,>=1.22.3 (from google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading proto_plus-1.27.0-py3-none-any.whl.metadata (2.2 kB)
+Collecting protobuf!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<7.0.0,>=3.20.2 (from google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading protobuf-6.33.5-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+Collecting grpc-google-iam-v1<1.0.0,>=0.14.0 (from google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading grpc_google_iam_v1-0.14.3-py3-none-any.whl.metadata (9.2 kB)
+Collecting aiofiles (from cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading aiofiles-25.1.0-py3-none-any.whl.metadata (6.3 kB)
+Collecting aiohttp (from cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading aiohttp-3.13.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+Collecting dnspython>=2.0.0 (from cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading dnspython-2.8.0-py3-none-any.whl.metadata (5.7 kB)
+Collecting Requests (from cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Collecting pg8000>=1.31.1 (from cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading pg8000-1.31.5-py3-none-any.whl.metadata (88 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 88.8/88.8 kB 2.9 MB/s eta 0:00:00
+Collecting cffi>=2.0.0 (from cryptography>=42.0.0->-r requirements.txt (line 12))
+  Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+Collecting croniter>=1.3.0 (from easy-acumatica>=0.5.11->-r requirements.txt (line 17))
+  Downloading croniter-6.0.0-py2.py3-none-any.whl.metadata (32 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.4.0 (from aiohttp->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting attrs>=17.3.0 (from aiohttp->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading attrs-25.4.0-py3-none-any.whl.metadata (10 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+Collecting propcache>=0.2.0 (from aiohttp->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (13 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (75 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 75.1/75.1 kB 2.9 MB/s eta 0:00:00
+Collecting Mako (from alembic>=1.9.0->Flask-Migrate==4.1.0->-r requirements.txt (line 8))
+  Downloading mako-1.3.10-py3-none-any.whl.metadata (2.9 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=42.0.0->-r requirements.txt (line 12))
+  Downloading pycparser-3.0-py3-none-any.whl.metadata (8.2 kB)
+Collecting pytz>2021.1 (from croniter>=1.3.0->easy-acumatica>=0.5.11->-r requirements.txt (line 17))
+  Downloading pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+Collecting googleapis-common-protos<2.0.0,>=1.56.2 (from google-api-core!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading googleapis_common_protos-1.72.0-py3-none-any.whl.metadata (9.4 kB)
+Collecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0,>=1.34.1->google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading grpcio_status-1.76.0-py3-none-any.whl.metadata (1.1 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1->google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting rsa<5,>=3.1.4 (from google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1->google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Collecting scramp>=1.4.5 (from pg8000>=1.31.1->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading scramp-1.4.8-py3-none-any.whl.metadata (18 kB)
+Collecting charset_normalizer<4,>=2 (from Requests->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (37 kB)
+Collecting idna<4,>=2.5 (from Requests->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting urllib3<3,>=1.21.1 (from Requests->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+Collecting certifi>=2017.4.17 (from Requests->cloud-sql-python-connector==1.20.0->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading certifi-2026.1.4-py3-none-any.whl.metadata (2.5 kB)
+Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth!=2.24.0,!=2.25.0,<3.0.0,>=2.14.1->google-cloud-secret-manager==2.26.0->-r requirements.txt (line 32))
+  Downloading pyasn1-0.6.2-py3-none-any.whl.metadata (8.4 kB)
+Collecting asn1crypto>=1.5.1 (from scramp>=1.4.5->pg8000>=1.31.1->cloud-sql-python-connector[pg8000]==1.20.0->-r requirements.txt (line 33))
+  Downloading asn1crypto-1.5.1-py2.py3-none-any.whl.metadata (13 kB)
+Downloading flask-3.1.2-py3-none-any.whl (103 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.3/103.3 kB 3.1 MB/s eta 0:00:00
+Downloading flask_cors-6.0.2-py3-none-any.whl (13 kB)
+Downloading sqlalchemy-2.0.46-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.3/3.3 MB 3.6 MB/s eta 0:00:00
+Downloading flask_sqlalchemy-3.1.1-py3-none-any.whl (25 kB)
+Downloading Flask_Migrate-4.1.0-py3-none-any.whl (21 kB)
+Downloading psycopg2_binary-2.9.11-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.2/4.2 MB 7.1 MB/s eta 0:00:00
+Downloading gunicorn-24.1.1-py3-none-any.whl (114 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 114.9/114.9 kB 8.6 MB/s eta 0:00:00
+Downloading waitress-3.0.2-py3-none-any.whl (56 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.2/56.2 kB 21.4 MB/s eta 0:00:00
+Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 229.9/229.9 kB 9.6 MB/s eta 0:00:00
+Downloading apscheduler-3.11.2-py3-none-any.whl (64 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.4/64.4 kB 25.1 MB/s eta 0:00:00
+Downloading google_cloud_secret_manager-2.26.0-py3-none-any.whl (223 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 223.6/223.6 kB 9.1 MB/s eta 0:00:00
+Downloading cloud_sql_python_connector-1.20.0-py3-none-any.whl (50 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.1/50.1 kB 23.9 MB/s eta 0:00:00
+Downloading cryptography-46.0.4-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 9.0 MB/s eta 0:00:00
+Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 278.2/278.2 kB 8.9 MB/s eta 0:00:00
+Downloading pyjwt-2.11.0-py3-none-any.whl (28 kB)
+Downloading easy_acumatica-0.5.11-py3-none-any.whl (104 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 104.3/104.3 kB 7.8 MB/s eta 0:00:00
+Downloading google_cloud_run-0.15.0-py3-none-any.whl (453 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 453.9/453.9 kB 9.1 MB/s eta 0:00:00
+Downloading google_cloud_build-3.35.0-py3-none-any.whl (186 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 186.4/186.4 kB 10.2 MB/s eta 0:00:00
+Downloading aiohttp-3.13.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 9.6 MB/s eta 0:00:00
+Downloading alembic-1.18.3-py3-none-any.whl (262 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 262.3/262.3 kB 11.1 MB/s eta 0:00:00
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading cffi-2.0.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (215 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 215.6/215.6 kB 11.9 MB/s eta 0:00:00
+Downloading click-8.3.1-py3-none-any.whl (108 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 108.3/108.3 kB 18.5 MB/s eta 0:00:00
+Downloading croniter-6.0.0-py2.py3-none-any.whl (25 kB)
+Downloading dnspython-2.8.0-py3-none-any.whl (331 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 331.1/331.1 kB 11.6 MB/s eta 0:00:00
+Downloading google_api_core-2.29.0-py3-none-any.whl (173 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 173.9/173.9 kB 11.9 MB/s eta 0:00:00
+Downloading google_auth-2.48.0-py3-none-any.whl (236 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 236.5/236.5 kB 10.2 MB/s eta 0:00:00
+Downloading greenlet-3.3.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (590 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 590.3/590.3 kB 10.4 MB/s eta 0:00:00
+Downloading grpc_google_iam_v1-0.14.3-py3-none-any.whl (32 kB)
+Downloading grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 12.4 MB/s eta 0:00:00
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 24.1 MB/s eta 0:00:00
+Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Downloading pg8000-1.31.5-py3-none-any.whl (57 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 57.8/57.8 kB 208.2 MB/s eta 0:00:00
+Downloading proto_plus-1.27.0-py3-none-any.whl (50 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.2/50.2 kB 94.3 MB/s eta 0:00:00
+Downloading protobuf-6.33.5-cp39-abi3-manylinux2014_x86_64.whl (323 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 323.5/323.5 kB 14.0 MB/s eta 0:00:00
+Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 64.7/64.7 kB 39.3 MB/s eta 0:00:00
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.6/44.6 kB 201.5 MB/s eta 0:00:00
+Downloading tzlocal-5.3.1-py3-none-any.whl (18 kB)
+Downloading werkzeug-3.1.5-py3-none-any.whl (225 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 225.0/225.0 kB 14.9 MB/s eta 0:00:00
+Downloading aiofiles-25.1.0-py3-none-any.whl (14 kB)
+Downloading packaging-26.0-py3-none-any.whl (74 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 74.4/74.4 kB 41.1 MB/s eta 0:00:00
+Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Downloading attrs-25.4.0-py3-none-any.whl (67 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.6/67.6 kB 37.4 MB/s eta 0:00:00
+Downloading certifi-2026.1.4-py3-none-any.whl (152 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 152.9/152.9 kB 22.1 MB/s eta 0:00:00
+Downloading charset_normalizer-3.4.4-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (151 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 151.6/151.6 kB 23.4 MB/s eta 0:00:00
+Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 231.1/231.1 kB 15.4 MB/s eta 0:00:00
+Downloading googleapis_common_protos-1.72.0-py3-none-any.whl (297 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 297.5/297.5 kB 15.7 MB/s eta 0:00:00
+Downloading grpcio_status-1.76.0-py3-none-any.whl (14 kB)
+Downloading idna-3.11-py3-none-any.whl (71 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 71.0/71.0 kB 42.4 MB/s eta 0:00:00
+Downloading multidict-6.7.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 246.3/246.3 kB 16.6 MB/s eta 0:00:00
+Downloading propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (210 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 210.0/210.0 kB 16.2 MB/s eta 0:00:00
+Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 181.3/181.3 kB 18.9 MB/s eta 0:00:00
+Downloading pytz-2025.2-py2.py3-none-any.whl (509 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 509.2/509.2 kB 14.8 MB/s eta 0:00:00
+Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Downloading scramp-1.4.8-py3-none-any.whl (13 kB)
+Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.6/131.6 kB 29.9 MB/s eta 0:00:00
+Downloading yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (365 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 365.8/365.8 kB 15.0 MB/s eta 0:00:00
+Downloading mako-1.3.10-py3-none-any.whl (78 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.5/78.5 kB 75.0 MB/s eta 0:00:00
+Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 48.2/48.2 kB 202.2 MB/s eta 0:00:00
+Downloading asn1crypto-1.5.1-py2.py3-none-any.whl (105 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.0/105.0 kB 35.6 MB/s eta 0:00:00
+Downloading pyasn1-0.6.2-py3-none-any.whl (83 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 83.4/83.4 kB 44.2 MB/s eta 0:00:00
+Installing collected packages: pytz, asn1crypto, waitress, urllib3, tzlocal, typing-extensions, six, scramp, PyJWT, pycparser, pyasn1, psycopg2-binary, protobuf, propcache, packaging, multidict, markupsafe, itsdangerous, idna, greenlet, frozenlist, dnspython, click, charset_normalizer, certifi, blinker, bcrypt, attrs, aiohappyeyeballs, aiofiles, yarl, werkzeug, SQLAlchemy, rsa, Requests, python-dateutil, pyasn1-modules, proto-plus, Mako, jinja2, gunicorn, grpcio, googleapis-common-protos, cffi, APScheduler, aiosignal, pg8000, grpcio-status, Flask, cryptography, croniter, alembic, aiohttp, grpc-google-iam-v1, google-auth, Flask-SQLAlchemy, Flask-CORS, easy-acumatica, google-api-core, Flask-Migrate, cloud-sql-python-connector, google-cloud-secret-manager, google-cloud-run, google-cloud-build
+Successfully installed APScheduler-3.11.2 Flask-3.1.2 Flask-CORS-6.0.2 Flask-Migrate-4.1.0 Flask-SQLAlchemy-3.1.1 Mako-1.3.10 PyJWT-2.11.0 Requests-2.32.5 SQLAlchemy-2.0.46 aiofiles-25.1.0 aiohappyeyeballs-2.6.1 aiohttp-3.13.3 aiosignal-1.4.0 alembic-1.18.3 asn1crypto-1.5.1 attrs-25.4.0 bcrypt-5.0.0 blinker-1.9.0 certifi-2026.1.4 cffi-2.0.0 charset_normalizer-3.4.4 click-8.3.1 cloud-sql-python-connector-1.20.0 croniter-6.0.0 cryptography-46.0.4 dnspython-2.8.0 easy-acumatica-0.5.11 frozenlist-1.8.0 google-api-core-2.29.0 google-auth-2.48.0 google-cloud-build-3.35.0 google-cloud-run-0.15.0 google-cloud-secret-manager-2.26.0 googleapis-common-protos-1.72.0 greenlet-3.3.1 grpc-google-iam-v1-0.14.3 grpcio-1.76.0 grpcio-status-1.76.0 gunicorn-24.1.1 idna-3.11 itsdangerous-2.2.0 jinja2-3.1.6 markupsafe-3.0.3 multidict-6.7.1 packaging-26.0 pg8000-1.31.5 propcache-0.4.1 proto-plus-1.27.0 protobuf-6.33.5 psycopg2-binary-2.9.11 pyasn1-0.6.2 pyasn1-modules-0.4.2 pycparser-3.0 python-dateutil-2.9.0.post0 pytz-2025.2 rsa-4.9.1 scramp-1.4.8 six-1.17.0 typing-extensions-4.15.0 tzlocal-5.3.1 urllib3-2.6.3 waitress-3.0.2 werkzeug-3.1.5 yarl-1.22.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+[notice] A new release of pip is available: 24.0 -> 26.0
+[notice] To update, run: pip install --upgrade pip
+Removing intermediate container a9bc459237da
+ ---> 37684ef44115
+Step 13/33 : FROM python:3.11-slim
+ ---> fa659464a114
+Step 14/33 : ENV PYTHONUNBUFFERED=1     DEBIAN_FRONTEND=noninteractive
+ ---> Running in a99136992b81
+Removing intermediate container a99136992b81
+ ---> a135eeb5f9d8
+Step 15/33 : RUN apt-get update && apt-get install -y     nginx     supervisor     curl     dos2unix     && rm -rf /var/lib/apt/lists/*     && apt-get clean
+ ---> Running in a44cf6bf7215
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9670 kB]
+Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [98.7 kB]
+Fetched 9865 kB in 1s (7355 kB/s)
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  bash-completion iproute2 krb5-locales libbpf1 libbrotli1 libcap2-bin
+  libcom-err2 libcurl4t64 libelf1t64 libexpat1 libgnutls30t64 libgssapi-krb5-2
+  libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap-common
+  libldap2 libmnl0 libnghttp2-14 libnghttp3-9 libp11-kit0 libpam-cap
+  libpsl5t64 libpython3-stdlib libpython3.13-minimal libpython3.13-stdlib
+  librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db libssh2-1t64
+  libtasn1-6 libtirpc-common libtirpc3t64 libunistring5 libxtables12
+  media-types nginx-common publicsuffix python3 python3-autocommand
+  python3-inflect python3-jaraco.context python3-jaraco.functools
+  python3-minimal python3-more-itertools python3-pkg-resources
+  python3-typeguard python3-typing-extensions python3.13 python3.13-minimal
+Suggested packages:
+  gnutls-bin krb5-doc krb5-user libsasl2-modules-gssapi-mit
+  | libsasl2-modules-gssapi-heimdal libsasl2-modules-ldap libsasl2-modules-otp
+  libsasl2-modules-sql fcgiwrap nginx-doc ssl-cert python3-doc python3-tk
+  python3-venv python3-setuptools python3.13-venv python3.13-doc binutils
+  binfmt-support supervisor-doc
+The following NEW packages will be installed:
+  bash-completion curl dos2unix iproute2 krb5-locales libbpf1 libbrotli1
+  libcap2-bin libcom-err2 libcurl4t64 libelf1t64 libexpat1 libgnutls30t64
+  libgssapi-krb5-2 libidn2-0 libk5crypto3 libkeyutils1 libkrb5-3
+  libkrb5support0 libldap-common libldap2 libmnl0 libnghttp2-14 libnghttp3-9
+  libp11-kit0 libpam-cap libpsl5t64 libpython3-stdlib libpython3.13-minimal
+  libpython3.13-stdlib librtmp1 libsasl2-2 libsasl2-modules
+  libsasl2-modules-db libssh2-1t64 libtasn1-6 libtirpc-common libtirpc3t64
+  libunistring5 libxtables12 media-types nginx nginx-common publicsuffix
+  python3 python3-autocommand python3-inflect python3-jaraco.context
+  python3-jaraco.functools python3-minimal python3-more-itertools
+  python3-pkg-resources python3-typeguard python3-typing-extensions python3.13
+  python3.13-minimal supervisor
+0 upgraded, 57 newly installed, 0 to remove and 3 not upgraded.
+Need to get 15.4 MB of archives.
+After this operation, 55.2 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main amd64 libexpat1 amd64 2.7.1-2 [108 kB]
+Get:2 http://deb.debian.org/debian trixie/main amd64 libpython3.13-minimal amd64 3.13.5-2 [862 kB]
+Get:3 http://deb.debian.org/debian trixie/main amd64 python3.13-minimal amd64 3.13.5-2 [2224 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 python3-minimal amd64 3.13.5-1 [27.2 kB]
+Get:5 http://deb.debian.org/debian trixie/main amd64 media-types all 13.0.0 [29.3 kB]
+Get:6 http://deb.debian.org/debian trixie/main amd64 libpython3.13-stdlib amd64 3.13.5-2 [1956 kB]
+Get:7 http://deb.debian.org/debian trixie/main amd64 python3.13 amd64 3.13.5-2 [757 kB]
+Get:8 http://deb.debian.org/debian trixie/main amd64 libpython3-stdlib amd64 3.13.5-1 [10.2 kB]
+Get:9 http://deb.debian.org/debian trixie/main amd64 python3 amd64 3.13.5-1 [28.2 kB]
+Get:10 http://deb.debian.org/debian trixie/main amd64 python3-autocommand all 2.2.2-3 [13.6 kB]
+Get:11 http://deb.debian.org/debian trixie/main amd64 python3-more-itertools all 10.7.0-1 [67.4 kB]
+Get:12 http://deb.debian.org/debian trixie/main amd64 python3-typing-extensions all 4.13.2-1 [90.5 kB]
+Get:13 http://deb.debian.org/debian trixie/main amd64 python3-typeguard all 4.4.2-1 [37.3 kB]
+Get:14 http://deb.debian.org/debian trixie/main amd64 python3-inflect all 7.3.1-2 [32.4 kB]
+Get:15 http://deb.debian.org/debian trixie/main amd64 python3-jaraco.context all 6.0.1-1 [8276 B]
+Get:16 http://deb.debian.org/debian trixie/main amd64 python3-jaraco.functools all 4.1.0-1 [12.0 kB]
+Get:17 http://deb.debian.org/debian trixie/main amd64 python3-pkg-resources all 78.1.1-0.1 [224 kB]
+Get:18 http://deb.debian.org/debian trixie/main amd64 supervisor all 4.2.5-3 [311 kB]
+Get:19 http://deb.debian.org/debian trixie/main amd64 libelf1t64 amd64 0.192-4 [189 kB]
+Get:20 http://deb.debian.org/debian trixie/main amd64 libbpf1 amd64 1:1.5.0-3 [169 kB]
+Get:21 http://deb.debian.org/debian trixie/main amd64 libmnl0 amd64 1.0.5-3 [11.9 kB]
+Get:22 http://deb.debian.org/debian trixie/main amd64 libkrb5support0 amd64 1.21.3-5 [33.0 kB]
+Get:23 http://deb.debian.org/debian trixie/main amd64 libcom-err2 amd64 1.47.2-3+b7 [25.0 kB]
+Get:24 http://deb.debian.org/debian trixie/main amd64 libk5crypto3 amd64 1.21.3-5 [81.5 kB]
+Get:25 http://deb.debian.org/debian trixie/main amd64 libkeyutils1 amd64 1.6.3-6 [9456 B]
+Get:26 http://deb.debian.org/debian trixie/main amd64 libkrb5-3 amd64 1.21.3-5 [326 kB]
+Get:27 http://deb.debian.org/debian trixie/main amd64 libgssapi-krb5-2 amd64 1.21.3-5 [138 kB]
+Get:28 http://deb.debian.org/debian trixie/main amd64 libtirpc-common all 1.3.6+ds-1 [11.0 kB]
+Get:29 http://deb.debian.org/debian trixie/main amd64 libtirpc3t64 amd64 1.3.6+ds-1 [83.3 kB]
+Get:30 http://deb.debian.org/debian trixie/main amd64 libxtables12 amd64 1.8.11-2 [31.9 kB]
+Get:31 http://deb.debian.org/debian trixie/main amd64 libcap2-bin amd64 1:2.75-10+b3 [36.4 kB]
+Get:32 http://deb.debian.org/debian trixie/main amd64 iproute2 amd64 6.15.0-1 [1089 kB]
+Get:33 http://deb.debian.org/debian trixie/main amd64 bash-completion all 1:2.16.0-7 [319 kB]
+Get:34 http://deb.debian.org/debian trixie/main amd64 krb5-locales all 1.21.3-5 [101 kB]
+Get:35 http://deb.debian.org/debian trixie/main amd64 libbrotli1 amd64 1.1.0-2+b7 [307 kB]
+Get:36 http://deb.debian.org/debian trixie/main amd64 libunistring5 amd64 1.3-2 [477 kB]
+Get:37 http://deb.debian.org/debian trixie/main amd64 libidn2-0 amd64 2.3.8-2 [109 kB]
+Get:38 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg1-9 [19.8 kB]
+Get:39 http://deb.debian.org/debian trixie/main amd64 libsasl2-2 amd64 2.1.28+dfsg1-9 [57.5 kB]
+Get:40 http://deb.debian.org/debian trixie/main amd64 libldap2 amd64 2.6.10+dfsg-1 [194 kB]
+Get:41 http://deb.debian.org/debian trixie/main amd64 libnghttp2-14 amd64 1.64.0-1.1 [76.0 kB]
+Get:42 http://deb.debian.org/debian trixie/main amd64 libnghttp3-9 amd64 1.8.0-1 [67.7 kB]
+Get:43 http://deb.debian.org/debian trixie/main amd64 libpsl5t64 amd64 0.21.2-1.1+b1 [57.2 kB]
+Get:44 http://deb.debian.org/debian trixie/main amd64 libp11-kit0 amd64 0.25.5-3 [425 kB]
+Get:45 http://deb.debian.org/debian trixie/main amd64 libtasn1-6 amd64 4.20.0-2 [49.9 kB]
+Get:46 http://deb.debian.org/debian trixie/main amd64 libgnutls30t64 amd64 3.8.9-3+deb13u1 [1466 kB]
+Get:47 http://deb.debian.org/debian trixie/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b5 [58.8 kB]
+Get:48 http://deb.debian.org/debian trixie/main amd64 libssh2-1t64 amd64 1.11.1-1 [245 kB]
+Get:49 http://deb.debian.org/debian trixie/main amd64 libcurl4t64 amd64 8.14.1-2+deb13u2 [391 kB]
+Get:50 http://deb.debian.org/debian trixie/main amd64 curl amd64 8.14.1-2+deb13u2 [270 kB]
+Get:51 http://deb.debian.org/debian trixie/main amd64 dos2unix amd64 7.5.2-1 [518 kB]
+Get:52 http://deb.debian.org/debian trixie/main amd64 libldap-common all 2.6.10+dfsg-1 [35.1 kB]
+Get:53 http://deb.debian.org/debian trixie/main amd64 libpam-cap amd64 1:2.75-10+b3 [16.5 kB]
+Get:54 http://deb.debian.org/debian trixie/main amd64 libsasl2-modules amd64 2.1.28+dfsg1-9 [66.7 kB]
+Get:55 http://deb.debian.org/debian trixie/main amd64 nginx-common all 1.26.3-3+deb13u1 [109 kB]
+Get:56 http://deb.debian.org/debian trixie/main amd64 nginx amd64 1.26.3-3+deb13u1 [609 kB]
+Get:57 http://deb.debian.org/debian trixie/main amd64 publicsuffix all 20250328.1952-0.1 [296 kB]
+Preconfiguring packages ...
+Fetched 15.4 MB in 1s (26.1 MB/s)
+Selecting previously unselected package libexpat1:amd64.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+Preparing to unpack .../libexpat1_2.7.1-2_amd64.deb ...
+Unpacking libexpat1:amd64 (2.7.1-2) ...
+Selecting previously unselected package libpython3.13-minimal:amd64.
+Preparing to unpack .../libpython3.13-minimal_3.13.5-2_amd64.deb ...
+Unpacking libpython3.13-minimal:amd64 (3.13.5-2) ...
+Selecting previously unselected package python3.13-minimal.
+Preparing to unpack .../python3.13-minimal_3.13.5-2_amd64.deb ...
+Unpacking python3.13-minimal (3.13.5-2) ...
+Setting up libpython3.13-minimal:amd64 (3.13.5-2) ...
+Setting up libexpat1:amd64 (2.7.1-2) ...
+Setting up python3.13-minimal (3.13.5-2) ...
+Selecting previously unselected package python3-minimal.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5979 files and directories currently installed.)
+Preparing to unpack .../python3-minimal_3.13.5-1_amd64.deb ...
+Unpacking python3-minimal (3.13.5-1) ...
+Selecting previously unselected package media-types.
+Preparing to unpack .../media-types_13.0.0_all.deb ...
+Unpacking media-types (13.0.0) ...
+Selecting previously unselected package libpython3.13-stdlib:amd64.
+Preparing to unpack .../libpython3.13-stdlib_3.13.5-2_amd64.deb ...
+Unpacking libpython3.13-stdlib:amd64 (3.13.5-2) ...
+Selecting previously unselected package python3.13.
+Preparing to unpack .../python3.13_3.13.5-2_amd64.deb ...
+Unpacking python3.13 (3.13.5-2) ...
+Selecting previously unselected package libpython3-stdlib:amd64.
+Preparing to unpack .../libpython3-stdlib_3.13.5-1_amd64.deb ...
+Unpacking libpython3-stdlib:amd64 (3.13.5-1) ...
+Setting up python3-minimal (3.13.5-1) ...
+Selecting previously unselected package python3.
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6433 files and directories currently installed.)
+Preparing to unpack .../00-python3_3.13.5-1_amd64.deb ...
+Unpacking python3 (3.13.5-1) ...
+Selecting previously unselected package python3-autocommand.
+Preparing to unpack .../01-python3-autocommand_2.2.2-3_all.deb ...
+Unpacking python3-autocommand (2.2.2-3) ...
+Selecting previously unselected package python3-more-itertools.
+Preparing to unpack .../02-python3-more-itertools_10.7.0-1_all.deb ...
+Unpacking python3-more-itertools (10.7.0-1) ...
+Selecting previously unselected package python3-typing-extensions.
+Preparing to unpack .../03-python3-typing-extensions_4.13.2-1_all.deb ...
+Unpacking python3-typing-extensions (4.13.2-1) ...
+Selecting previously unselected package python3-typeguard.
+Preparing to unpack .../04-python3-typeguard_4.4.2-1_all.deb ...
+Unpacking python3-typeguard (4.4.2-1) ...
+Selecting previously unselected package python3-inflect.
+Preparing to unpack .../05-python3-inflect_7.3.1-2_all.deb ...
+Unpacking python3-inflect (7.3.1-2) ...
+Selecting previously unselected package python3-jaraco.context.
+Preparing to unpack .../06-python3-jaraco.context_6.0.1-1_all.deb ...
+Unpacking python3-jaraco.context (6.0.1-1) ...
+Selecting previously unselected package python3-jaraco.functools.
+Preparing to unpack .../07-python3-jaraco.functools_4.1.0-1_all.deb ...
+Unpacking python3-jaraco.functools (4.1.0-1) ...
+Selecting previously unselected package python3-pkg-resources.
+Preparing to unpack .../08-python3-pkg-resources_78.1.1-0.1_all.deb ...
+Unpacking python3-pkg-resources (78.1.1-0.1) ...
+Selecting previously unselected package supervisor.
+Preparing to unpack .../09-supervisor_4.2.5-3_all.deb ...
+Unpacking supervisor (4.2.5-3) ...
+Selecting previously unselected package libelf1t64:amd64.
+Preparing to unpack .../10-libelf1t64_0.192-4_amd64.deb ...
+Unpacking libelf1t64:amd64 (0.192-4) ...
+Selecting previously unselected package libbpf1:amd64.
+Preparing to unpack .../11-libbpf1_1%3a1.5.0-3_amd64.deb ...
+Unpacking libbpf1:amd64 (1:1.5.0-3) ...
+Selecting previously unselected package libmnl0:amd64.
+Preparing to unpack .../12-libmnl0_1.0.5-3_amd64.deb ...
+Unpacking libmnl0:amd64 (1.0.5-3) ...
+Selecting previously unselected package libkrb5support0:amd64.
+Preparing to unpack .../13-libkrb5support0_1.21.3-5_amd64.deb ...
+Unpacking libkrb5support0:amd64 (1.21.3-5) ...
+Selecting previously unselected package libcom-err2:amd64.
+Preparing to unpack .../14-libcom-err2_1.47.2-3+b7_amd64.deb ...
+Unpacking libcom-err2:amd64 (1.47.2-3+b7) ...
+Selecting previously unselected package libk5crypto3:amd64.
+Preparing to unpack .../15-libk5crypto3_1.21.3-5_amd64.deb ...
+Unpacking libk5crypto3:amd64 (1.21.3-5) ...
+Selecting previously unselected package libkeyutils1:amd64.
+Preparing to unpack .../16-libkeyutils1_1.6.3-6_amd64.deb ...
+Unpacking libkeyutils1:amd64 (1.6.3-6) ...
+Selecting previously unselected package libkrb5-3:amd64.
+Preparing to unpack .../17-libkrb5-3_1.21.3-5_amd64.deb ...
+Unpacking libkrb5-3:amd64 (1.21.3-5) ...
+Selecting previously unselected package libgssapi-krb5-2:amd64.
+Preparing to unpack .../18-libgssapi-krb5-2_1.21.3-5_amd64.deb ...
+Unpacking libgssapi-krb5-2:amd64 (1.21.3-5) ...
+Selecting previously unselected package libtirpc-common.
+Preparing to unpack .../19-libtirpc-common_1.3.6+ds-1_all.deb ...
+Unpacking libtirpc-common (1.3.6+ds-1) ...
+Selecting previously unselected package libtirpc3t64:amd64.
+Preparing to unpack .../20-libtirpc3t64_1.3.6+ds-1_amd64.deb ...
+Adding 'diversion of /lib/x86_64-linux-gnu/libtirpc.so.3 to /lib/x86_64-linux-gnu/libtirpc.so.3.usr-is-merged by libtirpc3t64'
+Adding 'diversion of /lib/x86_64-linux-gnu/libtirpc.so.3.0.0 to /lib/x86_64-linux-gnu/libtirpc.so.3.0.0.usr-is-merged by libtirpc3t64'
+Unpacking libtirpc3t64:amd64 (1.3.6+ds-1) ...
+Selecting previously unselected package libxtables12:amd64.
+Preparing to unpack .../21-libxtables12_1.8.11-2_amd64.deb ...
+Unpacking libxtables12:amd64 (1.8.11-2) ...
+Selecting previously unselected package libcap2-bin.
+Preparing to unpack .../22-libcap2-bin_1%3a2.75-10+b3_amd64.deb ...
+Unpacking libcap2-bin (1:2.75-10+b3) ...
+Selecting previously unselected package iproute2.
+Preparing to unpack .../23-iproute2_6.15.0-1_amd64.deb ...
+Unpacking iproute2 (6.15.0-1) ...
+Selecting previously unselected package bash-completion.
+Preparing to unpack .../24-bash-completion_1%3a2.16.0-7_all.deb ...
+Unpacking bash-completion (1:2.16.0-7) ...
+Selecting previously unselected package krb5-locales.
+Preparing to unpack .../25-krb5-locales_1.21.3-5_all.deb ...
+Unpacking krb5-locales (1.21.3-5) ...
+Selecting previously unselected package libbrotli1:amd64.
+Preparing to unpack .../26-libbrotli1_1.1.0-2+b7_amd64.deb ...
+Unpacking libbrotli1:amd64 (1.1.0-2+b7) ...
+Selecting previously unselected package libunistring5:amd64.
+Preparing to unpack .../27-libunistring5_1.3-2_amd64.deb ...
+Unpacking libunistring5:amd64 (1.3-2) ...
+Selecting previously unselected package libidn2-0:amd64.
+Preparing to unpack .../28-libidn2-0_2.3.8-2_amd64.deb ...
+Unpacking libidn2-0:amd64 (2.3.8-2) ...
+Selecting previously unselected package libsasl2-modules-db:amd64.
+Preparing to unpack .../29-libsasl2-modules-db_2.1.28+dfsg1-9_amd64.deb ...
+Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+Selecting previously unselected package libsasl2-2:amd64.
+Preparing to unpack .../30-libsasl2-2_2.1.28+dfsg1-9_amd64.deb ...
+Unpacking libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+Selecting previously unselected package libldap2:amd64.
+Preparing to unpack .../31-libldap2_2.6.10+dfsg-1_amd64.deb ...
+Unpacking libldap2:amd64 (2.6.10+dfsg-1) ...
+Selecting previously unselected package libnghttp2-14:amd64.
+Preparing to unpack .../32-libnghttp2-14_1.64.0-1.1_amd64.deb ...
+Unpacking libnghttp2-14:amd64 (1.64.0-1.1) ...
+Selecting previously unselected package libnghttp3-9:amd64.
+Preparing to unpack .../33-libnghttp3-9_1.8.0-1_amd64.deb ...
+Unpacking libnghttp3-9:amd64 (1.8.0-1) ...
+Selecting previously unselected package libpsl5t64:amd64.
+Preparing to unpack .../34-libpsl5t64_0.21.2-1.1+b1_amd64.deb ...
+Unpacking libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+Selecting previously unselected package libp11-kit0:amd64.
+Preparing to unpack .../35-libp11-kit0_0.25.5-3_amd64.deb ...
+Unpacking libp11-kit0:amd64 (0.25.5-3) ...
+Selecting previously unselected package libtasn1-6:amd64.
+Preparing to unpack .../36-libtasn1-6_4.20.0-2_amd64.deb ...
+Unpacking libtasn1-6:amd64 (4.20.0-2) ...
+Selecting previously unselected package libgnutls30t64:amd64.
+Preparing to unpack .../37-libgnutls30t64_3.8.9-3+deb13u1_amd64.deb ...
+Unpacking libgnutls30t64:amd64 (3.8.9-3+deb13u1) ...
+Selecting previously unselected package librtmp1:amd64.
+Preparing to unpack .../38-librtmp1_2.4+20151223.gitfa8646d.1-2+b5_amd64.deb ...
+Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+Selecting previously unselected package libssh2-1t64:amd64.
+Preparing to unpack .../39-libssh2-1t64_1.11.1-1_amd64.deb ...
+Unpacking libssh2-1t64:amd64 (1.11.1-1) ...
+Selecting previously unselected package libcurl4t64:amd64.
+Preparing to unpack .../40-libcurl4t64_8.14.1-2+deb13u2_amd64.deb ...
+Unpacking libcurl4t64:amd64 (8.14.1-2+deb13u2) ...
+Selecting previously unselected package curl.
+Preparing to unpack .../41-curl_8.14.1-2+deb13u2_amd64.deb ...
+Unpacking curl (8.14.1-2+deb13u2) ...
+Selecting previously unselected package dos2unix.
+Preparing to unpack .../42-dos2unix_7.5.2-1_amd64.deb ...
+Unpacking dos2unix (7.5.2-1) ...
+Selecting previously unselected package libldap-common.
+Preparing to unpack .../43-libldap-common_2.6.10+dfsg-1_all.deb ...
+Unpacking libldap-common (2.6.10+dfsg-1) ...
+Selecting previously unselected package libpam-cap:amd64.
+Preparing to unpack .../44-libpam-cap_1%3a2.75-10+b3_amd64.deb ...
+Unpacking libpam-cap:amd64 (1:2.75-10+b3) ...
+Selecting previously unselected package libsasl2-modules:amd64.
+Preparing to unpack .../45-libsasl2-modules_2.1.28+dfsg1-9_amd64.deb ...
+Unpacking libsasl2-modules:amd64 (2.1.28+dfsg1-9) ...
+Selecting previously unselected package nginx-common.
+Preparing to unpack .../46-nginx-common_1.26.3-3+deb13u1_all.deb ...
+Unpacking nginx-common (1.26.3-3+deb13u1) ...
+Selecting previously unselected package nginx.
+Preparing to unpack .../47-nginx_1.26.3-3+deb13u1_amd64.deb ...
+Unpacking nginx (1.26.3-3+deb13u1) ...
+Selecting previously unselected package publicsuffix.
+Preparing to unpack .../48-publicsuffix_20250328.1952-0.1_all.deb ...
+Unpacking publicsuffix (20250328.1952-0.1) ...
+Setting up media-types (13.0.0) ...
+Setting up libkeyutils1:amd64 (1.6.3-6) ...
+Setting up libtirpc-common (1.3.6+ds-1) ...
+Setting up libbrotli1:amd64 (1.1.0-2+b7) ...
+Setting up libsasl2-modules:amd64 (2.1.28+dfsg1-9) ...
+Setting up libnghttp2-14:amd64 (1.64.0-1.1) ...
+Setting up nginx-common (1.26.3-3+deb13u1) ...
+Setting up krb5-locales (1.21.3-5) ...
+Setting up libcom-err2:amd64 (1.47.2-3+b7) ...
+Setting up libldap-common (2.6.10+dfsg-1) ...
+Setting up libelf1t64:amd64 (0.192-4) ...
+Setting up libkrb5support0:amd64 (1.21.3-5) ...
+Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg1-9) ...
+Setting up libcap2-bin (1:2.75-10+b3) ...
+Setting up bash-completion (1:2.16.0-7) ...
+Setting up libp11-kit0:amd64 (0.25.5-3) ...
+Setting up libunistring5:amd64 (1.3-2) ...
+Setting up libmnl0:amd64 (1.0.5-3) ...
+Setting up libk5crypto3:amd64 (1.21.3-5) ...
+Setting up libxtables12:amd64 (1.8.11-2) ...
+Setting up libsasl2-2:amd64 (2.1.28+dfsg1-9) ...
+Setting up libnghttp3-9:amd64 (1.8.0-1) ...
+Setting up libtasn1-6:amd64 (4.20.0-2) ...
+Setting up libkrb5-3:amd64 (1.21.3-5) ...
+Setting up dos2unix (7.5.2-1) ...
+Setting up libssh2-1t64:amd64 (1.11.1-1) ...
+Setting up libpam-cap:amd64 (1:2.75-10+b3) ...
+Setting up libpython3.13-stdlib:amd64 (3.13.5-2) ...
+Setting up publicsuffix (20250328.1952-0.1) ...
+Setting up libldap2:amd64 (2.6.10+dfsg-1) ...
+Setting up libbpf1:amd64 (1:1.5.0-3) ...
+Setting up libpython3-stdlib:amd64 (3.13.5-1) ...
+Setting up python3.13 (3.13.5-2) ...
+Setting up python3 (3.13.5-1) ...
+Setting up libidn2-0:amd64 (2.3.8-2) ...
+Setting up python3-autocommand (2.2.2-3) ...
+Setting up libgssapi-krb5-2:amd64 (1.21.3-5) ...
+Setting up python3-typing-extensions (4.13.2-1) ...
+Setting up libgnutls30t64:amd64 (3.8.9-3+deb13u1) ...
+Setting up python3-more-itertools (10.7.0-1) ...
+Setting up python3-jaraco.functools (4.1.0-1) ...
+Setting up python3-jaraco.context (6.0.1-1) ...
+Setting up libtirpc3t64:amd64 (1.3.6+ds-1) ...
+Setting up iproute2 (6.15.0-1) ...
+Setting up python3-typeguard (4.4.2-1) ...
+Setting up libpsl5t64:amd64 (0.21.2-1.1+b1) ...
+Setting up python3-inflect (7.3.1-2) ...
+Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b5) ...
+Setting up python3-pkg-resources (78.1.1-0.1) ...
+Setting up supervisor (4.2.5-3) ...
+invoke-rc.d: could not determine current runlevel
+invoke-rc.d: policy-rc.d denied execution of start.
+Setting up libcurl4t64:amd64 (8.14.1-2+deb13u2) ...
+Setting up nginx (1.26.3-3+deb13u1) ...
+invoke-rc.d: could not determine current runlevel
+invoke-rc.d: policy-rc.d denied execution of start.
+Setting up curl (8.14.1-2+deb13u2) ...
+Processing triggers for libc-bin (2.41-12+deb13u1) ...
+Removing intermediate container a44cf6bf7215
+ ---> ecef8edec449
+Step 16/33 : WORKDIR /app
+ ---> Running in 8bacf6074bf6
+Removing intermediate container 8bacf6074bf6
+ ---> 77168e076a3c
+Step 17/33 : COPY --from=python-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+ ---> 3c7f99cbe12b
+Step 18/33 : COPY --from=python-deps /usr/local/bin /usr/local/bin
+ ---> d103b2d2508c
+Step 19/33 : RUN chmod -R 777 /usr/local/lib/python3.11/site-packages/easy_acumatica || true
+ ---> Running in a1f3bd959e8d
+Removing intermediate container a1f3bd959e8d
+ ---> a425e9a26b31
+Step 20/33 : COPY backend/ /app/backend/
+ ---> e9da1251b423
+Step 21/33 : COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
+ ---> b61303bbb65a
+Step 22/33 : COPY nginx/nginx.conf /etc/nginx/nginx.conf
+ ---> fddbd17eca7c
+Step 23/33 : COPY nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
+ ---> 5caf5bf89a51
+Step 24/33 : RUN mkdir -p /app/docker/gcp
+ ---> Running in 00a1f654c90a
+Removing intermediate container 00a1f654c90a
+ ---> e660afae06c0
+Step 25/33 : COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+ ---> 65b9c1390bc8
+Step 26/33 : COPY docker/gcp/entrypoint.sh /app/entrypoint.sh
+ ---> 15a13d4b9add
+Step 27/33 : COPY docker/gcp/init-secrets.py /app/docker/gcp/init-secrets.py
+ ---> 925b581cf159
+Step 28/33 : RUN mkdir -p     /var/log/supervisor     /var/log/nginx     /tmp/flask_session     /tmp/.easy_acumatica_cache     /app/backend/flask_session     && dos2unix /app/entrypoint.sh     && chmod +x /app/entrypoint.sh     && chown -R www-data:www-data /usr/share/nginx/html     && chown -R www-data:www-data /var/log/nginx     && chmod -R 777 /tmp/flask_session     && chmod -R 777 /tmp/.easy_acumatica_cache     && chmod -R 777 /app/backend/flask_session
+ ---> Running in 1ba7dd73d548
+dos2unix: converting file /app/entrypoint.sh to Unix format...
+Removing intermediate container 1ba7dd73d548
+ ---> d54b0f99bdda
+Step 29/33 : ENV FLASK_APP=app.py     DOCKER_ENV=true     POSTGRES_HOST=postgres     POSTGRES_PORT=5432     POSTGRES_DB=orbu     POSTGRES_USER=orbu     HOME=/tmp
+ ---> Running in 35116abbbe83
+Removing intermediate container 35116abbbe83
+ ---> 71c553e59717
+Step 30/33 : EXPOSE 8080
+ ---> Running in 4a4eb96c4ec4
+Removing intermediate container 4a4eb96c4ec4
+ ---> 2ac3a39c4dbc
+Step 31/33 : HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3     CMD curl -f http://localhost:8080/api/health || exit 1
+ ---> Running in 18191a4dd431
+Removing intermediate container 18191a4dd431
+ ---> ce7d3fd74283
+Step 32/33 : WORKDIR /app/backend
+ ---> Running in 6669ccf31738
+Removing intermediate container 6669ccf31738
+ ---> 4132664b3be5
+Step 33/33 : ENTRYPOINT ["/app/entrypoint.sh"]
+ ---> Running in 0ea160fd878f
+Removing intermediate container 0ea160fd878f
+ ---> ab8b2d3765b2
+Successfully built ab8b2d3765b2
+Successfully tagged gcr.io/orbu-test-2/nioron-orbu:v0.1.36
+Successfully tagged gcr.io/orbu-test-2/nioron-orbu:latest
+Finished Step #1
+Starting Step #2
+Already have image (with digest): gcr.io/cloud-builders/docker
+The push refers to repository [gcr.io/orbu-test-2/nioron-orbu]
+1b82ad98dcc3: Preparing
+a91e29956d9d: Preparing
+bdb009e2467d: Preparing
+d48b47ea8fc1: Preparing
+4766dd64a770: Preparing
+16a8f678353a: Preparing
+debbc9086a6d: Preparing
+2b46056344fb: Preparing
+b7d8a4fa5254: Preparing
+a9da93335a31: Preparing
+4ab634737e8c: Preparing
+3d09a16351db: Preparing
+b386d4f05361: Preparing
+e0932dcd0e16: Preparing
+49d74831a287: Preparing
+5d89b1d5fc98: Preparing
+523062ea36b5: Preparing
+e50a58335e13: Preparing
+3d09a16351db: Waiting
+b386d4f05361: Waiting
+e0932dcd0e16: Waiting
+49d74831a287: Waiting
+5d89b1d5fc98: Waiting
+523062ea36b5: Waiting
+4ab634737e8c: Waiting
+e50a58335e13: Waiting
+a9da93335a31: Pushed
+bdb009e2467d: Pushed
+d48b47ea8fc1: Pushed
+16a8f678353a: Pushed
+4766dd64a770: Pushed
+b7d8a4fa5254: Pushed
+debbc9086a6d: Pushed
+a91e29956d9d: Pushed
+49d74831a287: Layer already exists
+5d89b1d5fc98: Layer already exists
+523062ea36b5: Layer already exists
+e50a58335e13: Layer already exists
+2b46056344fb: Pushed
+b386d4f05361: Pushed
+1b82ad98dcc3: Pushed
+4ab634737e8c: Pushed
+e0932dcd0e16: Pushed
+3d09a16351db: Pushed
+latest: digest: sha256:a8a30f3ea8996323529844bd30b819fd205adeb09eb216da65fcda79810691ea size: 4085
+1b82ad98dcc3: Preparing
+a91e29956d9d: Preparing
+bdb009e2467d: Preparing
+d48b47ea8fc1: Preparing
+4766dd64a770: Preparing
+16a8f678353a: Preparing
+debbc9086a6d: Preparing
+2b46056344fb: Preparing
+b7d8a4fa5254: Preparing
+a9da93335a31: Preparing
+4ab634737e8c: Preparing
+1b82ad98dcc3: Layer already exists
+a91e29956d9d: Layer already exists
+bdb009e2467d: Layer already exists
+d48b47ea8fc1: Layer already exists
+4766dd64a770: Layer already exists
+16a8f678353a: Layer already exists
+debbc9086a6d: Layer already exists
+2b46056344fb: Layer already exists
+b7d8a4fa5254: Layer already exists
+a9da93335a31: Layer already exists
+3d09a16351db: Preparing
+b386d4f05361: Preparing
+e0932dcd0e16: Preparing
+49d74831a287: Preparing
+5d89b1d5fc98: Preparing
+523062ea36b5: Preparing
+e50a58335e13: Preparing
+4ab634737e8c: Layer already exists
+3d09a16351db: Layer already exists
+b386d4f05361: Layer already exists
+e0932dcd0e16: Layer already exists
+49d74831a287: Layer already exists
+5d89b1d5fc98: Layer already exists
+523062ea36b5: Layer already exists
+e50a58335e13: Layer already exists
+v0.1.36: digest: sha256:a8a30f3ea8996323529844bd30b819fd205adeb09eb216da65fcda79810691ea size: 4085
+Finished Step #2
+PUSH
+Pushing gcr.io/orbu-test-2/nioron-orbu:v0.1.36
+The push refers to repository [gcr.io/orbu-test-2/nioron-orbu]
+1b82ad98dcc3: Preparing
+a91e29956d9d: Preparing
+bdb009e2467d: Preparing
+d48b47ea8fc1: Preparing
+4766dd64a770: Preparing
+16a8f678353a: Preparing
+debbc9086a6d: Preparing
+2b46056344fb: Preparing
+b7d8a4fa5254: Preparing
+a9da93335a31: Preparing
+4ab634737e8c: Preparing
+3d09a16351db: Preparing
+b386d4f05361: Preparing
+e0932dcd0e16: Preparing
+49d74831a287: Preparing
+5d89b1d5fc98: Preparing
+523062ea36b5: Preparing
+e50a58335e13: Preparing
+4ab634737e8c: Waiting
+3d09a16351db: Waiting
+b386d4f05361: Waiting
+e0932dcd0e16: Waiting
+49d74831a287: Waiting
+5d89b1d5fc98: Waiting
+523062ea36b5: Waiting
+e50a58335e13: Waiting
+debbc9086a6d: Layer already exists
+d48b47ea8fc1: Layer already exists
+16a8f678353a: Layer already exists
+a91e29956d9d: Layer already exists
+a9da93335a31: Layer already exists
+bdb009e2467d: Layer already exists
+1b82ad98dcc3: Layer already exists
+4766dd64a770: Layer already exists
+b7d8a4fa5254: Layer already exists
+2b46056344fb: Layer already exists
+4ab634737e8c: Layer already exists
+e0932dcd0e16: Layer already exists
+3d09a16351db: Layer already exists
+b386d4f05361: Layer already exists
+523062ea36b5: Layer already exists
+5d89b1d5fc98: Layer already exists
+49d74831a287: Layer already exists
+e50a58335e13: Layer already exists
+v0.1.36: digest: sha256:a8a30f3ea8996323529844bd30b819fd205adeb09eb216da65fcda79810691ea size: 4085
+Pushing gcr.io/orbu-test-2/nioron-orbu:latest
+The push refers to repository [gcr.io/orbu-test-2/nioron-orbu]
+1b82ad98dcc3: Preparing
+a91e29956d9d: Preparing
+bdb009e2467d: Preparing
+d48b47ea8fc1: Preparing
+4766dd64a770: Preparing
+16a8f678353a: Preparing
+debbc9086a6d: Preparing
+2b46056344fb: Preparing
+b7d8a4fa5254: Preparing
+a9da93335a31: Preparing
+4ab634737e8c: Preparing
+3d09a16351db: Preparing
+b386d4f05361: Preparing
+e0932dcd0e16: Preparing
+49d74831a287: Preparing
+5d89b1d5fc98: Preparing
+523062ea36b5: Preparing
+e50a58335e13: Preparing
+4ab634737e8c: Waiting
+3d09a16351db: Waiting
+b386d4f05361: Waiting
+e0932dcd0e16: Waiting
+49d74831a287: Waiting
+5d89b1d5fc98: Waiting
+523062ea36b5: Waiting
+e50a58335e13: Waiting
+a91e29956d9d: Layer already exists
+bdb009e2467d: Layer already exists
+4766dd64a770: Layer already exists
+debbc9086a6d: Layer already exists
+a9da93335a31: Layer already exists
+2b46056344fb: Layer already exists
+b7d8a4fa5254: Layer already exists
+1b82ad98dcc3: Layer already exists
+d48b47ea8fc1: Layer already exists
+3d09a16351db: Layer already exists
+4ab634737e8c: Layer already exists
+16a8f678353a: Layer already exists
+e0932dcd0e16: Layer already exists
+49d74831a287: Layer already exists
+b386d4f05361: Layer already exists
+e50a58335e13: Layer already exists
+523062ea36b5: Layer already exists
+5d89b1d5fc98: Layer already exists
+latest: digest: sha256:a8a30f3ea8996323529844bd30b819fd205adeb09eb216da65fcda79810691ea size: 4085
+DONE
