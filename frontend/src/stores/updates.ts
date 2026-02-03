@@ -8,10 +8,6 @@ import { updateApi, type UpdateCheckResponse, type BuildStatusResponse } from '@
 
 // Local storage keys
 const DISMISSED_VERSION_KEY = 'orbu_dismissed_update_version'
-const LAST_CHECK_KEY = 'orbu_last_update_check'
-
-// Check interval (1 hour in milliseconds)
-const CHECK_INTERVAL = 60 * 60 * 1000
 
 // Build polling interval (5 seconds)
 const BUILD_POLL_INTERVAL = 5000
@@ -28,7 +24,6 @@ export const useUpdateStore = defineStore('updates', {
     isDismissed: false,
     isChecking: false,
     isDeploying: false,
-    lastCheckTime: null as number | null,
     error: null as string | null,
     // Cloud Build state
     buildId: null as string | null,
@@ -52,11 +47,6 @@ export const useUpdateStore = defineStore('updates', {
     async initialize() {
       // Load dismissed version from localStorage
       const dismissedVersion = localStorage.getItem(DISMISSED_VERSION_KEY)
-      const lastCheck = localStorage.getItem(LAST_CHECK_KEY)
-
-      if (lastCheck) {
-        this.lastCheckTime = parseInt(lastCheck, 10)
-      }
 
       // Get current version info
       try {
@@ -68,24 +58,13 @@ export const useUpdateStore = defineStore('updates', {
         console.error('Failed to get current version:', error)
       }
 
-      // Check if we should auto-check (once per hour)
-      if (this.shouldAutoCheck()) {
-        await this.checkForUpdates()
-      }
+      // Always check for updates on load
+      await this.checkForUpdates()
 
       // Restore dismissed state for current latest version
       if (dismissedVersion && dismissedVersion === this.latestVersion) {
         this.isDismissed = true
       }
-    },
-
-    /**
-     * Determine if we should auto-check for updates
-     */
-    shouldAutoCheck(): boolean {
-      if (!this.lastCheckTime) return true
-      const timeSinceLastCheck = Date.now() - this.lastCheckTime
-      return timeSinceLastCheck > CHECK_INTERVAL
     },
 
     /**
@@ -108,10 +87,6 @@ export const useUpdateStore = defineStore('updates', {
           this.releaseNotes = response.release_notes
           this.platform = response.platform
           this.canAutoUpdate = response.can_auto_update
-
-          // Update last check time
-          this.lastCheckTime = Date.now()
-          localStorage.setItem(LAST_CHECK_KEY, this.lastCheckTime.toString())
 
           // Check if this version was previously dismissed
           const dismissedVersion = localStorage.getItem(DISMISSED_VERSION_KEY)
@@ -260,14 +235,12 @@ export const useUpdateStore = defineStore('updates', {
       this.isDismissed = false
       this.isChecking = false
       this.isDeploying = false
-      this.lastCheckTime = null
       this.error = null
       this.buildId = null
       this.buildStatus = null
       this.buildStep = null
       this.buildLogsUrl = null
       localStorage.removeItem(DISMISSED_VERSION_KEY)
-      localStorage.removeItem(LAST_CHECK_KEY)
     },
   },
 })
