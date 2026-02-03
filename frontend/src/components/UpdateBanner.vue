@@ -204,6 +204,14 @@ const buildStatusColor = computed(() => {
 // Build finished (success)
 const buildFinished = computed(() => updateStore.buildStatus === 'SUCCESS')
 
+// Watch for store requesting the update dialog (from footer button)
+watch(() => updateStore.showUpdateDialog, (show) => {
+  if (show) {
+    showConfirmDialog.value = true
+    updateStore.showUpdateDialog = false
+  }
+})
+
 // Watch for errors
 watch(() => updateStore.error, (error) => {
   if (error) {

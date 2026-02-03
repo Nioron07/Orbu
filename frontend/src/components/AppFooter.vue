@@ -11,6 +11,16 @@
           <div class="d-flex align-center gap-2">
             <span class="text-subtitle-2 font-weight-bold mr-1">Orbu</span>
             <v-chip size="x-small" variant="tonal" color="primary">v{{ displayVersion }}</v-chip>
+            <v-btn
+              v-if="showUpdateButton"
+              size="x-small"
+              variant="flat"
+              color="success"
+              prepend-icon="mdi-update"
+              @click="updateStore.showUpdateDialog = true"
+            >
+              Update Available
+            </v-btn>
           </div>
         </v-col>
 
@@ -80,10 +90,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useUpdateStore } from '@/stores/updates'
+import { useAuthStore } from '@/stores/auth'
+
 // Version is injected at build time from the VERSION file via vite.config.mts
 declare const __APP_VERSION__: string
 
 const displayVersion = __APP_VERSION__
+const updateStore = useUpdateStore()
+const authStore = useAuthStore()
+
+const showUpdateButton = computed(() => {
+  return authStore.isAdmin && updateStore.updateAvailable && !updateStore.isDismissed
+})
 </script>
 
 <style scoped lang="scss">

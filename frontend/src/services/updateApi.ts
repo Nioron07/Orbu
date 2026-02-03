@@ -66,6 +66,23 @@ class UpdateApi {
       }
       return config;
     });
+
+    // Handle invalid token errors by forcing logout with redirect
+    this.api.interceptors.response.use(
+      response => response,
+      error => {
+        const errorMessage = error.response?.data?.error || '';
+        if (errorMessage.includes('Signature verification failed') ||
+            errorMessage.includes('Invalid token')) {
+          localStorage.removeItem('orbu_access_token');
+          localStorage.removeItem('orbu_refresh_token');
+          const currentPath = window.location.pathname + window.location.search;
+          const redirect = currentPath && currentPath !== '/login' ? `&redirect=${encodeURIComponent(currentPath)}` : '';
+          window.location.href = `/login?reason=session_expired${redirect}`;
+        }
+        throw error;
+      }
+    );
   }
 
   /**

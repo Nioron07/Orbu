@@ -103,8 +103,10 @@ class AuthApiService {
     // Clear auth header
     delete this.axiosInstance.defaults.headers.common['Authorization'];
 
-    // Reload page to redirect to login
-    window.location.href = '/login?reason=session_expired';
+    // Redirect to login, preserving the current page for post-login redirect
+    const currentPath = window.location.pathname + window.location.search;
+    const redirect = currentPath && currentPath !== '/login' ? `&redirect=${encodeURIComponent(currentPath)}` : '';
+    window.location.href = `/login?reason=session_expired${redirect}`;
   }
 
   /**

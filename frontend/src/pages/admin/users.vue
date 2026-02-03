@@ -88,8 +88,8 @@
                   </v-btn>
                 </template>
 
-                <!-- Approved user actions -->
-                <template v-else>
+                <!-- Approved user actions (hide for own user - no self-actions available) -->
+                <template v-else-if="item.id !== currentUser?.id">
                   <v-menu>
                     <template #activator="{ props }">
                       <v-btn

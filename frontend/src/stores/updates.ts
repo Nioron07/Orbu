@@ -36,6 +36,7 @@ export const useUpdateStore = defineStore('updates', {
     buildStep: null as string | null,
     buildLogsUrl: null as string | null,
     pollIntervalId: null as number | null,
+    showUpdateDialog: false,
   }),
 
   getters: {
