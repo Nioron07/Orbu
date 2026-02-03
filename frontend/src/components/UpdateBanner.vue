@@ -98,29 +98,19 @@
   </v-dialog>
 
   <!-- Deployment in progress dialog -->
-  <v-dialog v-model="showDeployingDialog" persistent max-width="500">
+  <v-dialog v-model="showDeployingDialog" :persistent="!buildFinished" max-width="500">
     <v-card>
       <v-card-title class="text-h6">
-        Updating Orbu...
+        {{ buildFinished ? 'Update Complete' : 'Updating Orbu...' }}
       </v-card-title>
       <v-card-text>
         <div class="d-flex align-center mb-4">
-          <v-progress-circular indeterminate color="primary" class="mr-3" size="24" />
+          <v-progress-circular v-if="!buildFinished" indeterminate color="primary" class="mr-3" size="24" />
+          <v-icon v-else color="success" class="mr-3" size="24">mdi-check-circle</v-icon>
           <span class="text-body-1">{{ updateStore.buildStep || 'Starting build...' }}</span>
         </div>
 
-        <!-- Build status indicator -->
-        <div v-if="updateStore.buildStatus" class="mb-3">
-          <v-chip
-            :color="buildStatusColor"
-            size="small"
-            class="mr-2"
-          >
-            {{ updateStore.buildStatus }}
-          </v-chip>
-        </div>
-
-        <v-alert type="info" variant="tonal" class="mb-3">
+        <v-alert v-if="!buildFinished" type="info" variant="tonal" class="mb-3">
           Building a new Docker image from the latest release. This typically takes 5-10 minutes.
         </v-alert>
 
@@ -138,6 +128,10 @@
           </v-btn>
         </div>
       </v-card-text>
+      <v-card-actions v-if="buildFinished">
+        <v-spacer />
+        <v-btn variant="text" @click="showDeployingDialog = false">Close</v-btn>
+      </v-card-actions>
     </v-card>
   </v-dialog>
 
@@ -206,6 +200,9 @@ const buildStatusColor = computed(() => {
       return 'grey'
   }
 })
+
+// Build finished (success)
+const buildFinished = computed(() => updateStore.buildStatus === 'SUCCESS')
 
 // Watch for errors
 watch(() => updateStore.error, (error) => {
